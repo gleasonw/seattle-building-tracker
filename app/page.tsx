@@ -44,7 +44,10 @@ async function getYearStats(year: number) {
   if (year === currentYear) {
     const ytdDate = now.toISOString().split("T")[0];
     const lastYearYtdStart = `${year - 1}-01-01`;
-    const lastYearYtdEnd = `${year - 1}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    const lastYearYtdEnd = `${year - 1}-${String(now.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}-${String(now.getDate()).padStart(2, "0")}`;
 
     const ytdUnits = await db
       .select({
@@ -99,20 +102,18 @@ async function getYearStats(year: number) {
     ytdStats = {
       units: ytdUnits[0]?.total || 0,
       lastYearUnits: lastYearYtdUnits[0]?.total || 0,
-      unitsPercentChange:
-        lastYearYtdUnits[0]?.total
-          ? (((ytdUnits[0]?.total || 0) - lastYearYtdUnits[0].total) /
-              lastYearYtdUnits[0].total) *
-            100
-          : 0,
+      unitsPercentChange: lastYearYtdUnits[0]?.total
+        ? (((ytdUnits[0]?.total || 0) - lastYearYtdUnits[0].total) /
+            lastYearYtdUnits[0].total) *
+          100
+        : 0,
       permits: ytdPermits[0]?.count || 0,
       lastYearPermits: lastYearYtdPermits[0]?.count || 0,
-      permitsPercentChange:
-        lastYearYtdPermits[0]?.count
-          ? (((ytdPermits[0]?.count || 0) - lastYearYtdPermits[0].count) /
-              lastYearYtdPermits[0].count) *
-            100
-          : 0,
+      permitsPercentChange: lastYearYtdPermits[0]?.count
+        ? (((ytdPermits[0]?.count || 0) - lastYearYtdPermits[0].count) /
+            lastYearYtdPermits[0].count) *
+          100
+        : 0,
     };
   }
 
@@ -175,7 +176,9 @@ export default async function Home() {
                   )
                 </div>
                 <Link
-                  href={`/construction?start=${currentYear}-01-01&end=${new Date().toISOString().split("T")[0]}`}
+                  href={`/construction?start=${currentYear}-01-01&end=${
+                    new Date().toISOString().split("T")[0]
+                  }`}
                   className="block text-4xl font-bold text-blue-600 mb-2 hover:text-blue-700"
                 >
                   {stats.ytdStats.units.toLocaleString()}
@@ -188,13 +191,19 @@ export default async function Home() {
                   }`}
                 >
                   {stats.ytdStats.unitsPercentChange >= 0 ? "↑" : "↓"}{" "}
-                  {Math.abs(stats.ytdStats.unitsPercentChange).toFixed(1)}% vs last year
+                  {Math.abs(stats.ytdStats.unitsPercentChange).toFixed(1)}% vs
+                  last year
                 </div>
                 <Link
-                  href={`/construction?start=${currentYear - 1}-01-01&end=${new Date(new Date().setFullYear(currentYear - 1)).toISOString().split("T")[0]}`}
+                  href={`/construction?start=${currentYear - 1}-01-01&end=${
+                    new Date(new Date().setFullYear(currentYear - 1))
+                      .toISOString()
+                      .split("T")[0]
+                  }`}
                   className="text-sm text-gray-500 hover:text-gray-700"
                 >
-                  {stats.ytdStats.lastYearUnits.toLocaleString()} units same period last year →
+                  {stats.ytdStats.lastYearUnits.toLocaleString()} units same
+                  period last year →
                 </Link>
               </div>
               <div className="bg-white rounded-lg shadow p-6">
@@ -207,7 +216,9 @@ export default async function Home() {
                   )
                 </div>
                 <Link
-                  href={`/applications?start=${currentYear}-01-01&end=${new Date().toISOString().split("T")[0]}`}
+                  href={`/applications?start=${currentYear}-01-01&end=${
+                    new Date().toISOString().split("T")[0]
+                  }`}
                   className="block text-4xl font-bold text-blue-600 mb-2 hover:text-blue-700"
                 >
                   {stats.ytdStats.permits.toLocaleString()}
@@ -220,13 +231,19 @@ export default async function Home() {
                   }`}
                 >
                   {stats.ytdStats.permitsPercentChange >= 0 ? "↑" : "↓"}{" "}
-                  {Math.abs(stats.ytdStats.permitsPercentChange).toFixed(1)}% vs last year
+                  {Math.abs(stats.ytdStats.permitsPercentChange).toFixed(1)}% vs
+                  last year
                 </div>
                 <Link
-                  href={`/applications?start=${currentYear - 1}-01-01&end=${new Date(new Date().setFullYear(currentYear - 1)).toISOString().split("T")[0]}`}
+                  href={`/applications?start=${currentYear - 1}-01-01&end=${
+                    new Date(new Date().setFullYear(currentYear - 1))
+                      .toISOString()
+                      .split("T")[0]
+                  }`}
                   className="text-sm text-gray-500 hover:text-gray-700"
                 >
-                  {stats.ytdStats.lastYearPermits.toLocaleString()} permits same period last year →
+                  {stats.ytdStats.lastYearPermits.toLocaleString()} permits same
+                  period last year →
                 </Link>
               </div>
             </>
@@ -259,85 +276,89 @@ export default async function Home() {
         </div>
 
         {/* Top Permits */}
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <h2 className="text-2xl font-bold mb-4">
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-4 bg-white rounded-lg p-4 shadow">
             Top Permits by Housing Units ({currentYear})
           </h2>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="text-left p-3 font-semibold text-sm">
-                    Permit Number
-                  </th>
-                  <th className="text-left p-3 font-semibold text-sm">
-                    Completed Date
-                  </th>
-                  <th className="text-left p-3 font-semibold text-sm">
-                    Address
-                  </th>
-                  <th className="text-right p-3 font-semibold text-sm">
-                    Units
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {topPermits.map((permit) => (
-                  <tr
-                    key={permit.permitNum}
-                    className="border-b border-gray-100 hover:bg-gray-50"
-                  >
-                    <td className="p-3 text-sm">
-                      {permit.link ? (
-                        <a
-                          href={permit.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="font-mono text-blue-600 hover:underline"
-                        >
-                          {permit.permitNum}
-                        </a>
-                      ) : (
-                        <span className="font-mono text-gray-900">
-                          {permit.permitNum}
-                        </span>
-                      )}
-                    </td>
-                    <td className="p-3 text-sm">
+
+          <div className="flex flex-col gap-4">
+            {topPermits.map((permit, idx) => (
+              <div
+                key={permit.permitNum}
+                className="bg-white rounded-lg shadow p-4 flex flex-row items-center gap-6 overflow-hidden"
+              >
+                {/* Rank badge (subtler) */}
+                <div className="flex-none w-10 h-10 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-semibold text-sm">
+                  #{idx + 1}
+                </div>
+                {/* Main info stack */}
+                <div className="flex-1 flex flex-col md:flex-row md:items-center md:gap-6 min-w-0">
+                  {/* Permit meta (fixed width) */}
+                  <div className="w-28 flex-shrink-0 flex flex-col">
+                    <div className="flex items-center gap-2 text-lg font-semibold tabular-nums">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        className="w-4 h-4 text-gray-500"
+                      >
+                        <path d="M10.707 1.293a1 1 0 00-1.414 0L2 8.586V17a1 1 0 001 1h5v-5h4v5h5a1 1 0 001-1V8.586l-7.293-7.293z" />
+                      </svg>
+                      <span className="truncate">
+                        {permit.housingUnitsAdded?.toLocaleString() || 0}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-500">Units</div>
+                  </div>
+                  {/* Permit number and date (fixed width) */}
+                  <div className="w-48 flex-shrink-0 flex flex-col">
+                    {permit.link ? (
+                      <a
+                        href={permit.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono text-blue-600 hover:underline truncate block"
+                      >
+                        {permit.permitNum}
+                      </a>
+                    ) : (
+                      <div className="font-mono text-gray-900 truncate">
+                        {permit.permitNum}
+                      </div>
+                    )}
+                    <div className="text-xs text-gray-500 mt-1">
                       {permit.completedDate
                         ? new Date(permit.completedDate).toLocaleDateString()
                         : "-"}
-                    </td>
-                    <td className="p-3 text-sm max-w-md">
-                      <div className="truncate">
-                        {permit.originalAddress1 ? (
-                          <a
-                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                              permit.originalAddress1 + ", Seattle, WA"
-                            )}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline"
-                          >
-                            {permit.originalAddress1}
-                          </a>
-                        ) : (
-                          "-"
-                        )}
-                      </div>
-                      {permit.description && (
-                        <div className="text-xs text-gray-500 truncate mt-1">
-                          {permit.description}
-                        </div>
+                    </div>
+                  </div>
+                  {/* Address and description (flex, truncates) */}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-gray-700 truncate">
+                      {permit.originalAddress1 ? (
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                            permit.originalAddress1 + ", Seattle, WA"
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-gray-700 hover:underline truncate block"
+                        >
+                          {permit.originalAddress1}
+                        </a>
+                      ) : (
+                        "-"
                       )}
-                    </td>
-                    <td className="p-3 text-sm text-right tabular-nums font-medium">
-                      {permit.housingUnitsAdded?.toLocaleString() || 0}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                    {permit.description && (
+                      <div className="text-xs text-gray-500 truncate mt-1">
+                        {permit.description}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
