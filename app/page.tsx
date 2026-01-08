@@ -180,7 +180,7 @@ export default async function Home() {
                   href={`/construction?start=${currentYear}-01-01&end=${
                     new Date().toISOString().split("T")[0]
                   }`}
-                  className="block text-4xl font-bold text-blue-600 mb-2 hover:text-blue-700"
+                  className="block text-4xl font-bold  mb-2 hover:text-blue-700"
                 >
                   {stats.ytdStats.units.toLocaleString()}
                 </Link>
@@ -220,7 +220,7 @@ export default async function Home() {
                   href={`/applications?start=${currentYear}-01-01&end=${
                     new Date().toISOString().split("T")[0]
                   }`}
-                  className="block text-4xl font-bold text-blue-600 mb-2 hover:text-blue-700"
+                  className="block text-4xl font-bold  mb-2 hover:text-blue-700"
                 >
                   {stats.ytdStats.permits.toLocaleString()}
                 </Link>
