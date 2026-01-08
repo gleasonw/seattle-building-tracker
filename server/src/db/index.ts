@@ -1,12 +1,12 @@
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import * as schema from './schema';
-import 'dotenv/config';
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import * as schema from "./schema";
+import "dotenv/config";
 
 // Validate required environment variables
 if (!process.env.DATABASE_URL) {
   throw new Error(
-    'DATABASE_URL is not defined. Please create a .env.local file with your database connection string.'
+    "DATABASE_URL is not defined. Please create a .env.local file with your database connection string."
   );
 }
 
@@ -15,7 +15,7 @@ if (!process.env.DATABASE_URL) {
 const connectionString = process.env.DATABASE_URL;
 
 const client = postgres(connectionString, {
-  max: process.env.NODE_ENV === 'production' ? 20 : 10,
+  max: process.env.NODE_ENV === "production" ? 20 : 10,
   idle_timeout: 600, // 10 minutes
   connect_timeout: 30, // 30 seconds
 });

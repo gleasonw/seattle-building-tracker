@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Calendar, X } from "lucide-react";
+import { BuildingPermit } from "@/server/src/db/schema";
 
 interface Record {
   permitNum: string;
@@ -24,8 +25,10 @@ type SortField =
   | "housingUnitsAdded"
   | "permitNum";
 
+type ExtraFieldKey = keyof BuildingPermit;
+
 interface Props {
-  records: Record[];
+  records: (Record & Partial<BuildingPermit>)[];
   initialParams: {
     sortBy?: string;
     sortOrder?: string;
@@ -33,6 +36,10 @@ interface Props {
     tableEnd?: string;
   };
   seattleDataUrl: string;
+  extraFields?: Array<{
+    key: ExtraFieldKey;
+    label: string;
+  }>;
 }
 
 function SortIcon({
@@ -56,6 +63,7 @@ export default function RecordsTable({
   records,
   initialParams,
   seattleDataUrl,
+  extraFields = [],
 }: Props) {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -179,6 +187,14 @@ export default function RecordsTable({
                   Units
                 </Link>
               </th>
+              {extraFields.map((field) => (
+                <th
+                  key={field.key}
+                  className="text-left p-4 font-semibold text-sm"
+                >
+                  {field.label}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -240,11 +256,22 @@ export default function RecordsTable({
                   <td className="p-4 text-sm text-right tabular-nums font-medium">
                     {record.housingUnitsAdded?.toLocaleString() || 0}
                   </td>
+                  {extraFields.map((field) => (
+                    <td key={field.key} className="p-4 text-sm">
+                      {record[field.key] !== null &&
+                      record[field.key] !== undefined
+                        ? String(record[field.key])
+                        : "-"}
+                    </td>
+                  ))}
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="p-8 text-center text-gray-500">
+                <td
+                  colSpan={5 + extraFields.length}
+                  className="p-8 text-center text-gray-500"
+                >
                   No records found for the selected criteria
                 </td>
               </tr>

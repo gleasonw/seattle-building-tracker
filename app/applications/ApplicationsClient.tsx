@@ -98,6 +98,7 @@ ORDER BY \`${dateField}\` DESC`;
         records={records}
         initialParams={initialParams}
         seattleDataUrl={seattleDataUrl}
+        extraFields={[{ key: "statusCurrent", label: "Current Status" }]}
       />
     </>
   );

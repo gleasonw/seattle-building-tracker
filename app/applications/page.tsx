@@ -115,6 +115,8 @@ async function getTrendsData(params: SearchParams) {
   };
 }
 
+export type ApplicationRecord = Awaited<ReturnType<typeof getRecords>>[number];
+
 async function getRecords(params: SearchParams) {
   const {
     tableStart,
@@ -180,6 +182,7 @@ async function getRecords(params: SearchParams) {
       estProjectCost: buildingPermits.estProjectCost,
       latitude: buildingPermits.latitude,
       longitude: buildingPermits.longitude,
+      statusCurrent: buildingPermits.statusCurrent,
     })
     .from(buildingPermits)
     .where(and(...conditions))
