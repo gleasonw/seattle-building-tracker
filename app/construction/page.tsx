@@ -188,7 +188,7 @@ async function getRecords(params: SearchParams) {
     })
     .from(buildingPermits)
     .where(and(...conditions))
-    .orderBy(sortFn(sortColumn))
+    .orderBy(sql`${sortFn(sortColumn)} nulls last`)
     .limit(500);
 
   return results;
