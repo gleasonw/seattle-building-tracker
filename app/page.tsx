@@ -4,6 +4,7 @@ import { buildingPermits } from "@/server/src/db/schema";
 import Link from "next/link";
 import DashboardNav from "./components/DashboardNav";
 import DataFooter from "./components/DataFooter";
+import YearNavigation from "./components/YearNavigation";
 
 async function getYearStats(year: number) {
   const yearStart = `${year}-01-01`;
@@ -36,10 +37,11 @@ async function getYearStats(year: number) {
       )
     );
 
-  // Get YTD stats if current year
+  // Get YTD stats if current year, or previous year comparison if not
   const now = new Date();
   const currentYear = now.getFullYear();
   let ytdStats = null;
+  let previousYearStats = null;
 
   if (year === currentYear) {
     const ytdDate = now.toISOString().split("T")[0];
@@ -115,12 +117,60 @@ async function getYearStats(year: number) {
           100
         : 0,
     };
+  } else {
+    // Get previous year full year stats for comparison
+    const previousYearStart = `${year - 1}-01-01`;
+    const previousYearEnd = `${year - 1}-12-31`;
+
+    const previousYearUnits = await db
+      .select({
+        total: sql<number>`CAST(SUM(COALESCE(${buildingPermits.housingUnitsAdded}, 0)) AS INTEGER)`,
+      })
+      .from(buildingPermits)
+      .where(
+        and(
+          sql`${buildingPermits.completedDate} >= ${previousYearStart}`,
+          sql`${buildingPermits.completedDate} <= ${previousYearEnd}`
+        )
+      );
+
+    const previousYearPermits = await db
+      .select({
+        count: sql<number>`CAST(COUNT(*) AS INTEGER)`,
+      })
+      .from(buildingPermits)
+      .where(
+        and(
+          sql`${buildingPermits.appliedDate} >= ${previousYearStart}`,
+          sql`${buildingPermits.appliedDate} <= ${previousYearEnd}`,
+          sql`${buildingPermits.housingUnitsAdded} > 0`
+        )
+      );
+
+    const prevYearUnitsTotal = previousYearUnits[0]?.total || 0;
+    const prevYearPermitsTotal = previousYearPermits[0]?.count || 0;
+
+    previousYearStats = {
+      units: prevYearUnitsTotal,
+      unitsPercentChange: prevYearUnitsTotal
+        ? (((housingUnitsCompleted[0]?.total || 0) - prevYearUnitsTotal) /
+            prevYearUnitsTotal) *
+          100
+        : 0,
+      permits: prevYearPermitsTotal,
+      permitsPercentChange: prevYearPermitsTotal
+        ? (((permitsApplied[0]?.count || 0) - prevYearPermitsTotal) /
+            prevYearPermitsTotal) *
+          100
+        : 0,
+    };
   }
 
   return {
     housingUnitsCompleted: housingUnitsCompleted[0]?.total || 0,
     permitsApplied: permitsApplied[0]?.count || 0,
     ytdStats,
+    previousYearStats,
   };
 }
 
@@ -147,12 +197,24 @@ async function getTopPermits(year: number) {
     .limit(10);
 }
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ year?: string }>;
+}) {
+  const { year: yearParam } = await searchParams;
   const currentYear = new Date().getFullYear();
-  const stats = await getYearStats(currentYear);
-  const topPermits = await getTopPermits(currentYear);
+  const selectedYear = yearParam ? parseInt(yearParam, 10) : currentYear;
 
-  const isCurrentYear = true;
+  return <YearView year={selectedYear} />;
+}
+
+async function YearView({ year }: { year: number }) {
+  const targetYear = year;
+  const stats = await getYearStats(targetYear);
+  const topPermits = await getTopPermits(targetYear);
+
+  const isCurrentYear = targetYear === new Date().getFullYear();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -160,8 +222,8 @@ export default async function Home() {
         <h1 className="text-3xl font-bold mb-8">
           Seattle Building Permit Tracker
         </h1>
-
         <DashboardNav />
+        <YearNavigation currentYear={targetYear} minYear={2010} />
 
         {/* Year Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -177,7 +239,7 @@ export default async function Home() {
                   )
                 </div>
                 <Link
-                  href={`/construction?start=${currentYear}-01-01&end=${
+                  href={`/construction?start=${targetYear}-01-01&end=${
                     new Date().toISOString().split("T")[0]
                   }`}
                   className="block text-4xl font-bold  mb-2 hover:text-blue-700"
@@ -196,8 +258,8 @@ export default async function Home() {
                   last year
                 </div>
                 <Link
-                  href={`/construction?start=${currentYear - 1}-01-01&end=${
-                    new Date(new Date().setFullYear(currentYear - 1))
+                  href={`/construction?start=${targetYear - 1}-01-01&end=${
+                    new Date(new Date().setFullYear(targetYear - 1))
                       .toISOString()
                       .split("T")[0]
                   }`}
@@ -217,7 +279,7 @@ export default async function Home() {
                   )
                 </div>
                 <Link
-                  href={`/applications?start=${currentYear}-01-01&end=${
+                  href={`/applications?start=${targetYear}-01-01&end=${
                     new Date().toISOString().split("T")[0]
                   }`}
                   className="block text-4xl font-bold  mb-2 hover:text-blue-700"
@@ -236,8 +298,8 @@ export default async function Home() {
                   last year
                 </div>
                 <Link
-                  href={`/applications?start=${currentYear - 1}-01-01&end=${
-                    new Date(new Date().setFullYear(currentYear - 1))
+                  href={`/applications?start=${targetYear - 1}-01-01&end=${
+                    new Date(new Date().setFullYear(targetYear - 1))
                       .toISOString()
                       .split("T")[0]
                   }`}
@@ -250,28 +312,84 @@ export default async function Home() {
             </>
           ) : (
             <>
-              <Link
-                href={`/construction?start=${currentYear}-01-01&end=${currentYear}-12-31`}
-                className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer"
-              >
+              <div className="bg-white rounded-lg shadow p-6">
                 <div className="text-sm text-gray-600 mb-2">
-                  Housing Units Completed ({currentYear})
+                  Housing Units Completed ({targetYear})
                 </div>
-                <div className="text-4xl font-bold text-blue-600">
+                <Link
+                  href={`/construction?start=${targetYear}-01-01&end=${targetYear}-12-31`}
+                  className="block text-4xl font-bold mb-2 hover:text-blue-700"
+                >
                   {stats.housingUnitsCompleted.toLocaleString()}
-                </div>
-              </Link>
-              <Link
-                href={`/applications?start=${currentYear}-01-01&end=${currentYear}-12-31`}
-                className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer"
-              >
+                </Link>
+                {stats.previousYearStats && (
+                  <>
+                    <div
+                      className={`text-sm mb-3 ${
+                        stats.previousYearStats.unitsPercentChange >= 0
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
+                    >
+                      {stats.previousYearStats.unitsPercentChange >= 0
+                        ? "↑"
+                        : "↓"}{" "}
+                      {Math.abs(
+                        stats.previousYearStats.unitsPercentChange
+                      ).toFixed(1)}
+                      % vs {targetYear - 1}
+                    </div>
+                    <Link
+                      href={`/construction?start=${targetYear - 1}-01-01&end=${
+                        targetYear - 1
+                      }-12-31`}
+                      className="text-sm text-gray-500 hover:text-gray-700"
+                    >
+                      {stats.previousYearStats.units.toLocaleString()} units in{" "}
+                      {targetYear - 1} →
+                    </Link>
+                  </>
+                )}
+              </div>
+              <div className="bg-white rounded-lg shadow p-6">
                 <div className="text-sm text-gray-600 mb-2">
-                  Permits Applied ({currentYear})
+                  Permits Applied ({targetYear})
                 </div>
-                <div className="text-4xl font-bold text-blue-600">
+                <Link
+                  href={`/applications?start=${targetYear}-01-01&end=${targetYear}-12-31`}
+                  className="block text-4xl font-bold mb-2 hover:text-blue-700"
+                >
                   {stats.permitsApplied.toLocaleString()}
-                </div>
-              </Link>
+                </Link>
+                {stats.previousYearStats && (
+                  <>
+                    <div
+                      className={`text-sm mb-3 ${
+                        stats.previousYearStats.permitsPercentChange >= 0
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
+                    >
+                      {stats.previousYearStats.permitsPercentChange >= 0
+                        ? "↑"
+                        : "↓"}{" "}
+                      {Math.abs(
+                        stats.previousYearStats.permitsPercentChange
+                      ).toFixed(1)}
+                      % vs {targetYear - 1}
+                    </div>
+                    <Link
+                      href={`/applications?start=${targetYear - 1}-01-01&end=${
+                        targetYear - 1
+                      }-12-31`}
+                      className="text-sm text-gray-500 hover:text-gray-700"
+                    >
+                      {stats.previousYearStats.permits.toLocaleString()} permits
+                      in {targetYear - 1} →
+                    </Link>
+                  </>
+                )}
+              </div>
             </>
           )}
         </div>
@@ -279,7 +397,7 @@ export default async function Home() {
         {/* Top Permits */}
         <div className="mb-8">
           <h2 className="text-lg font-bold mb-4">
-            Top Permits by Completed Housing Units ({currentYear})
+            Top Permits by Completed Housing Units ({targetYear})
           </h2>
 
           <div className="flex flex-col gap-4">

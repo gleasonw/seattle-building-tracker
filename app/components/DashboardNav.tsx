@@ -7,9 +7,9 @@ export default function DashboardNav() {
   const pathname = usePathname();
 
   const tabs = [
-    { name: "This Year", href: "/" },
-    { name: "Construction", href: "/construction" },
-    { name: "Applications", href: "/applications" },
+    { name: "Year in detail", href: "/" },
+    { name: "Construction Trends", href: "/construction" },
+    { name: "Application Trends ", href: "/applications" },
   ];
 
   return (
