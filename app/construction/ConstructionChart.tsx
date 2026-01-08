@@ -8,21 +8,18 @@ import { Calendar } from "lucide-react";
 interface MonthlyData {
   year: number;
   month: number;
-  totalUnitsAdded?: number;
-  applicationCount?: number;
+  totalUnitsAdded: number;
 }
 
 interface QuarterlyData {
   year: number;
   quarter: number;
-  totalUnitsAdded?: number;
-  applicationCount?: number;
+  totalUnitsAdded: number;
 }
 
 interface YearlyData {
   year: number;
-  totalUnitsAdded?: number;
-  applicationCount?: number;
+  totalUnitsAdded: number;
 }
 
 interface Props {
@@ -31,7 +28,6 @@ interface Props {
     quarterlyData: QuarterlyData[];
     yearlyData: YearlyData[];
   };
-  metric: "units" | "applications";
   startDate?: string;
   endDate?: string;
 }
@@ -44,8 +40,9 @@ function getMonthsDifference(start?: string, end?: string): number | null {
   const startDate = new Date(start);
   const endDate = new Date(end);
 
-  const months = (endDate.getFullYear() - startDate.getFullYear()) * 12 +
-                 (endDate.getMonth() - startDate.getMonth());
+  const months =
+    (endDate.getFullYear() - startDate.getFullYear()) * 12 +
+    (endDate.getMonth() - startDate.getMonth());
 
   return months;
 }
@@ -56,7 +53,7 @@ function getDefaultPeriod(monthsDiff: number | null): Period {
   return "year";
 }
 
-export default function TrendsChart({ data, metric, startDate, endDate }: Props) {
+export default function ConstructionChart({ data, startDate, endDate }: Props) {
   const { monthlyData, quarterlyData, yearlyData } = data;
 
   const monthsDiff = getMonthsDifference(startDate, endDate);
@@ -72,15 +69,10 @@ export default function TrendsChart({ data, metric, startDate, endDate }: Props)
   // Hide chart if date range is less than 2 months
   if (monthsDiff !== null && monthsDiff < 2) {
     return (
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-lg shadow p-4 mb-6">
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <Calendar className="w-16 h-16 text-gray-300 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">
-            Date Range Too Small
-          </h3>
           <p className="text-gray-500 max-w-md">
             Please select a date range of at least 2 months to view the chart.
-            Expand your date filter to see trend visualizations.
           </p>
         </div>
       </div>
@@ -92,26 +84,33 @@ export default function TrendsChart({ data, metric, startDate, endDate }: Props)
   let seriesData: number[];
 
   if (period === "month") {
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
     categories = monthlyData.map((d) => `${monthNames[d.month - 1]} ${d.year}`);
-    seriesData = monthlyData.map((d) =>
-      metric === "units" ? (d.totalUnitsAdded || 0) : (d.applicationCount || 0)
-    );
+    seriesData = monthlyData.map((d) => d.totalUnitsAdded || 0);
   } else if (period === "quarter") {
     categories = quarterlyData.map((d) => `Q${d.quarter} ${d.year}`);
-    seriesData = quarterlyData.map((d) =>
-      metric === "units" ? (d.totalUnitsAdded || 0) : (d.applicationCount || 0)
-    );
+    seriesData = quarterlyData.map((d) => d.totalUnitsAdded || 0);
   } else {
     categories = yearlyData.map((d) => d.year.toString());
-    seriesData = yearlyData.map((d) =>
-      metric === "units" ? (d.totalUnitsAdded || 0) : (d.applicationCount || 0)
-    );
+    seriesData = yearlyData.map((d) => d.totalUnitsAdded || 0);
   }
 
   const series = [
     {
-      name: metric === "units" ? "Housing Units" : "Applications",
+      name: "Housing Units Completed",
       data: seriesData,
       color: "#3b82f6",
     },
@@ -128,7 +127,12 @@ export default function TrendsChart({ data, metric, startDate, endDate }: Props)
     xAxis: {
       categories,
       title: {
-        text: period === "month" ? "Month" : period === "quarter" ? "Quarter" : "Year",
+        text:
+          period === "month"
+            ? "Month"
+            : period === "quarter"
+            ? "Quarter"
+            : "Year",
       },
       labels: {
         rotation: period === "month" ? -45 : 0,
@@ -139,7 +143,7 @@ export default function TrendsChart({ data, metric, startDate, endDate }: Props)
     },
     yAxis: {
       title: {
-        text: metric === "units" ? "Housing Units Added" : "Number of Applications",
+        text: "Housing Units Completed",
       },
       min: 0,
     },

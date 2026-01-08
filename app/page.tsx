@@ -175,7 +175,7 @@ export default async function Home() {
                   )
                 </div>
                 <Link
-                  href={`/trends?start=${currentYear}-01-01&end=${new Date().toISOString().split("T")[0]}&dateType=completed`}
+                  href={`/construction?start=${currentYear}-01-01&end=${new Date().toISOString().split("T")[0]}`}
                   className="block text-4xl font-bold text-blue-600 mb-2 hover:text-blue-700"
                 >
                   {stats.ytdStats.units.toLocaleString()}
@@ -191,7 +191,7 @@ export default async function Home() {
                   {Math.abs(stats.ytdStats.unitsPercentChange).toFixed(1)}% vs last year
                 </div>
                 <Link
-                  href={`/trends?start=${currentYear - 1}-01-01&end=${new Date(new Date().setFullYear(currentYear - 1)).toISOString().split("T")[0]}&dateType=completed`}
+                  href={`/construction?start=${currentYear - 1}-01-01&end=${new Date(new Date().setFullYear(currentYear - 1)).toISOString().split("T")[0]}`}
                   className="text-sm text-gray-500 hover:text-gray-700"
                 >
                   {stats.ytdStats.lastYearUnits.toLocaleString()} units same period last year →
@@ -207,7 +207,7 @@ export default async function Home() {
                   )
                 </div>
                 <Link
-                  href={`/trends?start=${currentYear}-01-01&end=${new Date().toISOString().split("T")[0]}&dateType=applied&metric=applications`}
+                  href={`/applications?start=${currentYear}-01-01&end=${new Date().toISOString().split("T")[0]}`}
                   className="block text-4xl font-bold text-blue-600 mb-2 hover:text-blue-700"
                 >
                   {stats.ytdStats.permits.toLocaleString()}
@@ -223,7 +223,7 @@ export default async function Home() {
                   {Math.abs(stats.ytdStats.permitsPercentChange).toFixed(1)}% vs last year
                 </div>
                 <Link
-                  href={`/trends?start=${currentYear - 1}-01-01&end=${new Date(new Date().setFullYear(currentYear - 1)).toISOString().split("T")[0]}&dateType=applied&metric=applications`}
+                  href={`/applications?start=${currentYear - 1}-01-01&end=${new Date(new Date().setFullYear(currentYear - 1)).toISOString().split("T")[0]}`}
                   className="text-sm text-gray-500 hover:text-gray-700"
                 >
                   {stats.ytdStats.lastYearPermits.toLocaleString()} permits same period last year →
@@ -233,7 +233,7 @@ export default async function Home() {
           ) : (
             <>
               <Link
-                href={`/trends?start=${currentYear}-01-01&end=${currentYear}-12-31&dateType=completed`}
+                href={`/construction?start=${currentYear}-01-01&end=${currentYear}-12-31`}
                 className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer"
               >
                 <div className="text-sm text-gray-600 mb-2">
@@ -244,7 +244,7 @@ export default async function Home() {
                 </div>
               </Link>
               <Link
-                href={`/trends?start=${currentYear}-01-01&end=${currentYear}-12-31&dateType=applied&metric=applications`}
+                href={`/applications?start=${currentYear}-01-01&end=${currentYear}-12-31`}
                 className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer"
               >
                 <div className="text-sm text-gray-600 mb-2">

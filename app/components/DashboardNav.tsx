@@ -8,7 +8,8 @@ export default function DashboardNav() {
 
   const tabs = [
     { name: "This Year", href: "/" },
-    { name: "Trends", href: "/trends" },
+    { name: "Construction", href: "/construction" },
+    { name: "Applications", href: "/applications" },
   ];
 
   return (

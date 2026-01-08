@@ -4,7 +4,7 @@ import { sql, and, isNotNull } from "drizzle-orm";
 import { asc, desc } from "drizzle-orm";
 import DashboardNav from "../components/DashboardNav";
 import DataFooter from "../components/DataFooter";
-import TrendsClient from "./TrendsClient";
+import ApplicationsClient from "./ApplicationsClient";
 
 type SortField =
   | "appliedDate"
@@ -16,30 +16,18 @@ type SortOrder = "asc" | "desc";
 interface SearchParams {
   start?: string;
   end?: string;
-  dateType?: "completed" | "applied";
   sortBy?: SortField;
   sortOrder?: SortOrder;
   address?: string;
   radius?: string;
   lat?: string;
   lng?: string;
-  metric?: "units" | "applications";
 }
 
 async function getTrendsData(params: SearchParams) {
-  const {
-    start,
-    end,
-    dateType = "completed",
-    lat,
-    lng,
-    radius,
-  } = params;
+  const { start, end, lat, lng, radius } = params;
 
-  const dateField =
-    dateType === "completed"
-      ? buildingPermits.completedDate
-      : buildingPermits.appliedDate;
+  const dateField = buildingPermits.appliedDate;
 
   const conditions = [isNotNull(dateField)];
 
@@ -71,55 +59,8 @@ async function getTrendsData(params: SearchParams) {
     conditions.push(isNotNull(buildingPermits.longitude));
   }
 
-  // Get monthly data for housing units
-  const monthlyUnitsData = await db
-    .select({
-      year: sql<number>`CAST(EXTRACT(YEAR FROM ${dateField}) AS INTEGER)`,
-      month: sql<number>`CAST(EXTRACT(MONTH FROM ${dateField}) AS INTEGER)`,
-      totalUnitsAdded: sql<number>`CAST(SUM(COALESCE(${buildingPermits.housingUnitsAdded}, 0)) AS INTEGER)`,
-    })
-    .from(buildingPermits)
-    .where(and(...conditions))
-    .groupBy(
-      sql`EXTRACT(YEAR FROM ${dateField})`,
-      sql`EXTRACT(MONTH FROM ${dateField})`
-    )
-    .orderBy(
-      sql`EXTRACT(YEAR FROM ${dateField})`,
-      sql`EXTRACT(MONTH FROM ${dateField})`
-    );
-
-  // Get quarterly data for housing units
-  const quarterlyUnitsData = await db
-    .select({
-      year: sql<number>`CAST(EXTRACT(YEAR FROM ${dateField}) AS INTEGER)`,
-      quarter: sql<number>`CAST(EXTRACT(QUARTER FROM ${dateField}) AS INTEGER)`,
-      totalUnitsAdded: sql<number>`CAST(SUM(COALESCE(${buildingPermits.housingUnitsAdded}, 0)) AS INTEGER)`,
-    })
-    .from(buildingPermits)
-    .where(and(...conditions))
-    .groupBy(
-      sql`EXTRACT(YEAR FROM ${dateField})`,
-      sql`EXTRACT(QUARTER FROM ${dateField})`
-    )
-    .orderBy(
-      sql`EXTRACT(YEAR FROM ${dateField})`,
-      sql`EXTRACT(QUARTER FROM ${dateField})`
-    );
-
-  // Get yearly data for housing units
-  const yearlyUnitsData = await db
-    .select({
-      year: sql<number>`CAST(EXTRACT(YEAR FROM ${dateField}) AS INTEGER)`,
-      totalUnitsAdded: sql<number>`CAST(SUM(COALESCE(${buildingPermits.housingUnitsAdded}, 0)) AS INTEGER)`,
-    })
-    .from(buildingPermits)
-    .where(and(...conditions))
-    .groupBy(sql`EXTRACT(YEAR FROM ${dateField})`)
-    .orderBy(sql`EXTRACT(YEAR FROM ${dateField})`);
-
   // Get monthly data for applications
-  const monthlyApplicationsData = await db
+  const monthlyData = await db
     .select({
       year: sql<number>`CAST(EXTRACT(YEAR FROM ${dateField}) AS INTEGER)`,
       month: sql<number>`CAST(EXTRACT(MONTH FROM ${dateField}) AS INTEGER)`,
@@ -137,7 +78,7 @@ async function getTrendsData(params: SearchParams) {
     );
 
   // Get quarterly data for applications
-  const quarterlyApplicationsData = await db
+  const quarterlyData = await db
     .select({
       year: sql<number>`CAST(EXTRACT(YEAR FROM ${dateField}) AS INTEGER)`,
       quarter: sql<number>`CAST(EXTRACT(QUARTER FROM ${dateField}) AS INTEGER)`,
@@ -155,7 +96,7 @@ async function getTrendsData(params: SearchParams) {
     );
 
   // Get yearly data for applications
-  const yearlyApplicationsData = await db
+  const yearlyData = await db
     .select({
       year: sql<number>`CAST(EXTRACT(YEAR FROM ${dateField}) AS INTEGER)`,
       applicationCount: sql<number>`CAST(COUNT(*) AS INTEGER)`,
@@ -166,16 +107,9 @@ async function getTrendsData(params: SearchParams) {
     .orderBy(sql`EXTRACT(YEAR FROM ${dateField})`);
 
   return {
-    unitsData: {
-      monthlyData: monthlyUnitsData,
-      quarterlyData: quarterlyUnitsData,
-      yearlyData: yearlyUnitsData,
-    },
-    applicationsData: {
-      monthlyData: monthlyApplicationsData,
-      quarterlyData: quarterlyApplicationsData,
-      yearlyData: yearlyApplicationsData,
-    },
+    monthlyData,
+    quarterlyData,
+    yearlyData,
   };
 }
 
@@ -183,18 +117,14 @@ async function getRecords(params: SearchParams) {
   const {
     start,
     end,
-    dateType = "completed",
-    sortBy = "housingUnitsAdded",
+    sortBy = "appliedDate",
     sortOrder = "desc",
     lat,
     lng,
     radius,
   } = params;
 
-  const dateField =
-    dateType === "completed"
-      ? buildingPermits.completedDate
-      : buildingPermits.appliedDate;
+  const dateField = buildingPermits.appliedDate;
 
   const conditions = [
     isNotNull(dateField),
@@ -260,7 +190,7 @@ async function getRecords(params: SearchParams) {
   return results;
 }
 
-export default async function TrendsPage({
+export default async function ApplicationsPage({
   searchParams,
 }: {
   searchParams: Promise<SearchParams>;
@@ -278,7 +208,7 @@ export default async function TrendsPage({
 
         <DashboardNav />
 
-        <TrendsClient
+        <ApplicationsClient
           trendsData={trendsData}
           records={records}
           initialParams={params}

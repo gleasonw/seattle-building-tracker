@@ -2,8 +2,8 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import TrendsChart from "./TrendsChart";
-import RecordsTable from "./RecordsTable";
+import ConstructionChart from "./ConstructionChart";
+import RecordsTable from "../components/RecordsTable";
 import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
 import { Button } from "../components/ui/button";
 import { Calendar, MapPin, X } from "lucide-react";
@@ -16,38 +16,21 @@ interface SuggestionResult {
   lon: string;
 }
 
-interface MonthlyUnitsData {
+interface MonthlyData {
   year: number;
   month: number;
   totalUnitsAdded: number;
 }
 
-interface QuarterlyUnitsData {
+interface QuarterlyData {
   year: number;
   quarter: number;
   totalUnitsAdded: number;
 }
 
-interface YearlyUnitsData {
+interface YearlyData {
   year: number;
   totalUnitsAdded: number;
-}
-
-interface MonthlyApplicationsData {
-  year: number;
-  month: number;
-  applicationCount: number;
-}
-
-interface QuarterlyApplicationsData {
-  year: number;
-  quarter: number;
-  applicationCount: number;
-}
-
-interface YearlyApplicationsData {
-  year: number;
-  applicationCount: number;
 }
 
 interface Record {
@@ -66,33 +49,24 @@ interface Record {
 
 interface Props {
   trendsData: {
-    unitsData: {
-      monthlyData: MonthlyUnitsData[];
-      quarterlyData: QuarterlyUnitsData[];
-      yearlyData: YearlyUnitsData[];
-    };
-    applicationsData: {
-      monthlyData: MonthlyApplicationsData[];
-      quarterlyData: QuarterlyApplicationsData[];
-      yearlyData: YearlyApplicationsData[];
-    };
+    monthlyData: MonthlyData[];
+    quarterlyData: QuarterlyData[];
+    yearlyData: YearlyData[];
   };
   records: Record[];
   initialParams: {
     start?: string;
     end?: string;
-    dateType?: "completed" | "applied";
     sortBy?: string;
     sortOrder?: string;
     address?: string;
     radius?: string;
     lat?: string;
     lng?: string;
-    metric?: "units" | "applications";
   };
 }
 
-export default function TrendsClient({
+export default function ConstructionClient({
   trendsData,
   records,
   initialParams,
@@ -103,9 +77,6 @@ export default function TrendsClient({
   // Date filter state
   const [startDate, setStartDate] = useState(initialParams.start || "");
   const [endDate, setEndDate] = useState(initialParams.end || "");
-  const [dateType, setDateType] = useState<"completed" | "applied">(
-    initialParams.dateType || "completed"
-  );
 
   // Geographic filter state
   const [address, setAddress] = useState(initialParams.address || "");
@@ -117,10 +88,6 @@ export default function TrendsClient({
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  const [metric, setMetric] = useState<"units" | "applications">(
-    initialParams.metric || "units"
-  );
 
   // Debounce address input
   useEffect(() => {
@@ -186,16 +153,6 @@ export default function TrendsClient({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleFilterChange = (key: string, value: string | null) => {
-    const newParams = new URLSearchParams(searchParams.toString());
-    if (value) {
-      newParams.set(key, value);
-    } else {
-      newParams.delete(key);
-    }
-    router.push(`/trends?${newParams.toString()}`);
-  };
-
   const handleSelectSuggestion = (suggestion: SuggestionResult) => {
     setAddress(suggestion.display_name);
     setShowSuggestions(false);
@@ -232,8 +189,7 @@ export default function TrendsClient({
     } else {
       newParams.delete("end");
     }
-    newParams.set("dateType", dateType);
-    router.push(`/trends?${newParams.toString()}`);
+    router.push(`/construction?${newParams.toString()}`);
   };
 
   const handleApplyGeoFilter = async () => {
@@ -274,7 +230,7 @@ export default function TrendsClient({
       newParams.set("lat", lat);
       newParams.set("lng", lon);
 
-      router.push(`/trends?${newParams.toString()}`);
+      router.push(`/construction?${newParams.toString()}`);
     } catch (err) {
       setGeoError("Failed to geocode address. Please try again.");
       console.error("Geocoding error:", err);
@@ -287,11 +243,9 @@ export default function TrendsClient({
     const newParams = new URLSearchParams(searchParams.toString());
     newParams.delete("start");
     newParams.delete("end");
-    newParams.delete("dateType");
     setStartDate("");
     setEndDate("");
-    setDateType("completed");
-    router.push(`/trends?${newParams.toString()}`);
+    router.push(`/construction?${newParams.toString()}`);
   };
 
   const handleRemoveGeoFilter = () => {
@@ -302,12 +256,7 @@ export default function TrendsClient({
     newParams.delete("lng");
     setAddress("");
     setRadius("0.5");
-    router.push(`/trends?${newParams.toString()}`);
-  };
-
-  const handleMetricChange = (newMetric: "units" | "applications") => {
-    setMetric(newMetric);
-    handleFilterChange("metric", newMetric);
+    router.push(`/construction?${newParams.toString()}`);
   };
 
   const hasDateFilter = initialParams.start || initialParams.end;
@@ -324,7 +273,7 @@ export default function TrendsClient({
       "`housingunitsadded` > 0",
     ];
 
-    const dateField = dateType === "completed" ? "completeddate" : "applieddate";
+    const dateField = "completeddate";
 
     if (startDate) {
       conditions.push(`\`${dateField}\` >= '${startDate}T00:00:00'`);
@@ -360,7 +309,7 @@ ORDER BY \`${dateField}\` DESC`;
             </PopoverTrigger>
             <PopoverContent>
               <div className="space-y-4">
-                <h4 className="font-semibold">Time Range Filter</h4>
+                <h4 className="font-semibold">Completion Date Filter</h4>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Start Date
@@ -382,21 +331,6 @@ ORDER BY \`${dateField}\` DESC`;
                     onChange={(e) => setEndDate(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Date Type
-                  </label>
-                  <select
-                    value={dateType}
-                    onChange={(e) =>
-                      setDateType(e.target.value as "completed" | "applied")
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="completed">Completed Date</option>
-                    <option value="applied">Applied Date</option>
-                  </select>
                 </div>
                 <Button onClick={handleApplyDateFilter} className="w-full px-4 py-2">
                   Apply
@@ -488,30 +422,6 @@ ORDER BY \`${dateField}\` DESC`;
               </div>
             </PopoverContent>
           </Popover>
-
-          {/* Metric Toggle */}
-          <div className="flex gap-2 ml-auto">
-            <button
-              onClick={() => handleMetricChange("units")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                metric === "units"
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              Housing Units
-            </button>
-            <button
-              onClick={() => handleMetricChange("applications")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                metric === "applications"
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              Applications
-            </button>
-          </div>
         </div>
 
         {/* Active Filters */}
@@ -526,9 +436,6 @@ ORDER BY \`${dateField}\` DESC`;
                     {initialParams.start && new Date(initialParams.start).toLocaleDateString()}
                     {initialParams.start && initialParams.end && " - "}
                     {initialParams.end && new Date(initialParams.end).toLocaleDateString()}
-                  </span>
-                  <span className="text-gray-500">
-                    ({initialParams.dateType === "completed" ? "Completed" : "Applied"})
                   </span>
                   <button
                     onClick={handleRemoveDateFilter}
@@ -562,9 +469,8 @@ ORDER BY \`${dateField}\` DESC`;
       </div>
 
       {/* Chart */}
-      <TrendsChart
-        data={metric === "units" ? trendsData.unitsData : trendsData.applicationsData}
-        metric={metric}
+      <ConstructionChart
+        data={trendsData}
         startDate={initialParams.start}
         endDate={initialParams.end}
       />
