@@ -16,6 +16,8 @@ type SortOrder = "asc" | "desc";
 interface SearchParams {
   start?: string;
   end?: string;
+  tableStart?: string;
+  tableEnd?: string;
   sortBy?: SortField;
   sortOrder?: SortOrder;
   address?: string;
@@ -115,8 +117,8 @@ async function getTrendsData(params: SearchParams) {
 
 async function getRecords(params: SearchParams) {
   const {
-    start,
-    end,
+    tableStart,
+    tableEnd,
     sortBy = "appliedDate",
     sortOrder = "desc",
     lat,
@@ -126,16 +128,13 @@ async function getRecords(params: SearchParams) {
 
   const dateField = buildingPermits.appliedDate;
 
-  const conditions = [
-    isNotNull(dateField),
-    sql`${buildingPermits.housingUnitsAdded} > 0`,
-  ];
+  const conditions = [isNotNull(dateField)];
 
-  if (start) {
-    conditions.push(sql`${dateField} >= ${start}`);
+  if (tableStart) {
+    conditions.push(sql`${dateField} >= ${tableStart}`);
   }
-  if (end) {
-    conditions.push(sql`${dateField} <= ${end}`);
+  if (tableEnd) {
+    conditions.push(sql`${dateField} <= ${tableEnd}`);
   }
 
   // Add geographic filter if coordinates and radius are provided

@@ -16,6 +16,8 @@ type SortOrder = "asc" | "desc";
 interface SearchParams {
   start?: string;
   end?: string;
+  tableStart?: string;
+  tableEnd?: string;
   sortBy?: SortField;
   sortOrder?: SortOrder;
   address?: string;
@@ -115,6 +117,8 @@ async function getTrendsData(params: SearchParams) {
 
 async function getRecords(params: SearchParams) {
   const {
+    tableStart,
+    tableEnd,
     start,
     end,
     sortBy = "housingUnitsAdded",
@@ -131,11 +135,11 @@ async function getRecords(params: SearchParams) {
     sql`${buildingPermits.housingUnitsAdded} > 0`,
   ];
 
-  if (start) {
-    conditions.push(sql`${dateField} >= ${start}`);
+  if (tableStart || start) {
+    conditions.push(sql`${dateField} >= ${tableStart || start}`);
   }
-  if (end) {
-    conditions.push(sql`${dateField} <= ${end}`);
+  if (tableEnd || end) {
+    conditions.push(sql`${dateField} <= ${tableEnd || end}`);
   }
 
   // Add geographic filter if coordinates and radius are provided

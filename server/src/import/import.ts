@@ -273,6 +273,8 @@ export async function periodicSync(
       ? new Date(lastSync[0].lastSyncCompletedAt)
       : new Date("2000-01-01");
 
+    console.log({ lastSync });
+
     const timeSinceLastSync = Date.now() - lastSyncTime.getTime();
     if (timeSinceLastSync < MIN_SYNC_INTERVAL_MS) {
       console.log(
@@ -608,6 +610,9 @@ async function upsertPermits(
       await db.transaction(async (tx) => {
         for (const record of batch) {
           const mapped = mapAPIRecordToSchema(record);
+          if (mapped.permitNum === "6929787-CN") {
+            console.log({ mapped });
+          }
 
           await tx
             .insert(buildingPermits)
