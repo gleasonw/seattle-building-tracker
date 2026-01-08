@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
+import { Calendar } from "lucide-react";
 
 interface MonthlyData {
   year: number;
@@ -31,14 +32,60 @@ interface Props {
     yearlyData: YearlyData[];
   };
   metric: "units" | "applications";
+  startDate?: string;
+  endDate?: string;
 }
 
 type Period = "month" | "quarter" | "year";
 
-export default function TrendsChart({ data, metric }: Props) {
+function getMonthsDifference(start?: string, end?: string): number | null {
+  if (!start || !end) return null;
+
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+
+  const months = (endDate.getFullYear() - startDate.getFullYear()) * 12 +
+                 (endDate.getMonth() - startDate.getMonth());
+
+  return months;
+}
+
+function getDefaultPeriod(monthsDiff: number | null): Period {
+  if (monthsDiff === null) return "year";
+  if (monthsDiff < 12) return "month";
+  return "year";
+}
+
+export default function TrendsChart({ data, metric, startDate, endDate }: Props) {
   const { monthlyData, quarterlyData, yearlyData } = data;
 
-  const [period, setPeriod] = useState<Period>("year");
+  const monthsDiff = getMonthsDifference(startDate, endDate);
+  const defaultPeriod = getDefaultPeriod(monthsDiff);
+
+  const [period, setPeriod] = useState<Period>(defaultPeriod);
+
+  // Update period when date range changes
+  useEffect(() => {
+    setPeriod(defaultPeriod);
+  }, [defaultPeriod]);
+
+  // Hide chart if date range is less than 2 months
+  if (monthsDiff !== null && monthsDiff < 2) {
+    return (
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <Calendar className="w-16 h-16 text-gray-300 mb-4" />
+          <h3 className="text-lg font-semibold text-gray-700 mb-2">
+            Date Range Too Small
+          </h3>
+          <p className="text-gray-500 max-w-md">
+            Please select a date range of at least 2 months to view the chart.
+            Expand your date filter to see trend visualizations.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // Generate time series categories and data based on period
   let categories: string[];

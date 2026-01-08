@@ -70,13 +70,47 @@ async function getYearStats(year: number) {
         )
       );
 
+    const ytdPermits = await db
+      .select({
+        count: sql<number>`CAST(COUNT(*) AS INTEGER)`,
+      })
+      .from(buildingPermits)
+      .where(
+        and(
+          sql`${buildingPermits.appliedDate} >= ${yearStart}`,
+          sql`${buildingPermits.appliedDate} <= ${ytdDate}`,
+          sql`${buildingPermits.housingUnitsAdded} > 0`
+        )
+      );
+
+    const lastYearYtdPermits = await db
+      .select({
+        count: sql<number>`CAST(COUNT(*) AS INTEGER)`,
+      })
+      .from(buildingPermits)
+      .where(
+        and(
+          sql`${buildingPermits.appliedDate} >= ${lastYearYtdStart}`,
+          sql`${buildingPermits.appliedDate} <= ${lastYearYtdEnd}`,
+          sql`${buildingPermits.housingUnitsAdded} > 0`
+        )
+      );
+
     ytdStats = {
       units: ytdUnits[0]?.total || 0,
       lastYearUnits: lastYearYtdUnits[0]?.total || 0,
-      percentChange:
+      unitsPercentChange:
         lastYearYtdUnits[0]?.total
           ? (((ytdUnits[0]?.total || 0) - lastYearYtdUnits[0].total) /
               lastYearYtdUnits[0].total) *
+            100
+          : 0,
+      permits: ytdPermits[0]?.count || 0,
+      lastYearPermits: lastYearYtdPermits[0]?.count || 0,
+      permitsPercentChange:
+        lastYearYtdPermits[0]?.count
+          ? (((ytdPermits[0]?.count || 0) - lastYearYtdPermits[0].count) /
+              lastYearYtdPermits[0].count) *
             100
           : 0,
     };
@@ -131,10 +165,7 @@ export default async function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {isCurrentYear && stats.ytdStats ? (
             <>
-              <Link
-                href={`/trends?start=${currentYear}-01-01&end=${new Date().toISOString().split("T")[0]}&dateType=completed`}
-                className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer"
-              >
+              <div className="bg-white rounded-lg shadow p-6">
                 <div className="text-sm text-gray-600 mb-2">
                   Housing Units YTD (
                   {new Date().toLocaleDateString("en-US", {
@@ -143,32 +174,61 @@ export default async function Home() {
                   })}
                   )
                 </div>
-                <div className="text-4xl font-bold text-blue-600 mb-2">
+                <Link
+                  href={`/trends?start=${currentYear}-01-01&end=${new Date().toISOString().split("T")[0]}&dateType=completed`}
+                  className="block text-4xl font-bold text-blue-600 mb-2 hover:text-blue-700"
+                >
                   {stats.ytdStats.units.toLocaleString()}
-                </div>
+                </Link>
                 <div
-                  className={`text-sm ${
-                    stats.ytdStats.percentChange >= 0
+                  className={`text-sm mb-3 ${
+                    stats.ytdStats.unitsPercentChange >= 0
                       ? "text-green-600"
                       : "text-red-600"
                   }`}
                 >
-                  {stats.ytdStats.percentChange >= 0 ? "↑" : "↓"}{" "}
-                  {Math.abs(stats.ytdStats.percentChange).toFixed(1)}% vs last
-                  year YTD ({stats.ytdStats.lastYearUnits.toLocaleString()})
+                  {stats.ytdStats.unitsPercentChange >= 0 ? "↑" : "↓"}{" "}
+                  {Math.abs(stats.ytdStats.unitsPercentChange).toFixed(1)}% vs last year
                 </div>
-              </Link>
-              <Link
-                href={`/trends?start=${currentYear}-01-01&end=${new Date().toISOString().split("T")[0]}&dateType=applied&metric=applications`}
-                className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer"
-              >
+                <Link
+                  href={`/trends?start=${currentYear - 1}-01-01&end=${new Date(new Date().setFullYear(currentYear - 1)).toISOString().split("T")[0]}&dateType=completed`}
+                  className="text-sm text-gray-500 hover:text-gray-700"
+                >
+                  {stats.ytdStats.lastYearUnits.toLocaleString()} units same period last year →
+                </Link>
+              </div>
+              <div className="bg-white rounded-lg shadow p-6">
                 <div className="text-sm text-gray-600 mb-2">
-                  Permits Applied ({currentYear})
+                  Permits Applied YTD (
+                  {new Date().toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  })}
+                  )
                 </div>
-                <div className="text-4xl font-bold text-blue-600">
-                  {stats.permitsApplied.toLocaleString()}
+                <Link
+                  href={`/trends?start=${currentYear}-01-01&end=${new Date().toISOString().split("T")[0]}&dateType=applied&metric=applications`}
+                  className="block text-4xl font-bold text-blue-600 mb-2 hover:text-blue-700"
+                >
+                  {stats.ytdStats.permits.toLocaleString()}
+                </Link>
+                <div
+                  className={`text-sm mb-3 ${
+                    stats.ytdStats.permitsPercentChange >= 0
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }`}
+                >
+                  {stats.ytdStats.permitsPercentChange >= 0 ? "↑" : "↓"}{" "}
+                  {Math.abs(stats.ytdStats.permitsPercentChange).toFixed(1)}% vs last year
                 </div>
-              </Link>
+                <Link
+                  href={`/trends?start=${currentYear - 1}-01-01&end=${new Date(new Date().setFullYear(currentYear - 1)).toISOString().split("T")[0]}&dateType=applied&metric=applications`}
+                  className="text-sm text-gray-500 hover:text-gray-700"
+                >
+                  {stats.ytdStats.lastYearPermits.toLocaleString()} permits same period last year →
+                </Link>
+              </div>
             </>
           ) : (
             <>

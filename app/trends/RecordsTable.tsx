@@ -73,6 +73,7 @@ export default function RecordsTable({ records, initialParams }: Props) {
                 <Link
                   href={createSortUrl("permitNum")}
                   className="hover:text-blue-600 flex items-center gap-1"
+                  scroll={false}
                 >
                   Permit Number{" "}
                   <SortIcon
@@ -86,6 +87,7 @@ export default function RecordsTable({ records, initialParams }: Props) {
                 <Link
                   href={createSortUrl("appliedDate")}
                   className="hover:text-blue-600 flex items-center gap-1"
+                  scroll={false}
                 >
                   Applied Date{" "}
                   <SortIcon
@@ -99,6 +101,7 @@ export default function RecordsTable({ records, initialParams }: Props) {
                 <Link
                   href={createSortUrl("completedDate")}
                   className="hover:text-blue-600 flex items-center gap-1"
+                  scroll={false}
                 >
                   Completed Date{" "}
                   <SortIcon
@@ -108,13 +111,12 @@ export default function RecordsTable({ records, initialParams }: Props) {
                   />
                 </Link>
               </th>
-              <th className="text-left p-4 font-semibold text-sm">
-                Address
-              </th>
+              <th className="text-left p-4 font-semibold text-sm">Address</th>
               <th className="text-right p-4 font-semibold text-sm">
                 <Link
                   href={createSortUrl("housingUnitsAdded")}
                   className="hover:text-blue-600 flex items-center justify-end gap-1"
+                  scroll={false}
                 >
                   <SortIcon
                     field="housingUnitsAdded"
