@@ -139,6 +139,7 @@ async function getTopPermits(year: number) {
       and(
         sql`EXTRACT(YEAR FROM ${buildingPermits.completedDate}) = ${year}`,
         isNotNull(buildingPermits.housingUnitsAdded),
+        isNotNull(buildingPermits.completedDate),
         sql`${buildingPermits.housingUnitsAdded} > 0`
       )
     )
@@ -278,7 +279,7 @@ export default async function Home() {
         {/* Top Permits */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold mb-4 bg-white rounded-lg p-4 shadow">
-            Top Permits by Housing Units ({currentYear})
+            Top Permits by Completed Housing Units ({currentYear})
           </h2>
 
           <div className="flex flex-col gap-4">
