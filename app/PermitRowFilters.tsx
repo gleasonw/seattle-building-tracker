@@ -3,7 +3,7 @@
 import YearRangeSlider from "@/app/components/YearRangeSlider";
 import { DEFAULT_START_DATE } from "@/server/src/query";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, MapPin, X, Filter } from "lucide-react";
+import { Calendar, MapPin, X, Pencil } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useDebounceCallback } from "usehooks-ts";
@@ -178,133 +178,156 @@ export function PermitRowFilters({
   return (
     <div className="mb-6">
       <div className="flex items-center gap-3 flex-wrap">
-        {hasDateFilter && (
-          <div className="inline-flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full text-sm border border-blue-200">
-            <Calendar className="w-3 h-3" />
-            <span>
-              {initialParams.start &&
-                new Date(initialParams.start).getFullYear()}
-              {initialParams.start && initialParams.end && " - "}
-              {initialParams.end && new Date(initialParams.end).getFullYear()}
-            </span>
-            <button
-              onClick={handleRemoveYearFilter}
-              className="ml-1 text-gray-500 hover:text-gray-700"
-              aria-label="Remove year filter"
-            >
-              <X className="w-3 h-3" />
-            </button>
-          </div>
-        )}
-        {hasGeoFilter && (
-          <div className="inline-flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full text-sm border border-blue-200">
-            <MapPin className="w-3 h-3" />
-            <span className="max-w-xs truncate">{initialParams.address}</span>
-            <span className="text-gray-500">
-              (within {initialParams.radius} mile
-              {parseFloat(initialParams.radius || "0") !== 1 ? "s" : ""})
-            </span>
-            <button
-              onClick={handleRemoveGeoFilter}
-              className="ml-1 text-gray-500 hover:text-gray-700"
-              aria-label="Remove geographic filter"
-            >
-              <X className="w-3 h-3" />
-            </button>
-          </div>
-        )}
+        {/* Date Range Filter Popover */}
         <Popover>
           <PopoverTrigger asChild>
-            <button className="inline-flex items-center text-sm gap-2 p-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors">
-              <Filter className="w-4 h-4" />
-              Filters
+            <button className="inline-flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors">
+              <Calendar className="w-4 h-4 text-gray-600" />
+              {hasDateFilter ? (
+                <>
+                  <span className="font-medium">
+                    {initialParams.start &&
+                      new Date(initialParams.start).getFullYear()}
+                    {initialParams.start && initialParams.end && " - "}
+                    {initialParams.end &&
+                      new Date(initialParams.end).getFullYear()}
+                  </span>
+                  <Pencil className="w-3 h-3 text-gray-400" />
+                </>
+              ) : (
+                <span className="text-gray-700">Date Range</span>
+              )}
             </button>
           </PopoverTrigger>
-          <PopoverContent className="w-[450px] p-6" align="start">
-            <div className="flex flex-col gap-6">
-              {/* Date Range Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
+          <PopoverContent className="w-[400px] p-6" align="start">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-medium text-gray-900">
                   {yearRangeLabel}
                 </label>
-                <YearRangeSlider
-                  minYear={2010}
-                  maxYear={2026}
-                  startDate={startDate}
-                  endDate={endDate}
-                  onChange={(start, end) => {
-                    applyDateFilter(start, end);
-                  }}
-                />
+                {hasDateFilter && (
+                  <button
+                    onClick={handleRemoveYearFilter}
+                    className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1"
+                  >
+                    <X className="w-3 h-3" />
+                    Clear
+                  </button>
+                )}
               </div>
+              <YearRangeSlider
+                minYear={2010}
+                maxYear={2026}
+                startDate={startDate}
+                endDate={endDate}
+                onChange={(start, end) => {
+                  applyDateFilter(start, end);
+                }}
+              />
+            </div>
+          </PopoverContent>
+        </Popover>
 
-              {/* Geographic Filter */}
-              <div className="flex flex-col gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Address
-                  </label>
-                  <div className="relative">
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      value={address}
-                      onChange={(e) => {
-                        setAddress(e.target.value);
-                        debouncedAddressChange(e.target.value);
-                      }}
-                      onKeyDown={handleKeyDown}
-                      onFocus={() => {
-                        if (suggestions.length > 0) {
-                          setShowSuggestions(true);
-                        }
-                      }}
-                      placeholder="e.g., 500 Union St, Seattle"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    {isFetching && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                      </div>
-                    )}
-                    {showSuggestions && suggestions.length > 0 && (
-                      <div
-                        ref={suggestionsRef}
-                        className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
-                      >
-                        {suggestions.map((suggestion, index) => (
-                          <button
-                            key={suggestion.place_id}
-                            type="button"
-                            onClick={() => handleSelectSuggestion(suggestion)}
-                            className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 ${
-                              index === selectedIndex ? "bg-blue-100" : ""
-                            }`}
-                          >
-                            {suggestion.display_name}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Radius (miles)
-                  </label>
+        {/* Geographic Filter Popover */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className="inline-flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors">
+              <MapPin className="w-4 h-4 text-gray-600" />
+              {hasGeoFilter ? (
+                <>
+                  <span className="font-medium max-w-[200px] truncate">
+                    {initialParams.address}
+                  </span>
+                  <span className="text-gray-500 text-xs">
+                    ({initialParams.radius}mi)
+                  </span>
+                  <Pencil className="w-3 h-3 text-gray-400" />
+                </>
+              ) : (
+                <span className="text-gray-700">Location</span>
+              )}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[400px] p-6" align="start">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-medium text-gray-900">
+                  Geographic Filter
+                </label>
+                {hasGeoFilter && (
+                  <button
+                    onClick={handleRemoveGeoFilter}
+                    className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1"
+                  >
+                    <X className="w-3 h-3" />
+                    Clear
+                  </button>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Address
+                </label>
+                <div className="relative">
                   <input
-                    type="number"
-                    value={radius}
+                    ref={inputRef}
+                    type="text"
+                    value={address}
                     onChange={(e) => {
-                      setRadius(e.target.value);
-                      debouncedApplyRadius(e.target.value);
+                      setAddress(e.target.value);
+                      debouncedAddressChange(e.target.value);
                     }}
-                    min="0.1"
-                    max="10"
-                    step="0.1"
+                    onKeyDown={handleKeyDown}
+                    onFocus={() => {
+                      if (suggestions.length > 0) {
+                        setShowSuggestions(true);
+                      }
+                    }}
+                    placeholder="e.g., 500 Union St, Seattle"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
+                  {isFetching && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  )}
+                  {showSuggestions && suggestions.length > 0 && (
+                    <div
+                      ref={suggestionsRef}
+                      className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
+                    >
+                      {suggestions.map((suggestion, index) => (
+                        <button
+                          key={suggestion.place_id}
+                          type="button"
+                          onClick={() => handleSelectSuggestion(suggestion)}
+                          className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 ${
+                            index === selectedIndex ? "bg-blue-100" : ""
+                          }`}
+                        >
+                          {suggestion.display_name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Radius (miles)
+                </label>
+                <input
+                  type="number"
+                  value={radius}
+                  onChange={(e) => {
+                    setRadius(e.target.value);
+                    debouncedApplyRadius(e.target.value);
+                  }}
+                  min="0.1"
+                  max="10"
+                  step="0.1"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
             </div>
           </PopoverContent>
