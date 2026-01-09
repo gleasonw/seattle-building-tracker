@@ -120,6 +120,7 @@ async function getRecords(params: BuildingDashSearchParams) {
         latitude: buildingPermits.latitude,
         longitude: buildingPermits.longitude,
         statusCurrent: buildingPermits.statusCurrent,
+        permitTypeDesc: buildingPermits.permitTypeDesc,
       })
       .from(buildingPermits)
       .where(and(...conditions))
@@ -200,7 +201,10 @@ export default async function ApplicationsPage({
         <RecordsTable
           records={records}
           initialParams={params}
-          extraFields={[{ key: "statusCurrent", label: "Current Status" }]}
+          extraFields={[
+            { key: "statusCurrent", label: "Current Status" },
+            { key: "permitTypeDesc", label: "Permit Type Description" },
+          ]}
         />
       </div>
     </div>

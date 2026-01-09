@@ -610,9 +610,6 @@ async function upsertPermits(
       await db.transaction(async (tx) => {
         for (const record of batch) {
           const mapped = mapAPIRecordToSchema(record);
-          if (mapped.permitNum === "6929787-CN") {
-            console.log({ mapped });
-          }
 
           await tx
             .insert(buildingPermits)
