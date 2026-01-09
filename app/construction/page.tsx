@@ -10,6 +10,7 @@ import { BuildingDashSearchParams } from "@/app/PermitRowFilters";
 import { ConstructionChart } from "@/app/construction/ConstructionChart";
 import RecordsTable from "@/app/components/RecordsTable";
 import FiltersSidebar from "@/app/components/FiltersSidebar";
+import FilterBadges from "@/app/components/FilterBadges";
 import { Suspense } from "react";
 
 type SortField =
@@ -154,6 +155,9 @@ export default async function ConstructionPage({
         <h1 className="text-2xl font-bold text-gray-900 mb-6">
           Seattle housing units added
         </h1>
+        <Suspense>
+          <FilterBadges />
+        </Suspense>
         <Suspense>
           <ConstructionChart
             data={trendsData}

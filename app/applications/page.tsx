@@ -10,6 +10,8 @@ import { BuildingDashSearchParams } from "@/app/PermitRowFilters";
 import ApplicationsChart from "@/app/applications/ApplicationsChart";
 import RecordsTable from "@/app/components/RecordsTable";
 import FiltersSidebar from "@/app/components/FiltersSidebar";
+import FilterBadges from "@/app/components/FilterBadges";
+import { Suspense } from "react";
 
 type SortField =
   | "appliedDate"
@@ -156,6 +158,9 @@ export default async function ApplicationsPage({
         <h1 className="text-2xl font-bold text-gray-900 mb-6">
           Seattle building applications submitted
         </h1>
+        <Suspense>
+          <FilterBadges />
+        </Suspense>
 
         <ApplicationsChart
           data={trendsData}

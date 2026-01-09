@@ -183,7 +183,7 @@ export function ConstructionChart({ data, startDate, endDate }: Props) {
 
   const series = [
     {
-      name: "Housing Units Completed",
+      name: "Housing Units Added",
       data: seriesData.map((value, index) => ({
         y: value,
         events: {

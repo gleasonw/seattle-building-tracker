@@ -1,0 +1,70 @@
+"use client";
+
+import { useSearchParams } from "next/navigation";
+import { X } from "lucide-react";
+import { useFilters } from "@/app/hooks/useFilters";
+
+export default function FilterBadges() {
+  const searchParams = useSearchParams();
+  const { updateFilterParams } = useFilters();
+
+  // Get active filters
+  const getActiveFilters = () => {
+    const filters: Array<{ key: string; label: string; value: string[] }> = [];
+
+    // Date range filter
+    const start = searchParams.get("start");
+    const end = searchParams.get("end");
+    if (start || end) {
+      const startYear = start ? new Date(start).getFullYear() : "";
+      const endYear = end ? new Date(end).getFullYear() : "";
+      filters.push({
+        key: "dateRange",
+        label: `${startYear} - ${endYear}`,
+        value: ["start", "end"],
+      });
+    }
+
+    // Location filter
+    const address = searchParams.get("address");
+    const radius = searchParams.get("radius");
+    if (address) {
+      filters.push({
+        key: "location",
+        label: `${address} (${radius || "0.5"} mi)`,
+        value: ["address", "lat", "lng", "radius"],
+      });
+    }
+
+    return filters;
+  };
+
+  const removeFilter = (filterKeys: string[]) => {
+    const updates: Record<string, undefined> = {};
+    filterKeys.forEach((key) => {
+      updates[key] = undefined;
+    });
+    updateFilterParams(updates);
+  };
+
+  const activeFilters = getActiveFilters();
+
+  if (activeFilters.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-wrap gap-2 mb-4">
+      {activeFilters.map((filter) => (
+        <button
+          key={filter.key}
+          onClick={() => removeFilter(filter.value)}
+          className="inline-flex items-center gap-1 px-2.5 py-1 text-sm bg-blue-50 text-blue-700 rounded-full hover:bg-blue-100 transition-colors"
+        >
+          {filter.label}
+          <X className="h-3 w-3" />
+        </button>
+      ))}
+    </div>
+  );
+}
