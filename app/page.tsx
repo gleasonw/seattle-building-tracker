@@ -31,8 +31,7 @@ async function getYearStats(year: number) {
     .where(
       and(
         sql`${buildingPermits.appliedDate} >= ${yearStart}`,
-        sql`${buildingPermits.appliedDate} <= ${yearEnd}`,
-        sql`${buildingPermits.housingUnitsAdded} > 0`
+        sql`${buildingPermits.appliedDate} <= ${yearEnd}`
       )
     );
 
@@ -236,7 +235,7 @@ async function YearView({ year }: { year: number }) {
               <Link
                 href={`/construction?start=${targetYear}-01-01&end=${
                   new Date().toISOString().split("T")[0]
-                }`}
+                }&period=month`}
                 className="block text-4xl font-bold  mb-2 hover:text-blue-700"
               >
                 {stats.ytdStats.units.toLocaleString()}
@@ -257,7 +256,7 @@ async function YearView({ year }: { year: number }) {
                   new Date(new Date().setFullYear(targetYear - 1))
                     .toISOString()
                     .split("T")[0]
-                }`}
+                }&period=month`}
                 className="text-sm text-gray-500 hover:text-gray-700"
               >
                 {stats.ytdStats.lastYearUnits.toLocaleString()} units same
@@ -276,7 +275,7 @@ async function YearView({ year }: { year: number }) {
               <Link
                 href={`/applications?start=${targetYear}-01-01&end=${
                   new Date().toISOString().split("T")[0]
-                }`}
+                }&period=month`}
                 className="block text-4xl font-bold  mb-2 hover:text-blue-700"
               >
                 {stats.ytdStats.permits.toLocaleString()}
@@ -297,7 +296,7 @@ async function YearView({ year }: { year: number }) {
                   new Date(new Date().setFullYear(targetYear - 1))
                     .toISOString()
                     .split("T")[0]
-                }`}
+                }&period=month`}
                 className="text-sm text-gray-500 hover:text-gray-700"
               >
                 {stats.ytdStats.lastYearPermits.toLocaleString()} permits same
@@ -348,10 +347,10 @@ async function YearView({ year }: { year: number }) {
             </div>
             <div className="bg-white rounded-lg shadow p-6">
               <div className="text-sm text-gray-600 mb-2">
-                Building permits applications ({targetYear})
+                Building permit applications ({targetYear})
               </div>
               <Link
-                href={`/applications?start=${targetYear}-01-01&end=${targetYear}-12-31`}
+                href={`/applications?start=${targetYear}-01-01&end=${targetYear}-12-31&period=month`}
                 className="block text-4xl font-bold mb-2 hover:text-blue-700"
               >
                 {stats.permitsApplied.toLocaleString()}
