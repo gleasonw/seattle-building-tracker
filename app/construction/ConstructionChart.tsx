@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
+import { useFilters } from "@/app/hooks/useFilters";
 
 let exportingInitialized = false;
 
@@ -51,7 +52,7 @@ function getDefaultPeriod(monthsDiff: number | null): Period {
 
 export default function ConstructionChart({ data, startDate, endDate }: Props) {
   const { monthlyData, yearlyData } = data;
-  const router = useRouter();
+  const { updateDateRange, updateParam } = useFilters();
   const searchParams = useSearchParams();
   const [exportingReady, setExportingReady] = useState(false);
 
@@ -91,8 +92,6 @@ export default function ConstructionChart({ data, startDate, endDate }: Props) {
 
   // Handle click on chart bar to filter by date range
   const handleBarClick = (pointIndex: number) => {
-    const newParams = new URLSearchParams(searchParams.toString());
-
     if (period === "month") {
       const monthData = monthlyData[pointIndex];
       const year = monthData.year;
@@ -105,18 +104,49 @@ export default function ConstructionChart({ data, startDate, endDate }: Props) {
         lastDay
       ).padStart(2, "0")}`;
 
-      newParams.set("start", startDate);
-      newParams.set("end", endDate);
+      updateDateRange(startDate, endDate);
     } else {
       const yearData = yearlyData[pointIndex];
       const year = yearData.year;
 
-      newParams.set("start", `${year}-01-01`);
-      newParams.set("end", `${year}-12-31`);
-      newParams.set("period", "month");
+      updateDateRange(`${year}-01-01`, `${year}-12-31`);
+      updateParam("period", "month");
+    }
+  };
+
+  // Handle range selection
+  const handleSelection = (event: any) => {
+    if (!event.xAxis || event.xAxis.length === 0) return;
+
+    const minIndex = Math.floor(event.xAxis[0].min);
+    const maxIndex = Math.ceil(event.xAxis[0].max);
+
+    if (period === "month") {
+      const startMonth = monthlyData[minIndex];
+      const endMonth = monthlyData[Math.min(maxIndex, monthlyData.length - 1)];
+
+      if (startMonth && endMonth) {
+        const startDate = `${startMonth.year}-${String(
+          startMonth.month
+        ).padStart(2, "0")}-01`;
+        const lastDay = new Date(endMonth.year, endMonth.month, 0).getDate();
+        const endDate = `${endMonth.year}-${String(endMonth.month).padStart(
+          2,
+          "0"
+        )}-${String(lastDay).padStart(2, "0")}`;
+
+        updateDateRange(startDate, endDate);
+      }
+    } else {
+      const startYear = yearlyData[minIndex];
+      const endYear = yearlyData[Math.min(maxIndex, yearlyData.length - 1)];
+
+      if (startYear && endYear) {
+        updateDateRange(`${startYear.year}-01-01`, `${endYear.year}-12-31`);
+      }
     }
 
-    router.push(`/construction?${newParams.toString()}`, { scroll: false });
+    return false; // Prevent default zoom behavior
   };
 
   // Generate time series categories and data based on period
@@ -163,6 +193,10 @@ export default function ConstructionChart({ data, startDate, endDate }: Props) {
     chart: {
       type: "column",
       height: 500,
+      zoomType: "x" as const,
+      events: {
+        selection: handleSelection,
+      },
     },
     title: {
       text: undefined,
@@ -228,13 +262,7 @@ export default function ConstructionChart({ data, startDate, endDate }: Props) {
       <div className="mb-6 flex text-sm items-center gap-4">
         <div className="flex gap-2">
           <button
-            onClick={() => {
-              const newParams = new URLSearchParams(searchParams.toString());
-              newParams.set("period", "month");
-              router.push(`/construction?${newParams.toString()}`, {
-                scroll: false,
-              });
-            }}
+            onClick={() => updateParam("period", "month")}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               period === "month"
                 ? "bg-blue-500 text-white"
@@ -244,13 +272,7 @@ export default function ConstructionChart({ data, startDate, endDate }: Props) {
             Month
           </button>
           <button
-            onClick={() => {
-              const newParams = new URLSearchParams(searchParams.toString());
-              newParams.set("period", "year");
-              router.push(`/construction?${newParams.toString()}`, {
-                scroll: false,
-              });
-            }}
+            onClick={() => updateParam("period", "year")}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               period === "year"
                 ? "bg-blue-500 text-white"

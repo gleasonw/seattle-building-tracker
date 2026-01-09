@@ -4,7 +4,6 @@ import YearRangeSlider from "@/app/components/YearRangeSlider";
 import { DEFAULT_START_DATE } from "@/server/src/query";
 import { useQuery } from "@tanstack/react-query";
 import { Calendar, MapPin, X, Pencil } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useDebounceCallback } from "usehooks-ts";
 import {
@@ -12,6 +11,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/app/components/ui/popover";
+import { useFilters } from "@/app/hooks/useFilters";
 
 interface SuggestionResult {
   place_id: number;
@@ -38,8 +38,13 @@ export function PermitRowFilters({
   initialParams: BuildingDashSearchParams;
   yearRangeLabel: React.ReactNode;
 }) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const {
+    updateDateRange,
+    updateGeoFilter,
+    removeDateFilter,
+    removeGeoFilter,
+    updateParam,
+  } = useFilters();
 
   // Date filter state - default to 2010-01-01 to 2026-12-31
   const defaultStartDate = DEFAULT_START_DATE;
@@ -58,20 +63,10 @@ export function PermitRowFilters({
   const [showSuggestions, setShowSuggestions] = useState(true);
   const debouncedAddressChange = useDebounceCallback(setDebouncedAddress, 500);
 
-  // Auto-apply date range filter (debouncing happens in YearRangeSlider)
-  const applyDateFilter = (startDate: string, endDate: string) => {
-    const newParams = new URLSearchParams(searchParams.toString());
-    newParams.set("start", startDate);
-    newParams.set("end", endDate);
-    router.push(`?${newParams.toString()}`, { scroll: false });
-  };
-
   // Debounced auto-apply for radius
   const debouncedApplyRadius = useDebounceCallback((newRadius: string) => {
     if (initialParams.lat && initialParams.lng && initialParams.address) {
-      const newParams = new URLSearchParams(searchParams.toString());
-      newParams.set("radius", newRadius);
-      router.push(`?${newParams.toString()}`, { scroll: false });
+      updateParam("radius", newRadius);
     }
   }, 800);
 
@@ -98,12 +93,12 @@ export function PermitRowFilters({
     setSelectedIndex(-1);
 
     // Auto-apply the geographic filter
-    const newParams = new URLSearchParams(searchParams.toString());
-    newParams.set("address", suggestion.display_name);
-    newParams.set("radius", radius);
-    newParams.set("lat", suggestion.lat);
-    newParams.set("lng", suggestion.lon);
-    router.push(`?${newParams.toString()}`, { scroll: false });
+    updateGeoFilter(
+      suggestion.display_name,
+      suggestion.lat,
+      suggestion.lon,
+      radius
+    );
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -126,22 +121,10 @@ export function PermitRowFilters({
     }
   };
 
-  const handleRemoveYearFilter = () => {
-    const newParams = new URLSearchParams(searchParams.toString());
-    newParams.delete("start");
-    newParams.delete("end");
-    router.push(`/construction?${newParams.toString()}`, { scroll: false });
-  };
-
   const handleRemoveGeoFilter = () => {
-    const newParams = new URLSearchParams(searchParams.toString());
-    newParams.delete("address");
-    newParams.delete("radius");
-    newParams.delete("lat");
-    newParams.delete("lng");
+    removeGeoFilter();
     setAddress("");
     setRadius("0.5");
-    router.push(`/construction?${newParams.toString()}`, { scroll: false });
   };
 
   const hasDateFilter = initialParams.start || initialParams.end;
@@ -207,7 +190,7 @@ export function PermitRowFilters({
                 </label>
                 {hasDateFilter && (
                   <button
-                    onClick={handleRemoveYearFilter}
+                    onClick={removeDateFilter}
                     className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1"
                   >
                     <X className="w-3 h-3" />
@@ -221,7 +204,7 @@ export function PermitRowFilters({
                 startDate={startDate}
                 endDate={endDate}
                 onChange={(start, end) => {
-                  applyDateFilter(start, end);
+                  updateDateRange(start, end);
                 }}
               />
             </div>
