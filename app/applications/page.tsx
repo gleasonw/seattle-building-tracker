@@ -143,7 +143,7 @@ export default async function ApplicationsPage({
   const { records, totalCount } = await getRecords(initialParams);
   const seattleDataUrl = createSeattleDataUrl({
     initialParams,
-    extraFilters: ["`applieddate` IS NOT NULL"],
+    targetDateField: "applieddate",
   });
 
   return (

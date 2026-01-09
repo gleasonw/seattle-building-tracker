@@ -137,7 +137,7 @@ export default async function ConstructionPage({
   const initialParams = await searchParams;
   const seattleDataUrl = createSeattleDataUrl({
     initialParams,
-    extraFilters: ["`completeddate` IS NOT NULL"],
+    targetDateField: "completeddate",
   });
 
   return (

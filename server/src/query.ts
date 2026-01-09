@@ -7,27 +7,28 @@ export const DEFAULT_START_DATE = "2010-01-01";
 
 export function createSeattleDataUrl({
   initialParams,
-  extraFilters,
+  targetDateField,
 }: {
   initialParams: BuildingDashSearchParams;
-  extraFilters?: Array<string>;
+  targetDateField: "applieddate" | "completeddate";
 }) {
   const baseUrl =
     "https://data.seattle.gov/Built-Environment/Building-Permits/76t5-zqzr/explore/query";
 
   const conditions = [
     "(`permittypemapped` IN ('Building', 'Demolition', 'Land Use'))",
-    "`housingunitsadded` > 0",
-    ...(extraFilters ?? []),
+    targetDateField === "completeddate" ? "`housingunitsadded` > 0" : undefined,
   ];
 
-  const dateField = "applieddate";
-
   if (initialParams.start) {
-    conditions.push(`\`${dateField}\` >= '${initialParams.start}T00:00:00'`);
+    conditions.push(
+      `\`${targetDateField}\` >= '${initialParams.start}T00:00:00'`
+    );
   }
   if (initialParams.end) {
-    conditions.push(`\`${dateField}\` <= '${initialParams.end}T23:59:59'`);
+    conditions.push(
+      `\`${targetDateField}\` <= '${initialParams.end}T23:59:59'`
+    );
   }
 
   const whereClause = conditions.join(" AND ");
@@ -35,7 +36,7 @@ export function createSeattleDataUrl({
   const sqlQuery = `SELECT
   *
 WHERE ${whereClause}
-ORDER BY \`${dateField}\` DESC`;
+ORDER BY \`${targetDateField}\` DESC`;
 
   return `${baseUrl}/${encodeURIComponent(sqlQuery)}/page/filter`;
 }
