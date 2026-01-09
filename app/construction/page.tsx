@@ -7,9 +7,10 @@ import {
   createSeattleDataUrl,
 } from "@/server/src/query";
 import { BuildingDashSearchParams } from "@/app/PermitRowFilters";
-import ConstructionChart from "@/app/construction/ConstructionChart";
+import { ConstructionChart } from "@/app/construction/ConstructionChart";
 import RecordsTable from "@/app/components/RecordsTable";
 import FiltersSidebar from "@/app/components/FiltersSidebar";
+import { Suspense } from "react";
 
 type SortField =
   | "appliedDate"
@@ -142,20 +143,25 @@ export default async function ConstructionPage({
       className="flex gap-6 -mx-8 -mt-8"
       style={{ height: "calc(100vh - 120px)" }}
     >
-      <FiltersSidebar
-        initialParams={initialParams}
-        yearRangeLabel="Construction Completed Date"
-      />
+      <Suspense>
+        <FiltersSidebar
+          initialParams={initialParams}
+          yearRangeLabel="Construction Completed Date"
+        />
+      </Suspense>
+
       <div className="flex-1 overflow-y-auto px-8 py-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">
           Seattle housing units added
         </h1>
+        <Suspense>
+          <ConstructionChart
+            data={trendsData}
+            startDate={initialParams.start}
+            endDate={initialParams.end}
+          />
+        </Suspense>
 
-        <ConstructionChart
-          data={trendsData}
-          startDate={initialParams.start}
-          endDate={initialParams.end}
-        />
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-600 mb-4">
             {totalCount.toLocaleString()} record{totalCount !== 1 ? "s" : ""}{" "}

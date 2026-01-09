@@ -4,10 +4,29 @@ import { buildingPermits } from "@/server/src/db/schema";
 import Link from "next/link";
 import DashboardNav from "./components/DashboardNav";
 import YearNavigation from "./components/YearNavigation";
+import FiltersSidebar from "./components/FiltersSidebar";
+import { buildFiltersFromParams } from "@/server/src/query";
+import type { BuildingDashSearchParams } from "@/app/PermitRowFilters";
 
-async function getYearStats(year: number) {
+interface SearchParams extends BuildingDashSearchParams {
+  year?: string;
+}
+
+async function getYearStats(year: number, filters: BuildingDashSearchParams) {
   const yearStart = `${year}-01-01`;
   const yearEnd = `${year}-12-31`;
+
+  // Build filter conditions for completed date
+  const completedDateConditions = buildFiltersFromParams({
+    targetDateField: buildingPermits.completedDate,
+    initialParams: { ...filters, start: yearStart, end: yearEnd },
+  });
+
+  // Build filter conditions for applied date
+  const appliedDateConditions = buildFiltersFromParams({
+    targetDateField: buildingPermits.appliedDate,
+    initialParams: { ...filters, start: yearStart, end: yearEnd },
+  });
 
   // Housing units completed this year
   const housingUnitsCompleted = await db
@@ -15,12 +34,7 @@ async function getYearStats(year: number) {
       total: sql<number>`CAST(SUM(COALESCE(${buildingPermits.housingUnitsAdded}, 0)) AS INTEGER)`,
     })
     .from(buildingPermits)
-    .where(
-      and(
-        sql`${buildingPermits.completedDate} >= ${yearStart}`,
-        sql`${buildingPermits.completedDate} <= ${yearEnd}`
-      )
-    );
+    .where(and(...completedDateConditions));
 
   // Permits applied this year
   const permitsApplied = await db
@@ -28,12 +42,7 @@ async function getYearStats(year: number) {
       count: sql<number>`CAST(COUNT(*) AS INTEGER)`,
     })
     .from(buildingPermits)
-    .where(
-      and(
-        sql`${buildingPermits.appliedDate} >= ${yearStart}`,
-        sql`${buildingPermits.appliedDate} <= ${yearEnd}`
-      )
-    );
+    .where(and(...appliedDateConditions));
 
   // Get YTD stats if current year, or previous year comparison if not
   const now = new Date();
@@ -48,41 +57,54 @@ async function getYearStats(year: number) {
       now.getUTCMonth() + 1
     ).padStart(2, "0")}-${String(now.getUTCDate()).padStart(2, "0")}`;
 
+    const ytdCompletedConditions = buildFiltersFromParams({
+      targetDateField: buildingPermits.completedDate,
+      initialParams: { ...filters, start: yearStart, end: ytdDate },
+    });
+
+    const lastYearYtdCompletedConditions = buildFiltersFromParams({
+      targetDateField: buildingPermits.completedDate,
+      initialParams: {
+        ...filters,
+        start: lastYearYtdStart,
+        end: lastYearYtdEnd,
+      },
+    });
+
+    const ytdAppliedConditions = buildFiltersFromParams({
+      targetDateField: buildingPermits.appliedDate,
+      initialParams: { ...filters, start: yearStart, end: ytdDate },
+    });
+
+    const lastYearYtdAppliedConditions = buildFiltersFromParams({
+      targetDateField: buildingPermits.appliedDate,
+      initialParams: {
+        ...filters,
+        start: lastYearYtdStart,
+        end: lastYearYtdEnd,
+      },
+    });
+
     const ytdUnits = await db
       .select({
         total: sql<number>`CAST(SUM(COALESCE(${buildingPermits.housingUnitsAdded}, 0)) AS INTEGER)`,
       })
       .from(buildingPermits)
-      .where(
-        and(
-          sql`${buildingPermits.completedDate} >= ${yearStart}`,
-          sql`${buildingPermits.completedDate} <= ${ytdDate}`
-        )
-      );
+      .where(and(...ytdCompletedConditions));
 
     const lastYearYtdUnits = await db
       .select({
         total: sql<number>`CAST(SUM(COALESCE(${buildingPermits.housingUnitsAdded}, 0)) AS INTEGER)`,
       })
       .from(buildingPermits)
-      .where(
-        and(
-          sql`${buildingPermits.completedDate} >= ${lastYearYtdStart}`,
-          sql`${buildingPermits.completedDate} <= ${lastYearYtdEnd}`
-        )
-      );
+      .where(and(...lastYearYtdCompletedConditions));
 
     const ytdPermits = await db
       .select({
         count: sql<number>`CAST(COUNT(*) AS INTEGER)`,
       })
       .from(buildingPermits)
-      .where(
-        and(
-          sql`${buildingPermits.appliedDate} >= ${yearStart}`,
-          sql`${buildingPermits.appliedDate} <= ${ytdDate}`
-        )
-      );
+      .where(and(...ytdAppliedConditions));
 
     console.log(
       `LAST YEAR YTD START: ${lastYearYtdStart}, END: ${lastYearYtdEnd}`
@@ -92,12 +114,7 @@ async function getYearStats(year: number) {
         count: sql<number>`CAST(COUNT(*) AS INTEGER)`,
       })
       .from(buildingPermits)
-      .where(
-        and(
-          sql`${buildingPermits.appliedDate} >= ${lastYearYtdStart}`,
-          sql`${buildingPermits.appliedDate} <= ${lastYearYtdEnd}`
-        )
-      );
+      .where(and(...lastYearYtdAppliedConditions));
 
     ytdStats = {
       units: ytdUnits[0]?.total || 0,
@@ -120,29 +137,37 @@ async function getYearStats(year: number) {
     const previousYearStart = `${year - 1}-01-01`;
     const previousYearEnd = `${year - 1}-12-31`;
 
+    const prevYearCompletedConditions = buildFiltersFromParams({
+      targetDateField: buildingPermits.completedDate,
+      initialParams: {
+        ...filters,
+        start: previousYearStart,
+        end: previousYearEnd,
+      },
+    });
+
+    const prevYearAppliedConditions = buildFiltersFromParams({
+      targetDateField: buildingPermits.appliedDate,
+      initialParams: {
+        ...filters,
+        start: previousYearStart,
+        end: previousYearEnd,
+      },
+    });
+
     const previousYearUnits = await db
       .select({
         total: sql<number>`CAST(SUM(COALESCE(${buildingPermits.housingUnitsAdded}, 0)) AS INTEGER)`,
       })
       .from(buildingPermits)
-      .where(
-        and(
-          sql`${buildingPermits.completedDate} >= ${previousYearStart}`,
-          sql`${buildingPermits.completedDate} <= ${previousYearEnd}`
-        )
-      );
+      .where(and(...prevYearCompletedConditions));
 
     const previousYearPermits = await db
       .select({
         count: sql<number>`CAST(COUNT(*) AS INTEGER)`,
       })
       .from(buildingPermits)
-      .where(
-        and(
-          sql`${buildingPermits.appliedDate} >= ${previousYearStart}`,
-          sql`${buildingPermits.appliedDate} <= ${previousYearEnd}`
-        )
-      );
+      .where(and(...prevYearAppliedConditions));
 
     console.log({ previousYearPermits });
 
@@ -173,7 +198,18 @@ async function getYearStats(year: number) {
   };
 }
 
-async function getTopPermits(year: number) {
+async function getTopPermits(year: number, filters: BuildingDashSearchParams) {
+  const yearStart = `${year}-01-01`;
+  const yearEnd = `${year}-12-31`;
+
+  const conditions = buildFiltersFromParams({
+    targetDateField: buildingPermits.completedDate,
+    initialParams: { ...filters, start: yearStart, end: yearEnd },
+  });
+
+  conditions.push(isNotNull(buildingPermits.housingUnitsAdded));
+  conditions.push(sql`${buildingPermits.housingUnitsAdded} > 0`);
+
   return await db
     .select({
       permitNum: buildingPermits.permitNum,
@@ -184,14 +220,7 @@ async function getTopPermits(year: number) {
       link: buildingPermits.link,
     })
     .from(buildingPermits)
-    .where(
-      and(
-        sql`EXTRACT(YEAR FROM ${buildingPermits.completedDate}) = ${year}`,
-        isNotNull(buildingPermits.housingUnitsAdded),
-        isNotNull(buildingPermits.completedDate),
-        sql`${buildingPermits.housingUnitsAdded} > 0`
-      )
-    )
+    .where(and(...conditions))
     .orderBy(desc(buildingPermits.housingUnitsAdded))
     .limit(10);
 }
@@ -199,25 +228,40 @@ async function getTopPermits(year: number) {
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ year?: string }>;
+  searchParams: Promise<SearchParams>;
 }) {
-  const { year: yearParam } = await searchParams;
+  const params = await searchParams;
   const currentYear = new Date().getUTCFullYear();
-  const selectedYear = yearParam ? parseInt(yearParam, 10) : currentYear;
+  const selectedYear = params.year ? parseInt(params.year, 10) : currentYear;
 
-  return <YearView year={selectedYear} />;
+  return <YearView year={selectedYear} filters={params} />;
 }
 
-async function YearView({ year }: { year: number }) {
+async function YearView({
+  year,
+  filters,
+}: {
+  year: number;
+  filters: BuildingDashSearchParams;
+}) {
   const targetYear = year;
-  const stats = await getYearStats(targetYear);
-  const topPermits = await getTopPermits(targetYear);
+  const stats = await getYearStats(targetYear, filters);
+  const topPermits = await getTopPermits(targetYear, filters);
 
   const isCurrentYear = targetYear === new Date().getUTCFullYear();
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <YearNavigation currentYear={targetYear} minYear={2010} />
+    <div
+      className="flex gap-6 -mx-8 -mt-8"
+      style={{ height: "calc(100vh - 120px)" }}
+    >
+      <FiltersSidebar
+        initialParams={filters}
+        yearRangeLabel="Filter by Date Range"
+      />
+      <div className="flex-1 overflow-y-auto px-8 py-8">
+        <div className="max-w-7xl mx-auto">
+          <YearNavigation currentYear={targetYear} minYear={2010} />
 
       {/* Year Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -472,6 +516,8 @@ async function YearView({ year }: { year: number }) {
               </div>
             </div>
           ))}
+        </div>
+      </div>
         </div>
       </div>
     </div>

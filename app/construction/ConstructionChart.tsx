@@ -50,7 +50,7 @@ function getDefaultPeriod(monthsDiff: number | null): Period {
   return "year";
 }
 
-export default function ConstructionChart({ data, startDate, endDate }: Props) {
+export function ConstructionChart({ data, startDate, endDate }: Props) {
   const { monthlyData, yearlyData } = data;
   const { updateFilterParams } = useFilters();
   const searchParams = useSearchParams();
