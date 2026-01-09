@@ -56,13 +56,6 @@ export default function YearRangeSlider({
         <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
           {localValues[0]} - {localValues[1]}
         </span>
-        <button
-          type="button"
-          onClick={() => setShowExactDates(!showExactDates)}
-          className="text-xs text-blue-600 hover:underline"
-        >
-          {showExactDates ? "Hide" : "Show"} exact dates
-        </button>
       </div>
 
       <Slider
@@ -79,38 +72,36 @@ export default function YearRangeSlider({
         className="w-full"
       />
 
-      {showExactDates && (
-        <div className="flex gap-2 items-center mt-2">
-          <div className="flex flex-col flex-1">
-            <label className="text-xs text-gray-600 mb-1">Start Date</label>
-            <input
-              type="date"
-              value={localStartDate}
-              onChange={(e) => {
-                const newValue = e.target.value;
-                if (newValue && newValue <= localEndDate) {
-                  handleExactDateChange(newValue, localEndDate);
-                }
-              }}
-              className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="flex flex-col flex-1">
-            <label className="text-xs text-gray-600 mb-1">End Date</label>
-            <input
-              type="date"
-              value={localEndDate}
-              onChange={(e) => {
-                const newValue = e.target.value;
-                if (newValue && newValue >= localStartDate) {
-                  handleExactDateChange(localStartDate, newValue);
-                }
-              }}
-              className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+      <div className="flex gap-2 items-center mt-2">
+        <div className="flex flex-col flex-1">
+          <label className="text-xs text-gray-600 mb-1">Start Date</label>
+          <input
+            type="date"
+            value={localStartDate}
+            onChange={(e) => {
+              const newValue = e.target.value;
+              if (newValue && newValue <= localEndDate) {
+                handleExactDateChange(newValue, localEndDate);
+              }
+            }}
+            className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
         </div>
-      )}
+        <div className="flex flex-col flex-1">
+          <label className="text-xs text-gray-600 mb-1">End Date</label>
+          <input
+            type="date"
+            value={localEndDate}
+            onChange={(e) => {
+              const newValue = e.target.value;
+              if (newValue && newValue >= localStartDate) {
+                handleExactDateChange(localStartDate, newValue);
+              }
+            }}
+            className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      </div>
     </div>
   );
 }

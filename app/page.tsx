@@ -236,7 +236,7 @@ async function YearView({ year }: { year: number }) {
                 href={`/construction?start=${targetYear}-01-01&end=${
                   new Date().toISOString().split("T")[0]
                 }&period=month`}
-                className="block text-4xl font-bold  mb-2 hover:text-blue-700"
+                className="block text-4xl font-bold mb-2 text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
               >
                 {stats.ytdStats.units.toLocaleString()}
               </Link>
@@ -276,7 +276,7 @@ async function YearView({ year }: { year: number }) {
                 href={`/applications?start=${targetYear}-01-01&end=${
                   new Date().toISOString().split("T")[0]
                 }&period=month`}
-                className="block text-4xl font-bold  mb-2 hover:text-blue-700"
+                className="block text-4xl font-bold mb-2 text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
               >
                 {stats.ytdStats.permits.toLocaleString()}
               </Link>
@@ -312,7 +312,7 @@ async function YearView({ year }: { year: number }) {
               </div>
               <Link
                 href={`/construction?start=${targetYear}-01-01&end=${targetYear}-12-31&period=month`}
-                className="block text-4xl font-bold mb-2 hover:text-blue-700"
+                className="block text-4xl font-bold mb-2 text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
               >
                 {stats.housingUnitsCompleted.toLocaleString()}
               </Link>
@@ -351,7 +351,7 @@ async function YearView({ year }: { year: number }) {
               </div>
               <Link
                 href={`/applications?start=${targetYear}-01-01&end=${targetYear}-12-31&period=month`}
-                className="block text-4xl font-bold mb-2 hover:text-blue-700"
+                className="block text-4xl font-bold mb-2 text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
               >
                 {stats.permitsApplied.toLocaleString()}
               </Link>
