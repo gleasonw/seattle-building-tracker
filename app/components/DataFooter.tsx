@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 const SYNC_METADATA_ID = "building_permits_sync";
 const DATASET_URL =
   "https://data.seattle.gov/Permitting/Building-Permits/76t5-zqzr";
+const GITHUB_URL = "https://github.com/gleasonw/seattle-building-tracker";
 
 async function getSyncMetadata() {
   const result = await db
@@ -21,7 +22,7 @@ export default async function DataFooter() {
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 px-2 sm:px-4 py-1.5 sm:py-2 text-right text-xs text-gray-600">
-      <div className="mb-1 flex gap-1 justify-end">
+      <div className="mb-1 flex gap-1 justify-end flex-wrap">
         <span className="hidden sm:inline">Data from</span>
         <a
           href={DATASET_URL}
@@ -31,6 +32,15 @@ export default async function DataFooter() {
         >
           <span className="sm:hidden">Data</span>
           <span className="hidden sm:inline">Seattle Open Data Portal</span>
+        </a>
+        <span className="hidden sm:inline">·</span>
+        <a
+          href={GITHUB_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:underline"
+        >
+          GitHub
         </a>
       </div>
       {syncMeta?.lastSyncCompletedAt && (
