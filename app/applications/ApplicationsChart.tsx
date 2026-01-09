@@ -52,7 +52,7 @@ function getDefaultPeriod(monthsDiff: number | null): Period {
 
 export default function ApplicationsChart({ data, startDate, endDate }: Props) {
   const { monthlyData, yearlyData } = data;
-  const { updateDateRange, updateParam } = useFilters();
+  const { updateFilterParams } = useFilters();
   const searchParams = useSearchParams();
   const [exportingReady, setExportingReady] = useState(false);
 
@@ -104,13 +104,16 @@ export default function ApplicationsChart({ data, startDate, endDate }: Props) {
         lastDay
       ).padStart(2, "0")}`;
 
-      updateDateRange(startDate, endDate);
+      updateFilterParams({ start: startDate, end: endDate });
     } else {
       const yearData = yearlyData[pointIndex];
       const year = yearData.year;
 
-      updateDateRange(`${year}-01-01`, `${year}-12-31`);
-      updateParam("period", "month");
+      updateFilterParams({
+        start: `${year}-01-01`,
+        end: `${year}-12-31`,
+        period: "month",
+      });
     }
   };
 
@@ -135,14 +138,17 @@ export default function ApplicationsChart({ data, startDate, endDate }: Props) {
           "0"
         )}-${String(lastDay).padStart(2, "0")}`;
 
-        updateDateRange(startDate, endDate);
+        updateFilterParams({ start: startDate, end: endDate });
       }
     } else {
       const startYear = yearlyData[minIndex];
       const endYear = yearlyData[Math.min(maxIndex, yearlyData.length - 1)];
 
       if (startYear && endYear) {
-        updateDateRange(`${startYear.year}-01-01`, `${endYear.year}-12-31`);
+        updateFilterParams({
+          start: `${startYear.year}-01-01`,
+          end: `${endYear.year}-12-31`,
+        });
       }
     }
 
@@ -262,7 +268,7 @@ export default function ApplicationsChart({ data, startDate, endDate }: Props) {
       <div className="mb-6 flex text-sm items-center gap-4">
         <div className="flex gap-2">
           <button
-            onClick={() => updateParam("period", "month")}
+            onClick={() => updateFilterParams({ period: "month" })}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               period === "month"
                 ? "bg-blue-500 text-white"
@@ -273,7 +279,7 @@ export default function ApplicationsChart({ data, startDate, endDate }: Props) {
           </button>
 
           <button
-            onClick={() => updateParam("period", "year")}
+            onClick={() => updateFilterParams({ period: "year" })}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               period === "year"
                 ? "bg-blue-500 text-white"

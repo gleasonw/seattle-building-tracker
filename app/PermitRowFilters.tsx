@@ -23,6 +23,7 @@ interface SuggestionResult {
 export type BuildingDashSearchParams = {
   start?: string;
   end?: string;
+  period?: string;
   sortBy?: string;
   sortOrder?: string;
   address?: string;
@@ -38,13 +39,7 @@ export function PermitRowFilters({
   initialParams: BuildingDashSearchParams;
   yearRangeLabel: React.ReactNode;
 }) {
-  const {
-    updateDateRange,
-    updateGeoFilter,
-    removeDateFilter,
-    removeGeoFilter,
-    updateParam,
-  } = useFilters();
+  const { updateFilterParams } = useFilters();
 
   // Date filter state - default to 2010-01-01 to 2026-12-31
   const defaultStartDate = DEFAULT_START_DATE;
@@ -66,7 +61,7 @@ export function PermitRowFilters({
   // Debounced auto-apply for radius
   const debouncedApplyRadius = useDebounceCallback((newRadius: string) => {
     if (initialParams.lat && initialParams.lng && initialParams.address) {
-      updateParam("radius", newRadius);
+      updateFilterParams({ radius: newRadius });
     }
   }, 800);
 
@@ -93,12 +88,12 @@ export function PermitRowFilters({
     setSelectedIndex(-1);
 
     // Auto-apply the geographic filter
-    updateGeoFilter(
-      suggestion.display_name,
-      suggestion.lat,
-      suggestion.lon,
-      radius
-    );
+    updateFilterParams({
+      address: suggestion.display_name,
+      lat: suggestion.lat,
+      lng: suggestion.lon,
+      radius,
+    });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -122,7 +117,12 @@ export function PermitRowFilters({
   };
 
   const handleRemoveGeoFilter = () => {
-    removeGeoFilter();
+    updateFilterParams({
+      address: undefined,
+      radius: undefined,
+      lat: undefined,
+      lng: undefined,
+    });
     setAddress("");
     setRadius("0.5");
   };
@@ -190,7 +190,9 @@ export function PermitRowFilters({
                 </label>
                 {hasDateFilter && (
                   <button
-                    onClick={removeDateFilter}
+                    onClick={() =>
+                      updateFilterParams({ start: undefined, end: undefined })
+                    }
                     className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1"
                   >
                     <X className="w-3 h-3" />
@@ -204,7 +206,7 @@ export function PermitRowFilters({
                 startDate={startDate}
                 endDate={endDate}
                 onChange={(start, end) => {
-                  updateDateRange(start, end);
+                  updateFilterParams({ start, end });
                 }}
               />
             </div>

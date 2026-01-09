@@ -1,60 +1,29 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
+import { BuildingDashSearchParams } from "@/app/PermitRowFilters";
 
 export function useFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const updateDateRange = (startDate: string, endDate: string) => {
+  const updateFilterParams = (updates: Partial<BuildingDashSearchParams>) => {
     const newParams = new URLSearchParams(searchParams.toString());
-    newParams.set("start", startDate);
-    newParams.set("end", endDate);
-    router.push(`?${newParams.toString()}`, { scroll: false });
-  };
 
-  const updateGeoFilter = (
-    address: string,
-    lat: string,
-    lng: string,
-    radius: string
-  ) => {
-    const newParams = new URLSearchParams(searchParams.toString());
-    newParams.set("address", address);
-    newParams.set("lat", lat);
-    newParams.set("lng", lng);
-    newParams.set("radius", radius);
-    router.push(`?${newParams.toString()}`, { scroll: false });
-  };
+    // Apply all updates
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === undefined || value === null) {
+        newParams.delete(key);
+      } else {
+        newParams.set(key, value);
+      }
+    });
 
-  const removeDateFilter = () => {
-    const newParams = new URLSearchParams(searchParams.toString());
-    newParams.delete("start");
-    newParams.delete("end");
-    router.push(`?${newParams.toString()}`, { scroll: false });
-  };
-
-  const removeGeoFilter = () => {
-    const newParams = new URLSearchParams(searchParams.toString());
-    newParams.delete("address");
-    newParams.delete("radius");
-    newParams.delete("lat");
-    newParams.delete("lng");
-    router.push(`?${newParams.toString()}`, { scroll: false });
-  };
-
-  const updateParam = (key: string, value: string) => {
-    const newParams = new URLSearchParams(searchParams.toString());
-    newParams.set(key, value);
     router.push(`?${newParams.toString()}`, { scroll: false });
   };
 
   return {
-    updateDateRange,
-    updateGeoFilter,
-    removeDateFilter,
-    removeGeoFilter,
-    updateParam,
+    updateFilterParams,
     searchParams,
   };
 }
