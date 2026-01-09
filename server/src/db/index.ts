@@ -15,11 +15,20 @@ if (!process.env.DATABASE_URL) {
 const connectionString = process.env.DATABASE_URL;
 const isProd = process.env.NODE_ENV === "production";
 
-const client = postgres(connectionString, {
-  max: process.env.NODE_ENV === "production" ? 20 : 10,
-  idle_timeout: 600, // 10 minutes
-  connect_timeout: 30, // 30 seconds
-});
+// Singleton pattern to prevent connection pool exhaustion during hot reload
+const globalForDb = globalThis as unknown as {
+  client: ReturnType<typeof postgres> | undefined;
+};
+
+const client =
+  globalForDb.client ||
+  postgres(connectionString, {
+    max: process.env.NODE_ENV === "production" ? 20 : 10,
+    idle_timeout: 600, // 10 minutes
+    connect_timeout: 30, // 30 seconds
+  });
+
+if (process.env.NODE_ENV !== "production") globalForDb.client = client;
 
 // Create Drizzle instance with schema
 export const db = drizzle(client, { schema, logger: !isProd });

@@ -9,12 +9,26 @@ import {
 } from "@/components/ui/sheet";
 import { useState } from "react";
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
+import SortControls from "./SortControls";
+
+interface SortOption {
+  key: string;
+  label: string;
+}
 
 interface MobileFiltersProps {
   children: React.ReactNode;
+  sortOptions?: SortOption[];
+  currentSort?: string;
+  currentOrder?: string;
 }
 
-export default function MobileFilters({ children }: MobileFiltersProps) {
+export default function MobileFilters({
+  children,
+  sortOptions,
+  currentSort,
+  currentOrder,
+}: MobileFiltersProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -33,7 +47,16 @@ export default function MobileFilters({ children }: MobileFiltersProps) {
           <VisuallyHidden.Root>
             <SheetTitle>Filters</SheetTitle>
           </VisuallyHidden.Root>
-          {children}
+          <div className="p-6 space-y-8">
+            {children}
+            {sortOptions && sortOptions.length > 0 && (
+              <SortControls
+                sortOptions={sortOptions}
+                currentSort={currentSort}
+                currentOrder={currentOrder}
+              />
+            )}
+          </div>
         </SheetContent>
       </Sheet>
     </div>

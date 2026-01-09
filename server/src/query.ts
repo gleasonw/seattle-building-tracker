@@ -1,6 +1,6 @@
 import { BuildingDashSearchParams } from "@/app/PermitRowFilters";
 import { buildingPermits } from "@/server/src/db/schema";
-import { eq, isNotNull, sql, SQL } from "drizzle-orm";
+import { eq, gt, isNotNull, sql, SQL } from "drizzle-orm";
 import { PgColumn } from "drizzle-orm/pg-core";
 
 export const DEFAULT_START_DATE = "2010-01-01";
@@ -50,6 +50,10 @@ export function buildFiltersFromParams({
 }): SQL<unknown>[] {
   const { start, end, lat, lng, radius, permitTypeDesc } = initialParams;
   const conditions = [isNotNull(targetDateField)];
+
+  if (targetDateField.name === "completed_date") {
+    conditions.push(gt(buildingPermits.housingUnitsAdded, 0));
+  }
 
   if (permitTypeDesc) {
     conditions.push(eq(buildingPermits.permitTypeDesc, permitTypeDesc));

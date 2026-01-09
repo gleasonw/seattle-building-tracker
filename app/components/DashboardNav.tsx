@@ -10,12 +10,12 @@ export default function DashboardNav() {
 
   const tabs = [
     { name: "Year in detail", href: "/" },
-    { name: "Construction Trends", href: "/construction" },
-    { name: "Application Trends ", href: "/applications" },
+    { name: "Housing Unit Totals", href: "/construction" },
+    { name: "Application Totals", href: "/applications" },
   ];
 
   return (
-    <div className="flex gap-2 sm:gap-4 mb-6 sm:mb-8 border-b border-gray-200 overflow-x-auto">
+    <div className="flex gap-2 sm:gap-4 mb-4 sm:mb-6 border-b border-gray-200 overflow-x-auto">
       {tabs.map((tab) => {
         const isActive = pathname === tab.href;
         const href =

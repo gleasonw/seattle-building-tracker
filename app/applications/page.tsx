@@ -149,10 +149,20 @@ export default async function ApplicationsPage({
     targetDateField: "applieddate",
   });
 
+  const sortOptions = [
+    { key: "appliedDate", label: "Applied Date" },
+    { key: "housingUnitsAdded", label: "Units Added" },
+    { key: "permitNum", label: "Permit Number" },
+  ];
+
   return (
-    <div className="flex flex-col lg:flex-row gap-0 lg:gap-6 -mx-4 sm:-mx-6 lg:-mx-8 -mt-4 sm:-mt-6 lg:-mt-8">
+    <div className="flex flex-col lg:flex-row gap-0 lg:gap-6">
       {/* Mobile Filter Button */}
-      <MobileFilters>
+      <MobileFilters
+        sortOptions={sortOptions}
+        currentSort={params.sortBy}
+        currentOrder={params.sortOrder}
+      >
         <FiltersSidebar
           initialParams={params}
           yearRangeLabel="Application Submitted Date"
@@ -176,9 +186,9 @@ export default async function ApplicationsPage({
         />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+      <div className="flex-1 overflow-y-auto px-2 sm:px-4 lg:px-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">
-          Seattle building applications submitted
+          Building applications submitted
         </h1>
         <Suspense>
           <FilterBadges />
