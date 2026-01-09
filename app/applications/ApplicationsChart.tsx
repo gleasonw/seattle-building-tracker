@@ -1,8 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
+
+let exportingInitialized = false;
 
 interface MonthlyData {
   year: number;
@@ -50,6 +53,35 @@ export default function ApplicationsChart({ data, startDate, endDate }: Props) {
   const { monthlyData, yearlyData } = data;
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [exportingReady, setExportingReady] = useState(false);
+
+  // Initialize Highcharts modules
+  useEffect(() => {
+    if (!exportingInitialized && typeof window !== "undefined") {
+      import("highcharts/modules/exporting")
+        .then((module) => {
+          const initFn = module.default as any;
+          if (typeof initFn === "function") {
+            initFn(Highcharts);
+          }
+          return import("highcharts/modules/export-data");
+        })
+        .then((module) => {
+          const initFn = module.default as any;
+          if (typeof initFn === "function") {
+            initFn(Highcharts);
+          }
+          exportingInitialized = true;
+          setExportingReady(true);
+        })
+        .catch(() => {
+          // Modules failed to load, continue without export functionality
+          setExportingReady(true);
+        });
+    } else {
+      setExportingReady(true);
+    }
+  }, []);
 
   const monthsDiff = getYearsDifference(startDate, endDate);
   const defaultPeriod = getDefaultPeriod(monthsDiff);
@@ -170,6 +202,24 @@ export default function ApplicationsChart({ data, startDate, endDate }: Props) {
     series,
     credits: {
       enabled: false,
+    },
+    exporting: {
+      enabled: true,
+      buttons: {
+        contextButton: {
+          menuItems: [
+            "viewFullscreen",
+            "separator",
+            "downloadPNG",
+            "downloadJPEG",
+            "downloadPDF",
+            "downloadSVG",
+            "separator",
+            "downloadCSV",
+            "downloadXLS",
+          ],
+        },
+      },
     },
   };
 
