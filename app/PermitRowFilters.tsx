@@ -1,9 +1,10 @@
 "use client";
 
 import YearRangeSlider from "@/app/components/YearRangeSlider";
+import LocationMap from "@/app/components/LocationMap";
 import { DEFAULT_START_DATE } from "@/server/src/query";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, MapPin, X, Pencil } from "lucide-react";
+import { Calendar, MapPin, X, Pencil, Search, Map } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useDebounceCallback } from "usehooks-ts";
 import {
@@ -51,6 +52,7 @@ export function PermitRowFilters({
   const [address, setAddress] = useState(initialParams.address || "");
   const [radius, setRadius] = useState(initialParams.radius || "0.5");
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [geoTab, setGeoTab] = useState<"search" | "map">("search");
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -92,6 +94,22 @@ export function PermitRowFilters({
       address: suggestion.display_name,
       lat: suggestion.lat,
       lng: suggestion.lon,
+      radius,
+    });
+  };
+
+  const handleMapLocationSelect = (
+    lat: number,
+    lng: number,
+    addressText: string
+  ) => {
+    setAddress(addressText);
+
+    // Auto-apply the geographic filter
+    updateFilterParams({
+      address: addressText,
+      lat: lat.toString(),
+      lng: lng.toString(),
       radius,
     });
   };
@@ -233,7 +251,7 @@ export function PermitRowFilters({
               )}
             </button>
           </PopoverTrigger>
-          <PopoverContent className="w-[400px] p-6" align="start">
+          <PopoverContent className="w-[500px] p-6" align="start">
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <label className="block text-sm font-medium text-gray-900">
@@ -249,54 +267,111 @@ export function PermitRowFilters({
                   </button>
                 )}
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Address
-                </label>
-                <div className="relative">
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={address}
-                    onChange={(e) => {
-                      setAddress(e.target.value);
-                      debouncedAddressChange(e.target.value);
-                    }}
-                    onKeyDown={handleKeyDown}
-                    onFocus={() => {
-                      if (suggestions.length > 0) {
-                        setShowSuggestions(true);
-                      }
-                    }}
-                    placeholder="e.g., 500 Union St, Seattle"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  {isFetching && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                    </div>
-                  )}
-                  {showSuggestions && suggestions.length > 0 && (
-                    <div
-                      ref={suggestionsRef}
-                      className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
-                    >
-                      {suggestions.map((suggestion, index) => (
-                        <button
-                          key={suggestion.place_id}
-                          type="button"
-                          onClick={() => handleSelectSuggestion(suggestion)}
-                          className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 ${
-                            index === selectedIndex ? "bg-blue-100" : ""
-                          }`}
-                        >
-                          {suggestion.display_name}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+
+              {/* Tabs */}
+              <div className="flex gap-2 border-b border-gray-200">
+                <button
+                  onClick={() => setGeoTab("search")}
+                  className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                    geoTab === "search"
+                      ? "border-blue-500 text-blue-600"
+                      : "border-transparent text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  <Search className="w-4 h-4" />
+                  Search Address
+                </button>
+                <button
+                  onClick={() => setGeoTab("map")}
+                  className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                    geoTab === "map"
+                      ? "border-blue-500 text-blue-600"
+                      : "border-transparent text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  <Map className="w-4 h-4" />
+                  Select on Map
+                </button>
               </div>
+
+              {/* Search Tab */}
+              {geoTab === "search" && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Address
+                    </label>
+                    <div className="relative">
+                      <input
+                        ref={inputRef}
+                        type="text"
+                        value={address}
+                        onChange={(e) => {
+                          setAddress(e.target.value);
+                          debouncedAddressChange(e.target.value);
+                        }}
+                        onKeyDown={handleKeyDown}
+                        onFocus={() => {
+                          if (suggestions.length > 0) {
+                            setShowSuggestions(true);
+                          }
+                        }}
+                        placeholder="e.g., 500 Union St, Seattle"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      {isFetching && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                      )}
+                      {showSuggestions && suggestions.length > 0 && (
+                        <div
+                          ref={suggestionsRef}
+                          className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
+                        >
+                          {suggestions.map((suggestion, index) => (
+                            <button
+                              key={suggestion.place_id}
+                              type="button"
+                              onClick={() => handleSelectSuggestion(suggestion)}
+                              className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 ${
+                                index === selectedIndex ? "bg-blue-100" : ""
+                              }`}
+                            >
+                              {suggestion.display_name}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Map Tab */}
+              {geoTab === "map" && (
+                <div>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Click or drag the marker to select a location
+                  </p>
+                  <LocationMap
+                    lat={
+                      initialParams.lat
+                        ? parseFloat(initialParams.lat)
+                        : undefined
+                    }
+                    lng={
+                      initialParams.lng
+                        ? parseFloat(initialParams.lng)
+                        : undefined
+                    }
+                    radius={parseFloat(radius)}
+                    onLocationSelect={handleMapLocationSelect}
+                  />
+                </div>
+              )}
+
+              {/* Radius - shown for both tabs */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Radius (miles)
