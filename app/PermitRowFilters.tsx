@@ -52,7 +52,7 @@ export function PermitRowFilters({
   const [address, setAddress] = useState(initialParams.address || "");
   const [radius, setRadius] = useState(initialParams.radius || "0.5");
   const [selectedIndex, setSelectedIndex] = useState(-1);
-  const [geoTab, setGeoTab] = useState<"search" | "map">("search");
+  const [geoTab, setGeoTab] = useState<"search" | "map">("map");
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 

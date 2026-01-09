@@ -6,12 +6,10 @@ import {
   buildFiltersFromParams,
   createSeattleDataUrl,
 } from "@/server/src/query";
-import {
-  BuildingDashSearchParams,
-  PermitRowFilters,
-} from "@/app/PermitRowFilters";
+import { BuildingDashSearchParams } from "@/app/PermitRowFilters";
 import ApplicationsChart from "@/app/applications/ApplicationsChart";
 import RecordsTable from "@/app/components/RecordsTable";
+import FiltersSidebar from "@/app/components/FiltersSidebar";
 
 type SortField =
   | "appliedDate"
@@ -146,47 +144,46 @@ export default async function ApplicationsPage({
   });
 
   return (
-    <div>
-      <div className="flex gap-5">
+    <div
+      className="flex gap-6 -mx-8 -mt-8"
+      style={{ height: "calc(100vh - 120px)" }}
+    >
+      <FiltersSidebar
+        initialParams={initialParams}
+        yearRangeLabel="Application Submitted Date"
+      />
+      <div className="flex-1 overflow-y-auto px-8 py-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">
           Seattle building applications submitted
         </h1>
-        <PermitRowFilters
+
+        <ApplicationsChart
+          data={trendsData}
+          startDate={initialParams.start}
+          endDate={initialParams.end}
+        />
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-600 mb-4">
+            {totalCount.toLocaleString()} record{totalCount !== 1 ? "s" : ""}{" "}
+            found
+            {totalCount > 500 && " (showing first 500)"}
+          </div>
+          <a
+            href={seattleDataUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-blue-600 hover:underline"
+          >
+            View in Seattle Open Data Portal →
+          </a>
+        </div>
+
+        <RecordsTable
+          records={records}
           initialParams={initialParams}
-          yearRangeLabel={
-            <div className="block text-sm font-medium text-gray-700 mb-1">
-              Application Submitted Date
-            </div>
-          }
+          extraFields={[{ key: "statusCurrent", label: "Current Status" }]}
         />
       </div>
-
-      <ApplicationsChart
-        data={trendsData}
-        startDate={initialParams.start}
-        endDate={initialParams.end}
-      />
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-gray-600 mb-4">
-          {totalCount.toLocaleString()} record{totalCount !== 1 ? "s" : ""}{" "}
-          found
-          {totalCount > 500 && " (showing first 500)"}
-        </div>
-        <a
-          href={seattleDataUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm text-blue-600 hover:underline"
-        >
-          View in Seattle Open Data Portal →
-        </a>
-      </div>
-
-      <RecordsTable
-        records={records}
-        initialParams={initialParams}
-        extraFields={[{ key: "statusCurrent", label: "Current Status" }]}
-      />
     </div>
   );
 }

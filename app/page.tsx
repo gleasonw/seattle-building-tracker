@@ -216,7 +216,7 @@ async function YearView({ year }: { year: number }) {
   const isCurrentYear = targetYear === new Date().getUTCFullYear();
 
   return (
-    <div>
+    <div className="max-w-7xl mx-auto">
       <YearNavigation currentYear={targetYear} minYear={2010} />
 
       {/* Year Stats */}

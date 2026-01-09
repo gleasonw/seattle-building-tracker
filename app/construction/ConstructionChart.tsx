@@ -210,7 +210,7 @@ export default function ConstructionChart({ data, startDate, endDate }: Props) {
     xAxis: {
       categories,
       title: {
-        text: period === "month" ? "Month" : "Year",
+        text: "Permit Completed",
       },
       labels: {
         rotation: period === "month" ? -45 : 0,
@@ -221,7 +221,7 @@ export default function ConstructionChart({ data, startDate, endDate }: Props) {
     },
     yAxis: {
       title: {
-        text: "Housing Units Completed",
+        text: "Housing Units Added",
       },
       min: 0,
     },

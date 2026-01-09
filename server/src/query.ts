@@ -3,7 +3,7 @@ import { buildingPermits } from "@/server/src/db/schema";
 import { isNotNull, sql, SQL } from "drizzle-orm";
 import { PgColumn } from "drizzle-orm/pg-core";
 
-export const DEFAULT_START_DATE = "2018-01-01";
+export const DEFAULT_START_DATE = "2010-01-01";
 
 export function createSeattleDataUrl({
   initialParams,
