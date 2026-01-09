@@ -39,7 +39,7 @@ export default function YearProgressView({
   const router = useRouter();
 
   const handleYearChange = (year: number) => {
-    router.push(`/?year=${year}`);
+    router.push(`/?year=${year}`, { scroll: false });
   };
 
   return (

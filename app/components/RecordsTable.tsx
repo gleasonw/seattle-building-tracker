@@ -2,7 +2,6 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Calendar, X } from "lucide-react";
 import { BuildingPermit } from "@/server/src/db/schema";
 
 interface Record {
@@ -32,10 +31,7 @@ interface Props {
   initialParams: {
     sortBy?: string;
     sortOrder?: string;
-    tableStart?: string;
-    tableEnd?: string;
   };
-  seattleDataUrl: string;
   extraFields?: Array<{
     key: ExtraFieldKey;
     label: string;
@@ -62,7 +58,6 @@ function SortIcon({
 export default function RecordsTable({
   records,
   initialParams,
-  seattleDataUrl,
   extraFields = [],
 }: Props) {
   const searchParams = useSearchParams();
@@ -78,54 +73,8 @@ export default function RecordsTable({
     return `?${newParams.toString()}`;
   };
 
-  const handleRemoveTableFilter = () => {
-    const newParams = new URLSearchParams(searchParams.toString());
-    newParams.delete("tableStart");
-    newParams.delete("tableEnd");
-    router.push(`?${newParams.toString()}`, { scroll: false });
-  };
-
-  const hasTableFilter = initialParams.tableStart || initialParams.tableEnd;
-
   return (
     <div className="flex flex-col gap-2">
-      {/* Records Table */}
-      <div className="">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold">Building Permit Records</h2>
-          <a
-            href={seattleDataUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-blue-600 hover:underline"
-          >
-            View in Seattle Open Data Portal →
-          </a>
-        </div>
-        <div className="text-sm text-gray-600 mb-4">
-          {records.length} record{records.length !== 1 ? "s" : ""} found
-        </div>
-        {hasTableFilter && (
-          <div className="inline-flex grow-0 w-fit items-center gap-2 bg-white px-3 py-1 rounded-full text-sm border ">
-            <Calendar className="w-3 h-3" />
-            <span>
-              {initialParams.tableStart &&
-                new Date(initialParams.tableStart).toLocaleDateString()}
-              {initialParams.tableStart && initialParams.tableEnd && " - "}
-              {initialParams.tableEnd &&
-                new Date(initialParams.tableEnd).toLocaleDateString()}
-            </span>
-            <button
-              onClick={handleRemoveTableFilter}
-              className="ml-1 text-gray-500 hover:text-gray-700"
-              aria-label="Remove table filter"
-            >
-              <X className="w-3 h-3" />
-            </button>
-          </div>
-        )}
-      </div>
-
       <div className="overflow-x-auto shadow-md rounded-lg overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-100 border-b border-gray-200">

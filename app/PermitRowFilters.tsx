@@ -1,19 +1,28 @@
 "use client";
 
-import { Button } from "@/app/components/ui/button";
 import YearRangeSlider from "@/app/components/YearRangeSlider";
-import { SuggestionResult } from "@/app/construction/ConstructionClient";
+import { DEFAULT_START_DATE } from "@/server/src/query";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, MapPin, X } from "lucide-react";
+import { Calendar, MapPin, X, Filter } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useDebounceCallback } from "usehooks-ts";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/app/components/ui/popover";
+
+interface SuggestionResult {
+  place_id: number;
+  display_name: string;
+  lat: string;
+  lon: string;
+}
 
 export type BuildingDashSearchParams = {
   start?: string;
   end?: string;
-  tableStart?: string;
-  tableEnd?: string;
   sortBy?: string;
   sortOrder?: string;
   address?: string;
@@ -24,27 +33,23 @@ export type BuildingDashSearchParams = {
 
 export function PermitRowFilters({
   initialParams,
+  yearRangeLabel,
 }: {
   initialParams: BuildingDashSearchParams;
+  yearRangeLabel: React.ReactNode;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Year filter state - convert URL params to years, default to 2010-2026
-  const startParamYear = initialParams.start
-    ? new Date(initialParams.start).getFullYear()
-    : 2010;
-  const endParamYear = initialParams.end
-    ? new Date(initialParams.end).getFullYear()
-    : 2026;
-  const [isGeocoding, setIsGeocoding] = useState(false);
-  const [geoError, setGeoError] = useState<string | null>(null);
+  // Date filter state - default to 2010-01-01 to 2026-12-31
+  const defaultStartDate = DEFAULT_START_DATE;
+  const defaultEndDate = "2026-12-31";
+  const startDate = initialParams.start || defaultStartDate;
+  const endDate = initialParams.end || defaultEndDate;
 
   // Geographic filter state
   const [address, setAddress] = useState(initialParams.address || "");
   const [radius, setRadius] = useState(initialParams.radius || "0.5");
-  const [startYear, setStartYear] = useState(startParamYear);
-  const [endYear, setEndYear] = useState(endParamYear);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -52,6 +57,23 @@ export function PermitRowFilters({
   const [debouncedAddress, setDebouncedAddress] = useState(address);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const debouncedAddressChange = useDebounceCallback(setDebouncedAddress, 500);
+
+  // Auto-apply date range filter (debouncing happens in YearRangeSlider)
+  const applyDateFilter = (startDate: string, endDate: string) => {
+    const newParams = new URLSearchParams(searchParams.toString());
+    newParams.set("start", startDate);
+    newParams.set("end", endDate);
+    router.push(`?${newParams.toString()}`, { scroll: false });
+  };
+
+  // Debounced auto-apply for radius
+  const debouncedApplyRadius = useDebounceCallback((newRadius: string) => {
+    if (initialParams.lat && initialParams.lng && initialParams.address) {
+      const newParams = new URLSearchParams(searchParams.toString());
+      newParams.set("radius", newRadius);
+      router.push(`?${newParams.toString()}`, { scroll: false });
+    }
+  }, 800);
 
   // Close suggestions when clicking outside
   useEffect(() => {
@@ -74,6 +96,14 @@ export function PermitRowFilters({
     setAddress(suggestion.display_name);
     setShowSuggestions(false);
     setSelectedIndex(-1);
+
+    // Auto-apply the geographic filter
+    const newParams = new URLSearchParams(searchParams.toString());
+    newParams.set("address", suggestion.display_name);
+    newParams.set("radius", radius);
+    newParams.set("lat", suggestion.lat);
+    newParams.set("lng", suggestion.lon);
+    router.push(`?${newParams.toString()}`, { scroll: false });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -96,64 +126,11 @@ export function PermitRowFilters({
     }
   };
 
-  const handleApplyAllFilters = async () => {
-    const newParams = new URLSearchParams(searchParams.toString());
-
-    // Apply year filter
-    const startDateStr = `${startYear}-01-01`;
-    const endDateStr = `${endYear}-12-31`;
-    newParams.set("start", startDateStr);
-    newParams.set("end", endDateStr);
-
-    // Apply geo filter if address is provided
-    if (address.trim()) {
-      setGeoError(null);
-      setIsGeocoding(true);
-
-      try {
-        const encodedAddress = encodeURIComponent(
-          address.includes("Seattle") ? address : `${address}, Seattle, WA`
-        );
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&limit=1`
-        );
-
-        if (!response.ok) {
-          throw new Error("Geocoding service error");
-        }
-
-        const data = await response.json();
-
-        if (data.length === 0) {
-          setGeoError("Address not found. Please try a different address.");
-          setIsGeocoding(false);
-          return;
-        }
-
-        const { lat, lon } = data[0];
-        newParams.set("address", address);
-        newParams.set("radius", radius);
-        newParams.set("lat", lat);
-        newParams.set("lng", lon);
-      } catch (err) {
-        setGeoError("Failed to geocode address. Please try again.");
-        console.error("Geocoding error:", err);
-        setIsGeocoding(false);
-        return;
-      } finally {
-        setIsGeocoding(false);
-      }
-    }
-
-    // Push all parameters at once
-    router.push(`?${newParams.toString()}`);
-  };
-
   const handleRemoveYearFilter = () => {
     const newParams = new URLSearchParams(searchParams.toString());
     newParams.delete("start");
     newParams.delete("end");
-    router.push(`/construction?${newParams.toString()}`);
+    router.push(`/construction?${newParams.toString()}`, { scroll: false });
   };
 
   const handleRemoveGeoFilter = () => {
@@ -164,7 +141,7 @@ export function PermitRowFilters({
     newParams.delete("lng");
     setAddress("");
     setRadius("0.5");
-    router.push(`/construction?${newParams.toString()}`);
+    router.push(`/construction?${newParams.toString()}`, { scroll: false });
   };
 
   const hasDateFilter = initialParams.start || initialParams.end;
@@ -199,147 +176,140 @@ export function PermitRowFilters({
   });
 
   return (
-    <div className="bg-white rounded-lg shadow p-4 mb-6">
-      <h3 className="text-sm font-semibold text-gray-900 mb-4">
-        Filter Permits
-      </h3>
-
-      <div className="flex flex-col gap-1">
-        <div className="flex gap-10 flex-wrap">
-          <div className="flex flex-col gap-3 w-80">
-            <YearRangeSlider
-              minYear={2010}
-              maxYear={2026}
-              startYear={startYear}
-              endYear={endYear}
-              onChange={(start, end) => {
-                setStartYear(start);
-                setEndYear(end);
-              }}
-            />
+    <div className="mb-6">
+      <div className="flex items-center gap-3 flex-wrap">
+        {hasDateFilter && (
+          <div className="inline-flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full text-sm border border-blue-200">
+            <Calendar className="w-3 h-3" />
+            <span>
+              {initialParams.start &&
+                new Date(initialParams.start).getFullYear()}
+              {initialParams.start && initialParams.end && " - "}
+              {initialParams.end && new Date(initialParams.end).getFullYear()}
+            </span>
+            <button
+              onClick={handleRemoveYearFilter}
+              className="ml-1 text-gray-500 hover:text-gray-700"
+              aria-label="Remove year filter"
+            >
+              <X className="w-3 h-3" />
+            </button>
           </div>
-
-          {/* Geographic Filter Popover */}
-          <div className="flex gap-3 items-baseline">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Address
-              </label>
-              <div className="relative">
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={address}
-                  onChange={(e) => {
-                    setAddress(e.target.value);
-                    debouncedAddressChange(e.target.value);
+        )}
+        {hasGeoFilter && (
+          <div className="inline-flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full text-sm border border-blue-200">
+            <MapPin className="w-3 h-3" />
+            <span className="max-w-xs truncate">{initialParams.address}</span>
+            <span className="text-gray-500">
+              (within {initialParams.radius} mile
+              {parseFloat(initialParams.radius || "0") !== 1 ? "s" : ""})
+            </span>
+            <button
+              onClick={handleRemoveGeoFilter}
+              className="ml-1 text-gray-500 hover:text-gray-700"
+              aria-label="Remove geographic filter"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        )}
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className="inline-flex items-center text-sm gap-2 p-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors">
+              <Filter className="w-4 h-4" />
+              Filters
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[450px] p-6" align="start">
+            <div className="flex flex-col gap-6">
+              {/* Date Range Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  {yearRangeLabel}
+                </label>
+                <YearRangeSlider
+                  minYear={2010}
+                  maxYear={2026}
+                  startDate={startDate}
+                  endDate={endDate}
+                  onChange={(start, end) => {
+                    applyDateFilter(start, end);
                   }}
-                  onKeyDown={handleKeyDown}
-                  onFocus={() => {
-                    if (suggestions.length > 0) {
-                      setShowSuggestions(true);
-                    }
-                  }}
-                  placeholder="e.g., 500 Union St, Seattle"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-                {isFetching && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                  </div>
-                )}
-                {showSuggestions && suggestions.length > 0 && (
-                  <div
-                    ref={suggestionsRef}
-                    className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
-                  >
-                    {suggestions.map((suggestion, index) => (
-                      <button
-                        key={suggestion.place_id}
-                        type="button"
-                        onClick={() => handleSelectSuggestion(suggestion)}
-                        className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 ${
-                          index === selectedIndex ? "bg-blue-100" : ""
-                        }`}
-                      >
-                        {suggestion.display_name}
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Radius (miles)
-              </label>
-              <input
-                type="number"
-                value={radius}
-                onChange={(e) => setRadius(e.target.value)}
-                min="0.1"
-                max="10"
-                step="0.1"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            {geoError && <div className="text-sm text-red-600">{geoError}</div>}
-          </div>
-        </div>
-        <Button
-          onClick={handleApplyAllFilters}
-          disabled={isGeocoding}
-          className="w-fit h-11 px-4"
-        >
-          {isGeocoding ? "Applying..." : "Apply"}
-        </Button>
-      </div>
 
-      {/* Active Filters */}
-      {(hasDateFilter || hasGeoFilter) && (
-        <div className="mt-4 pt-4 border-t border-gray-200">
-          <div className="flex items-center gap-2 flex-wrap">
-            {hasDateFilter && (
-              <div className="inline-flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full text-sm border border-blue-200">
-                <Calendar className="w-3 h-3" />
-                <span>
-                  {initialParams.start &&
-                    new Date(initialParams.start).getFullYear()}
-                  {initialParams.start && initialParams.end && " - "}
-                  {initialParams.end &&
-                    new Date(initialParams.end).getFullYear()}
-                </span>
-                <button
-                  onClick={handleRemoveYearFilter}
-                  className="ml-1 text-gray-500 hover:text-gray-700"
-                  aria-label="Remove year filter"
-                >
-                  <X className="w-3 h-3" />
-                </button>
+              {/* Geographic Filter */}
+              <div className="flex flex-col gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Address
+                  </label>
+                  <div className="relative">
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      value={address}
+                      onChange={(e) => {
+                        setAddress(e.target.value);
+                        debouncedAddressChange(e.target.value);
+                      }}
+                      onKeyDown={handleKeyDown}
+                      onFocus={() => {
+                        if (suggestions.length > 0) {
+                          setShowSuggestions(true);
+                        }
+                      }}
+                      placeholder="e.g., 500 Union St, Seattle"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    {isFetching && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    )}
+                    {showSuggestions && suggestions.length > 0 && (
+                      <div
+                        ref={suggestionsRef}
+                        className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
+                      >
+                        {suggestions.map((suggestion, index) => (
+                          <button
+                            key={suggestion.place_id}
+                            type="button"
+                            onClick={() => handleSelectSuggestion(suggestion)}
+                            className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 ${
+                              index === selectedIndex ? "bg-blue-100" : ""
+                            }`}
+                          >
+                            {suggestion.display_name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Radius (miles)
+                  </label>
+                  <input
+                    type="number"
+                    value={radius}
+                    onChange={(e) => {
+                      setRadius(e.target.value);
+                      debouncedApplyRadius(e.target.value);
+                    }}
+                    min="0.1"
+                    max="10"
+                    step="0.1"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
               </div>
-            )}
-            {hasGeoFilter && (
-              <div className="inline-flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full text-sm border border-blue-200">
-                <MapPin className="w-3 h-3" />
-                <span className="max-w-xs truncate">
-                  {initialParams.address}
-                </span>
-                <span className="text-gray-500">
-                  (within {initialParams.radius} mile
-                  {parseFloat(initialParams.radius || "0") !== 1 ? "s" : ""})
-                </span>
-                <button
-                  onClick={handleRemoveGeoFilter}
-                  className="ml-1 text-gray-500 hover:text-gray-700"
-                  aria-label="Remove geographic filter"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
     </div>
   );
 }

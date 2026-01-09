@@ -101,7 +101,9 @@ export default function GeographicSearch() {
 
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setSelectedIndex((prev) => (prev < suggestions.length - 1 ? prev + 1 : prev));
+      setSelectedIndex((prev) =>
+        prev < suggestions.length - 1 ? prev + 1 : prev
+      );
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
@@ -156,7 +158,7 @@ export default function GeographicSearch() {
       newParams.set("lat", lat);
       newParams.set("lng", lon);
 
-      router.push(`/records?${newParams.toString()}`);
+      router.push(`/records?${newParams.toString()}`, { scroll: false });
     } catch (err) {
       setError("Failed to geocode address. Please try again.");
       console.error("Geocoding error:", err);
@@ -176,10 +178,11 @@ export default function GeographicSearch() {
     newParams.delete("lat");
     newParams.delete("lng");
 
-    router.push(`/records?${newParams.toString()}`);
+    router.push(`/records?${newParams.toString()}`, { scroll: false });
   };
 
-  const hasGeographicFilter = searchParams.has("lat") && searchParams.has("lng");
+  const hasGeographicFilter =
+    searchParams.has("lat") && searchParams.has("lng");
 
   return (
     <div className="bg-white rounded-lg shadow p-4 mb-6">
@@ -197,7 +200,9 @@ export default function GeographicSearch() {
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 onKeyDown={handleKeyDown}
-                onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                onFocus={() =>
+                  suggestions.length > 0 && setShowSuggestions(true)
+                }
                 placeholder="e.g., 500 Union St, Seattle"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 autoComplete="off"
@@ -262,12 +267,11 @@ export default function GeographicSearch() {
             )}
           </div>
         </div>
-        {error && (
-          <div className="text-sm text-red-600">{error}</div>
-        )}
+        {error && <div className="text-sm text-red-600">{error}</div>}
         {hasGeographicFilter && (
           <div className="text-sm text-gray-600">
-            Showing permits within {searchParams.get("radius")} mile{parseFloat(searchParams.get("radius") || "0") !== 1 ? "s" : ""} of{" "}
+            Showing permits within {searchParams.get("radius")} mile
+            {parseFloat(searchParams.get("radius") || "0") !== 1 ? "s" : ""} of{" "}
             <span className="font-medium">{searchParams.get("address")}</span>
           </div>
         )}

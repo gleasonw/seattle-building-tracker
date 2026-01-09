@@ -1,10 +1,17 @@
 import { db } from "@/server/src/db";
 import { buildingPermits } from "@/server/src/db/schema";
-import { sql, and, isNotNull } from "drizzle-orm";
+import { sql, and } from "drizzle-orm";
 import { asc, desc } from "drizzle-orm";
-import DashboardNav from "../components/DashboardNav";
-import DataFooter from "../components/DataFooter";
-import ConstructionClient from "./ConstructionClient";
+import {
+  buildFiltersFromParams,
+  createSeattleDataUrl,
+} from "@/server/src/query";
+import {
+  BuildingDashSearchParams,
+  PermitRowFilters,
+} from "@/app/PermitRowFilters";
+import ConstructionChart from "@/app/construction/ConstructionChart";
+import RecordsTable from "@/app/components/RecordsTable";
 
 type SortField =
   | "appliedDate"
@@ -16,8 +23,6 @@ type SortOrder = "asc" | "desc";
 interface SearchParams {
   start?: string;
   end?: string;
-  tableStart?: string;
-  tableEnd?: string;
   sortBy?: SortField;
   sortOrder?: SortOrder;
   address?: string;
@@ -27,41 +32,13 @@ interface SearchParams {
 }
 
 async function getTrendsData(params: SearchParams) {
-  const { start, end, lat, lng, radius } = params;
-
   const dateField = buildingPermits.completedDate;
 
-  const conditions = [isNotNull(dateField)];
+  const conditions = buildFiltersFromParams({
+    targetDateField: dateField,
+    initialParams: params,
+  });
 
-  if (start) {
-    conditions.push(sql`${dateField} >= ${start}`);
-  }
-  if (end) {
-    conditions.push(sql`${dateField} <= ${end}`);
-  }
-
-  // Add geographic filter if coordinates and radius are provided
-  if (lat && lng && radius) {
-    const latNum = parseFloat(lat);
-    const lngNum = parseFloat(lng);
-    const radiusMiles = parseFloat(radius);
-
-    conditions.push(
-      sql`(
-        3959 * acos(
-          cos(radians(${latNum})) *
-          cos(radians(CAST(${buildingPermits.latitude} AS DOUBLE PRECISION))) *
-          cos(radians(CAST(${buildingPermits.longitude} AS DOUBLE PRECISION)) - radians(${lngNum})) +
-          sin(radians(${latNum})) *
-          sin(radians(CAST(${buildingPermits.latitude} AS DOUBLE PRECISION)))
-        )
-      ) <= ${radiusMiles}`
-    );
-    conditions.push(isNotNull(buildingPermits.latitude));
-    conditions.push(isNotNull(buildingPermits.longitude));
-  }
-
-  // Get monthly data for housing units
   const monthlyData = await db
     .select({
       year: sql<number>`CAST(EXTRACT(YEAR FROM ${dateField}) AS INTEGER)`,
@@ -79,25 +56,6 @@ async function getTrendsData(params: SearchParams) {
       sql`EXTRACT(MONTH FROM ${dateField})`
     );
 
-  // Get quarterly data for housing units
-  const quarterlyData = await db
-    .select({
-      year: sql<number>`CAST(EXTRACT(YEAR FROM ${dateField}) AS INTEGER)`,
-      quarter: sql<number>`CAST(EXTRACT(QUARTER FROM ${dateField}) AS INTEGER)`,
-      totalUnitsAdded: sql<number>`CAST(SUM(COALESCE(${buildingPermits.housingUnitsAdded}, 0)) AS INTEGER)`,
-    })
-    .from(buildingPermits)
-    .where(and(...conditions))
-    .groupBy(
-      sql`EXTRACT(YEAR FROM ${dateField})`,
-      sql`EXTRACT(QUARTER FROM ${dateField})`
-    )
-    .orderBy(
-      sql`EXTRACT(YEAR FROM ${dateField})`,
-      sql`EXTRACT(QUARTER FROM ${dateField})`
-    );
-
-  // Get yearly data for housing units
   const yearlyData = await db
     .select({
       year: sql<number>`CAST(EXTRACT(YEAR FROM ${dateField}) AS INTEGER)`,
@@ -110,58 +68,17 @@ async function getTrendsData(params: SearchParams) {
 
   return {
     monthlyData,
-    quarterlyData,
     yearlyData,
   };
 }
 
-async function getRecords(params: SearchParams) {
-  const {
-    tableStart,
-    tableEnd,
-    start,
-    end,
-    sortBy = "housingUnitsAdded",
-    sortOrder = "desc",
-    lat,
-    lng,
-    radius,
-  } = params;
+async function getRecords(params: BuildingDashSearchParams) {
+  const { sortBy = "housingUnitsAdded", sortOrder = "desc" } = params;
 
-  const dateField = buildingPermits.completedDate;
-
-  const conditions = [
-    isNotNull(dateField),
-    sql`${buildingPermits.housingUnitsAdded} > 0`,
-  ];
-
-  if (tableStart || start) {
-    conditions.push(sql`${dateField} >= ${tableStart || start}`);
-  }
-  if (tableEnd || end) {
-    conditions.push(sql`${dateField} <= ${tableEnd || end}`);
-  }
-
-  // Add geographic filter if coordinates and radius are provided
-  if (lat && lng && radius) {
-    const latNum = parseFloat(lat);
-    const lngNum = parseFloat(lng);
-    const radiusMiles = parseFloat(radius);
-
-    conditions.push(
-      sql`(
-        3959 * acos(
-          cos(radians(${latNum})) *
-          cos(radians(CAST(${buildingPermits.latitude} AS DOUBLE PRECISION))) *
-          cos(radians(CAST(${buildingPermits.longitude} AS DOUBLE PRECISION)) - radians(${lngNum})) +
-          sin(radians(${latNum})) *
-          sin(radians(CAST(${buildingPermits.latitude} AS DOUBLE PRECISION)))
-        )
-      ) <= ${radiusMiles}`
-    );
-    conditions.push(isNotNull(buildingPermits.latitude));
-    conditions.push(isNotNull(buildingPermits.longitude));
-  }
+  const conditions = buildFiltersFromParams({
+    targetDateField: buildingPermits.completedDate,
+    initialParams: params,
+  });
 
   const sortColumn = {
     appliedDate: buildingPermits.appliedDate,
@@ -170,7 +87,21 @@ async function getRecords(params: SearchParams) {
     permitNum: buildingPermits.permitNum,
   }[sortBy];
 
+  if (!sortColumn) {
+    throw new Error(`Invalid sortBy field: ${sortBy}`);
+  }
+
   const sortFn = sortOrder === "asc" ? asc : desc;
+
+  // Get total count before applying limit
+  const countResult = await db
+    .select({
+      count: sql<number>`CAST(COUNT(*) AS INTEGER)`,
+    })
+    .from(buildingPermits)
+    .where(and(...conditions));
+
+  const totalCount = countResult[0]?.count || 0;
 
   const results = await db
     .select({
@@ -191,7 +122,7 @@ async function getRecords(params: SearchParams) {
     .orderBy(sql`${sortFn(sortColumn)} nulls last`)
     .limit(500);
 
-  return results;
+  return { records: results, totalCount };
 }
 
 export default async function ConstructionPage({
@@ -201,25 +132,50 @@ export default async function ConstructionPage({
 }) {
   const params = await searchParams;
   const trendsData = await getTrendsData(params);
-  const records = await getRecords(params);
+  const { records, totalCount } = await getRecords(params);
+  const initialParams = await searchParams;
+  const seattleDataUrl = createSeattleDataUrl({
+    initialParams,
+    extraFilters: ["`completeddate` IS NOT NULL"],
+  });
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto p-8">
-        <h1 className="text-3xl font-bold mb-8">
-          Seattle Building Permit Tracker
+    <div>
+      <div className="flex gap-5">
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">
+          Seattle housing units added
         </h1>
-
-        <DashboardNav />
-
-        <ConstructionClient
-          trendsData={trendsData}
-          records={records}
-          initialParams={params}
+        <PermitRowFilters
+          initialParams={initialParams}
+          yearRangeLabel={
+            <div className="block text-sm font-medium text-gray-700 mb-1">
+              Construction Completed Date
+            </div>
+          }
         />
-
-        <DataFooter />
       </div>
+
+      <ConstructionChart
+        data={trendsData}
+        startDate={initialParams.start}
+        endDate={initialParams.end}
+      />
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-gray-600 mb-4">
+          {totalCount.toLocaleString()} record{totalCount !== 1 ? "s" : ""}{" "}
+          found
+          {totalCount > 500 && " (showing first 500)"}
+        </div>
+        <a
+          href={seattleDataUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-blue-600 hover:underline"
+        >
+          View in Seattle Open Data Portal →
+        </a>
+      </div>
+      <RecordsTable records={records} initialParams={initialParams} />
     </div>
   );
 }

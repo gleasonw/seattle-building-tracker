@@ -20,9 +20,9 @@ export default async function DataFooter() {
   const syncMeta = await getSyncMetadata();
 
   return (
-    <div className="mt-8 pt-8 border-t border-gray-200 text-center text-sm text-gray-600">
-      <div className="mb-2">
-        Data from{" "}
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-2 text-right text-xs text-gray-600">
+      <div className="mb-1 flex gap-1">
+        Data from
         <a
           href={DATASET_URL}
           target="_blank"
@@ -33,15 +33,12 @@ export default async function DataFooter() {
         </a>
       </div>
       {syncMeta?.lastSyncCompletedAt && (
-        <div className="text-xs text-gray-500">
+        <div className="text-[10px] text-gray-500 whitespace-nowrap">
           Last synced:{" "}
           {new Date(syncMeta.lastSyncCompletedAt).toLocaleString("en-US", {
             month: "short",
             day: "numeric",
             year: "numeric",
-            hour: "numeric",
-            minute: "2-digit",
-            hour12: true,
           })}
         </div>
       )}
