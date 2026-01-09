@@ -40,32 +40,33 @@ async function getTrendsData(params: SearchParams) {
     initialParams: params,
   });
 
-  const monthlyData = await db
-    .select({
-      year: sql<number>`CAST(EXTRACT(YEAR FROM ${dateField}) AS INTEGER)`,
-      month: sql<number>`CAST(EXTRACT(MONTH FROM ${dateField}) AS INTEGER)`,
-      totalUnitsAdded: sql<number>`CAST(SUM(COALESCE(${buildingPermits.housingUnitsAdded}, 0)) AS INTEGER)`,
-    })
-    .from(buildingPermits)
-    .where(and(...conditions))
-    .groupBy(
-      sql`EXTRACT(YEAR FROM ${dateField})`,
-      sql`EXTRACT(MONTH FROM ${dateField})`
-    )
-    .orderBy(
-      sql`EXTRACT(YEAR FROM ${dateField})`,
-      sql`EXTRACT(MONTH FROM ${dateField})`
-    );
-
-  const yearlyData = await db
-    .select({
-      year: sql<number>`CAST(EXTRACT(YEAR FROM ${dateField}) AS INTEGER)`,
-      totalUnitsAdded: sql<number>`CAST(SUM(COALESCE(${buildingPermits.housingUnitsAdded}, 0)) AS INTEGER)`,
-    })
-    .from(buildingPermits)
-    .where(and(...conditions))
-    .groupBy(sql`EXTRACT(YEAR FROM ${dateField})`)
-    .orderBy(sql`EXTRACT(YEAR FROM ${dateField})`);
+  const [monthlyData, yearlyData] = await Promise.all([
+    db
+      .select({
+        year: sql<number>`CAST(EXTRACT(YEAR FROM ${dateField}) AS INTEGER)`,
+        month: sql<number>`CAST(EXTRACT(MONTH FROM ${dateField}) AS INTEGER)`,
+        totalUnitsAdded: sql<number>`CAST(SUM(COALESCE(${buildingPermits.housingUnitsAdded}, 0)) AS INTEGER)`,
+      })
+      .from(buildingPermits)
+      .where(and(...conditions))
+      .groupBy(
+        sql`EXTRACT(YEAR FROM ${dateField})`,
+        sql`EXTRACT(MONTH FROM ${dateField})`
+      )
+      .orderBy(
+        sql`EXTRACT(YEAR FROM ${dateField})`,
+        sql`EXTRACT(MONTH FROM ${dateField})`
+      ),
+    db
+      .select({
+        year: sql<number>`CAST(EXTRACT(YEAR FROM ${dateField}) AS INTEGER)`,
+        totalUnitsAdded: sql<number>`CAST(SUM(COALESCE(${buildingPermits.housingUnitsAdded}, 0)) AS INTEGER)`,
+      })
+      .from(buildingPermits)
+      .where(and(...conditions))
+      .groupBy(sql`EXTRACT(YEAR FROM ${dateField})`)
+      .orderBy(sql`EXTRACT(YEAR FROM ${dateField})`),
+  ]);
 
   return {
     monthlyData,
@@ -94,34 +95,34 @@ async function getRecords(params: BuildingDashSearchParams) {
 
   const sortFn = sortOrder === "asc" ? asc : desc;
 
-  // Get total count before applying limit
-  const countResult = await db
-    .select({
-      count: sql<number>`CAST(COUNT(*) AS INTEGER)`,
-    })
-    .from(buildingPermits)
-    .where(and(...conditions));
+  const [countResult, results] = await Promise.all([
+    db
+      .select({
+        count: sql<number>`CAST(COUNT(*) AS INTEGER)`,
+      })
+      .from(buildingPermits)
+      .where(and(...conditions)),
+    db
+      .select({
+        permitNum: buildingPermits.permitNum,
+        appliedDate: buildingPermits.appliedDate,
+        completedDate: buildingPermits.completedDate,
+        housingUnitsAdded: buildingPermits.housingUnitsAdded,
+        originalAddress1: buildingPermits.originalAddress1,
+        permitTypeMapped: buildingPermits.permitTypeMapped,
+        description: buildingPermits.description,
+        link: buildingPermits.link,
+        estProjectCost: buildingPermits.estProjectCost,
+        latitude: buildingPermits.latitude,
+        longitude: buildingPermits.longitude,
+      })
+      .from(buildingPermits)
+      .where(and(...conditions))
+      .orderBy(sql`${sortFn(sortColumn)} nulls last`)
+      .limit(500),
+  ]);
 
   const totalCount = countResult[0]?.count || 0;
-
-  const results = await db
-    .select({
-      permitNum: buildingPermits.permitNum,
-      appliedDate: buildingPermits.appliedDate,
-      completedDate: buildingPermits.completedDate,
-      housingUnitsAdded: buildingPermits.housingUnitsAdded,
-      originalAddress1: buildingPermits.originalAddress1,
-      permitTypeMapped: buildingPermits.permitTypeMapped,
-      description: buildingPermits.description,
-      link: buildingPermits.link,
-      estProjectCost: buildingPermits.estProjectCost,
-      latitude: buildingPermits.latitude,
-      longitude: buildingPermits.longitude,
-    })
-    .from(buildingPermits)
-    .where(and(...conditions))
-    .orderBy(sql`${sortFn(sortColumn)} nulls last`)
-    .limit(500);
 
   return { records: results, totalCount };
 }
@@ -132,11 +133,12 @@ export default async function ConstructionPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const trendsData = await getTrendsData(params);
-  const { records, totalCount } = await getRecords(params);
-  const initialParams = await searchParams;
+  const [trendsData, { records, totalCount }] = await Promise.all([
+    getTrendsData(params),
+    getRecords(params),
+  ]);
   const seattleDataUrl = createSeattleDataUrl({
-    initialParams,
+    initialParams: params,
     targetDateField: "completeddate",
   });
 
@@ -145,7 +147,7 @@ export default async function ConstructionPage({
       {/* Mobile Filter Button */}
       <MobileFilters>
         <FiltersSidebar
-          initialParams={initialParams}
+          initialParams={params}
           yearRangeLabel="Construction Completed Date"
         />
       </MobileFilters>
@@ -157,7 +159,7 @@ export default async function ConstructionPage({
       >
         <Suspense>
           <FiltersSidebar
-            initialParams={initialParams}
+            initialParams={params}
             yearRangeLabel="Construction Completed Date"
           />
         </Suspense>
@@ -173,8 +175,8 @@ export default async function ConstructionPage({
         <Suspense>
           <ConstructionChart
             data={trendsData}
-            startDate={initialParams.start}
-            endDate={initialParams.end}
+            startDate={params.start}
+            endDate={params.end}
           />
         </Suspense>
 
@@ -193,7 +195,7 @@ export default async function ConstructionPage({
             View in Seattle Open Data Portal →
           </a>
         </div>
-        <RecordsTable records={records} initialParams={initialParams} />
+        <RecordsTable records={records} initialParams={params} />
       </div>
     </div>
   );

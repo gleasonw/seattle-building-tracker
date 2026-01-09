@@ -9,7 +9,7 @@ export default function DashboardNav() {
   const queryString = searchParams.toString();
 
   const tabs = [
-    { name: "Year in review", href: "/" },
+    { name: "Year in detail", href: "/" },
     { name: "Construction Trends", href: "/construction" },
     { name: "Application Trends ", href: "/applications" },
   ];

@@ -9,7 +9,7 @@
     "lint": "eslint",
     "db:push": "npx drizzle-kit push",
     "db:studio": "npx drizzle-kit studio",
-    "import:bulk": "bun run ./server/src/import/doBulkImport.ts",
+    "import:bulk": "NODE_ENV=production bun run ./server/src/import/doBulkImport.ts",
     "sync": "bun run ./server/src/import/doPeriodicSync.ts"
   },
   "dependencies": {
