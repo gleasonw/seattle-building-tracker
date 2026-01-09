@@ -390,7 +390,7 @@ async function YearView({ year }: { year: number }) {
       {/* Top Permits */}
       <div className="mb-8">
         <h2 className="text-lg font-bold mb-4">
-          Top Permits by Completed Housing Units
+          Top Completed Permits by Housing Units Added
         </h2>
 
         <div className="flex flex-col gap-4">
