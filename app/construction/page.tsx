@@ -82,14 +82,13 @@ async function getRecords(params: BuildingDashSearchParams) {
     initialParams: params,
   });
 
-  const sortColumn = {
-    appliedDate: buildingPermits.appliedDate,
-    completedDate: buildingPermits.completedDate,
-    housingUnitsAdded: buildingPermits.housingUnitsAdded,
-    permitNum: buildingPermits.permitNum,
-  }[sortBy];
+  // Dynamically access the sort column from buildingPermits schema
+  const sortColumn =
+    sortBy in buildingPermits
+      ? buildingPermits[sortBy as keyof typeof buildingPermits]
+      : null;
 
-  if (!sortColumn) {
+  if (!sortColumn || !("columnType" in sortColumn)) {
     throw new Error(`Invalid sortBy field: ${sortBy}`);
   }
 
@@ -195,7 +194,11 @@ export default async function ConstructionPage({
             View in Seattle Open Data Portal →
           </a>
         </div>
-        <RecordsTable records={records} initialParams={params} />
+        <RecordsTable
+          records={records}
+          initialParams={params}
+          dateColumns={[{ key: "completedDate", label: "Completed Date" }]}
+        />
       </div>
     </div>
   );

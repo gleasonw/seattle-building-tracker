@@ -86,14 +86,13 @@ async function getRecords(params: BuildingDashSearchParams) {
 
   const { sortBy = "appliedDate", sortOrder = "desc" } = params;
 
-  const sortColumn = {
-    appliedDate: buildingPermits.appliedDate,
-    completedDate: buildingPermits.completedDate,
-    housingUnitsAdded: buildingPermits.housingUnitsAdded,
-    permitNum: buildingPermits.permitNum,
-  }[sortBy];
+  // Dynamically access the sort column from buildingPermits schema
+  const sortColumn =
+    sortBy in buildingPermits
+      ? buildingPermits[sortBy as keyof typeof buildingPermits]
+      : null;
 
-  if (!sortColumn) {
+  if (!sortColumn || !("columnType" in sortColumn)) {
     throw new Error(`Invalid sortBy field: ${sortBy}`);
   }
 
@@ -201,8 +200,9 @@ export default async function ApplicationsPage({
         <RecordsTable
           records={records}
           initialParams={params}
+          dateColumns={[{ key: "appliedDate", label: "Applied Date" }]}
           extraFields={[
-            { key: "statusCurrent", label: "Current Status" },
+            { key: "statusCurrent", label: "Current Status", sortable: true },
             { key: "permitTypeDesc", label: "Permit Type Description" },
           ]}
         />

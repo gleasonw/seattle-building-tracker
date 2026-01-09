@@ -26,15 +26,22 @@ type SortField =
 
 type ExtraFieldKey = keyof BuildingPermit;
 
+interface DateColumn {
+  key: "appliedDate" | "completedDate";
+  label: string;
+}
+
 interface Props {
   records: (Record & Partial<BuildingPermit>)[];
   initialParams: {
     sortBy?: string;
     sortOrder?: string;
   };
+  dateColumns?: DateColumn[];
   extraFields?: Array<{
     key: ExtraFieldKey;
     label: string;
+    sortable?: boolean;
   }>;
 }
 
@@ -43,7 +50,7 @@ function SortIcon({
   sortBy,
   sortOrder,
 }: {
-  field: SortField;
+  field: string;
   sortBy?: string;
   sortOrder?: string;
 }) {
@@ -58,13 +65,14 @@ function SortIcon({
 export default function RecordsTable({
   records,
   initialParams,
+  dateColumns = [],
   extraFields = [],
 }: Props) {
   const searchParams = useSearchParams();
 
   const { sortBy, sortOrder } = initialParams;
 
-  const createSortUrl = (field: SortField) => {
+  const createSortUrl = (field: string) => {
     const newOrder = sortBy === field && sortOrder === "desc" ? "asc" : "desc";
     const newParams = new URLSearchParams(searchParams.toString());
     newParams.set("sortBy", field);
@@ -93,34 +101,25 @@ export default function RecordsTable({
                   />
                 </Link>
               </th>
-              <th className="text-left p-4 font-semibold text-sm">
-                <Link
-                  href={createSortUrl("appliedDate")}
-                  className="hover:text-blue-600 flex items-center gap-1"
-                  scroll={false}
+              {dateColumns.map((dateCol) => (
+                <th
+                  key={dateCol.key}
+                  className="text-left p-4 font-semibold text-sm"
                 >
-                  Applied Date{" "}
-                  <SortIcon
-                    field="appliedDate"
-                    sortBy={sortBy}
-                    sortOrder={sortOrder}
-                  />
-                </Link>
-              </th>
-              <th className="text-left p-4 font-semibold text-sm">
-                <Link
-                  href={createSortUrl("completedDate")}
-                  className="hover:text-blue-600 flex items-center gap-1"
-                  scroll={false}
-                >
-                  Completed Date{" "}
-                  <SortIcon
-                    field="completedDate"
-                    sortBy={sortBy}
-                    sortOrder={sortOrder}
-                  />
-                </Link>
-              </th>
+                  <Link
+                    href={createSortUrl(dateCol.key)}
+                    className="hover:text-blue-600 flex items-center gap-1"
+                    scroll={false}
+                  >
+                    {dateCol.label}{" "}
+                    <SortIcon
+                      field={dateCol.key}
+                      sortBy={sortBy}
+                      sortOrder={sortOrder}
+                    />
+                  </Link>
+                </th>
+              ))}
               <th className="text-left p-4 font-semibold text-sm">Address</th>
               <th className="text-right p-4 font-semibold text-sm">
                 <Link
@@ -141,7 +140,22 @@ export default function RecordsTable({
                   key={field.key}
                   className="text-left p-4 font-semibold text-sm"
                 >
-                  {field.label}
+                  {field.sortable ? (
+                    <Link
+                      href={createSortUrl(field.key)}
+                      className="hover:text-blue-600 flex items-center gap-1"
+                      scroll={false}
+                    >
+                      {field.label}{" "}
+                      <SortIcon
+                        field={field.key}
+                        sortBy={sortBy}
+                        sortOrder={sortOrder}
+                      />
+                    </Link>
+                  ) : (
+                    field.label
+                  )}
                 </th>
               ))}
             </tr>
@@ -169,16 +183,13 @@ export default function RecordsTable({
                       </span>
                     )}
                   </td>
-                  <td className="p-4 text-sm">
-                    {record.appliedDate
-                      ? new Date(record.appliedDate).toLocaleDateString()
-                      : "-"}
-                  </td>
-                  <td className="p-4 text-sm">
-                    {record.completedDate
-                      ? new Date(record.completedDate).toLocaleDateString()
-                      : "-"}
-                  </td>
+                  {dateColumns.map((dateCol) => (
+                    <td key={dateCol.key} className="p-4 text-sm">
+                      {record[dateCol.key]
+                        ? new Date(record[dateCol.key]!).toLocaleDateString()
+                        : "-"}
+                    </td>
+                  ))}
                   <td className="p-4 text-sm max-w-md">
                     <div className="truncate">
                       {record.originalAddress1 ? (
@@ -218,7 +229,7 @@ export default function RecordsTable({
             ) : (
               <tr>
                 <td
-                  colSpan={5 + extraFields.length}
+                  colSpan={3 + dateColumns.length + extraFields.length}
                   className="p-8 text-center text-gray-500"
                 >
                   No records found for the selected criteria
@@ -281,17 +292,14 @@ export default function RecordsTable({
               )}
 
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600">
-                {record.appliedDate && (
-                  <div>
-                    <span className="font-medium">Applied:</span>{" "}
-                    {new Date(record.appliedDate).toLocaleDateString()}
-                  </div>
-                )}
-                {record.completedDate && (
-                  <div>
-                    <span className="font-medium">Completed:</span>{" "}
-                    {new Date(record.completedDate).toLocaleDateString()}
-                  </div>
+                {dateColumns.map(
+                  (dateCol) =>
+                    record[dateCol.key] && (
+                      <div key={dateCol.key}>
+                        <span className="font-medium">{dateCol.label}:</span>{" "}
+                        {new Date(record[dateCol.key]!).toLocaleDateString()}
+                      </div>
+                    )
                 )}
               </div>
 
