@@ -13,6 +13,7 @@ if (!process.env.DATABASE_URL) {
 // Configure PostgreSQL connection
 // Use max: 10 for development, adjust to 20-30 for production
 const connectionString = process.env.DATABASE_URL;
+const isProd = process.env.NODE_ENV === "production";
 
 const client = postgres(connectionString, {
   max: process.env.NODE_ENV === "production" ? 20 : 10,
@@ -21,7 +22,7 @@ const client = postgres(connectionString, {
 });
 
 // Create Drizzle instance with schema
-export const db = drizzle(client, { schema, logger: true });
+export const db = drizzle(client, { schema, logger: !isProd });
 
 // Export schema for convenience
 export { schema };
