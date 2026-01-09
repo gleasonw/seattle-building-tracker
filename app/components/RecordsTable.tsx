@@ -19,12 +19,6 @@ interface Record {
   longitude: string | null;
 }
 
-type SortField =
-  | "appliedDate"
-  | "completedDate"
-  | "housingUnitsAdded"
-  | "permitNum";
-
 type ExtraFieldKey = keyof BuildingPermit;
 
 interface DateColumn {
@@ -100,7 +94,7 @@ export default function RecordsTable({
               <th className="text-left p-4 font-semibold text-sm">
                 <Link
                   href={createSortUrl("permitNum")}
-                  className="hover:text-blue-600 flex items-center gap-1"
+                  className="hover:text-blue-600 flex items-center gap-1 whitespace-nowrap"
                   scroll={false}
                 >
                   Permit Number{" "}
@@ -118,7 +112,7 @@ export default function RecordsTable({
                 >
                   <Link
                     href={createSortUrl(dateCol.key)}
-                    className="hover:text-blue-600 flex items-center gap-1"
+                    className="hover:text-blue-600 flex items-center gap-1 whitespace-nowrap"
                     scroll={false}
                   >
                     {dateCol.label}{" "}
@@ -134,7 +128,7 @@ export default function RecordsTable({
               <th className="text-right p-4 font-semibold text-sm">
                 <Link
                   href={createSortUrl("housingUnitsAdded")}
-                  className="hover:text-blue-600 flex items-center justify-end gap-1"
+                  className="hover:text-blue-600 flex items-center justify-end gap-1 whitespace-nowrap"
                   scroll={false}
                 >
                   <SortIcon
@@ -153,7 +147,7 @@ export default function RecordsTable({
                   {field.sortable ? (
                     <Link
                       href={createSortUrl(field.key)}
-                      className="hover:text-blue-600 flex items-center gap-1"
+                      className="hover:text-blue-600 flex items-center gap-1 whitespace-nowrap"
                       scroll={false}
                     >
                       {field.label}{" "}
