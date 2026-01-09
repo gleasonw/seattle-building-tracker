@@ -36,6 +36,16 @@ export default function FilterBadges() {
       });
     }
 
+    // Permit type filter
+    const permitTypeDesc = searchParams.get("permitTypeDesc");
+    if (permitTypeDesc) {
+      filters.push({
+        key: "permitTypeDesc",
+        label: `Type: ${permitTypeDesc}`,
+        value: ["permitTypeDesc"],
+      });
+    }
+
     return filters;
   };
 

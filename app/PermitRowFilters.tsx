@@ -31,6 +31,7 @@ export type BuildingDashSearchParams = {
   radius?: string;
   lat?: string;
   lng?: string;
+  permitTypeDesc?: string;
 };
 
 export function PermitRowFilters({

@@ -3,6 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { BuildingPermit } from "@/server/src/db/schema";
+import { ArrowDown, ArrowDownUp, ArrowUp } from "lucide-react";
 
 interface Record {
   permitNum: string;
@@ -54,11 +55,20 @@ function SortIcon({
   sortBy?: string;
   sortOrder?: string;
 }) {
-  if (sortBy !== field) return <span className="text-gray-400">↕</span>;
+  if (sortBy !== field)
+    return (
+      <span className="text-gray-400">
+        <ArrowDownUp size={12} />
+      </span>
+    );
   return sortOrder === "asc" ? (
-    <span className="text-blue-600">↑</span>
+    <span className="text-blue-600">
+      <ArrowUp size={12} />
+    </span>
   ) : (
-    <span className="text-blue-600">↓</span>
+    <span className="text-blue-600">
+      <ArrowDown size={12} />
+    </span>
   );
 }
 

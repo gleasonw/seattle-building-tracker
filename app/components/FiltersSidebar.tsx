@@ -29,11 +29,13 @@ interface SuggestionResult {
 interface FiltersSidebarProps {
   initialParams: BuildingDashSearchParams;
   yearRangeLabel: React.ReactNode;
+  extraTopFilters?: React.ReactNode;
 }
 
 export default function FiltersSidebar({
   initialParams,
   yearRangeLabel,
+  extraTopFilters,
 }: FiltersSidebarProps) {
   const { updateFilterParams } = useFilters();
 
@@ -172,6 +174,9 @@ export default function FiltersSidebar({
   return (
     <div className="w-full lg:w-80 bg-white lg:border-r border-gray-200 p-6 overflow-y-auto h-full">
       <h2 className="text-lg font-semibold text-gray-900 mb-6">Filters</h2>
+
+      {/* Extra Top Filters */}
+      {extraTopFilters && <div className="mb-8">{extraTopFilters}</div>}
 
       {/* Date Range Filter */}
       <div className="mb-8">
