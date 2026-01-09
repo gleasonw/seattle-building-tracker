@@ -15,7 +15,7 @@ export default function DashboardNav() {
   ];
 
   return (
-    <div className="flex gap-4 mb-8 border-b border-gray-200">
+    <div className="flex gap-2 sm:gap-4 mb-6 sm:mb-8 border-b border-gray-200 overflow-x-auto">
       {tabs.map((tab) => {
         const isActive = pathname === tab.href;
         const href =
@@ -26,7 +26,7 @@ export default function DashboardNav() {
           <Link
             key={tab.href}
             href={href}
-            className={`px-4 py-2 border-b-2 font-medium transition-colors ${
+            className={`px-3 sm:px-4 py-2 border-b-2 font-medium text-sm sm:text-base whitespace-nowrap transition-colors ${
               isActive
                 ? "border-blue-500 text-blue-600"
                 : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"

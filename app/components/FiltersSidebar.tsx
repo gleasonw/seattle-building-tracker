@@ -170,7 +170,7 @@ export default function FiltersSidebar({
   });
 
   return (
-    <div className="w-80 bg-white border-r border-gray-200 p-6 overflow-y-auto">
+    <div className="w-full lg:w-80 bg-white lg:border-r border-gray-200 p-6 overflow-y-auto h-full">
       <h2 className="text-lg font-semibold text-gray-900 mb-6">Filters</h2>
 
       {/* Date Range Filter */}
@@ -198,7 +198,7 @@ export default function FiltersSidebar({
               <Pencil className="w-3 h-3 text-gray-400" />
             </button>
           </PopoverTrigger>
-          <PopoverContent className="w-[400px] p-6" align="start">
+          <PopoverContent className="w-100 p-6" align="start">
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <label className="block text-sm font-medium text-gray-900">

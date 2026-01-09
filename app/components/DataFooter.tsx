@@ -20,21 +20,22 @@ export default async function DataFooter() {
   const syncMeta = await getSyncMetadata();
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-2 text-right text-xs text-gray-600">
-      <div className="mb-1 flex gap-1">
-        Data from
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 px-2 sm:px-4 py-1.5 sm:py-2 text-right text-xs text-gray-600">
+      <div className="mb-1 flex gap-1 justify-end">
+        <span className="hidden sm:inline">Data from</span>
         <a
           href={DATASET_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="text-blue-600 hover:underline"
         >
-          Seattle Open Data Portal
+          <span className="sm:hidden">Data</span>
+          <span className="hidden sm:inline">Seattle Open Data Portal</span>
         </a>
       </div>
       {syncMeta?.lastSyncCompletedAt && (
         <div className="text-[10px] text-gray-500 whitespace-nowrap">
-          Last synced:{" "}
+          <span className="hidden sm:inline">Last synced: </span>
           {new Date(syncMeta.lastSyncCompletedAt).toLocaleString("en-US", {
             month: "short",
             day: "numeric",

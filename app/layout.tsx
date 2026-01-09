@@ -34,12 +34,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <div className="absolute top-0 right-0 p-4">
+        <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-30">
           <DataFooter />
         </div>
         <QueryProvider>
           <div className="min-h-screen bg-gray-50">
-            <div className=" mx-auto p-8">
+            <div className="mx-auto p-4 sm:p-6 lg:p-8">
               <Suspense>
                 <DashboardNav />
               </Suspense>

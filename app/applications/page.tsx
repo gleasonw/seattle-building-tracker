@@ -11,6 +11,7 @@ import ApplicationsChart from "@/app/applications/ApplicationsChart";
 import RecordsTable from "@/app/components/RecordsTable";
 import FiltersSidebar from "@/app/components/FiltersSidebar";
 import FilterBadges from "@/app/components/FilterBadges";
+import MobileFilters from "@/app/components/MobileFilters";
 import { Suspense } from "react";
 
 type SortField =
@@ -146,15 +147,27 @@ export default async function ApplicationsPage({
   });
 
   return (
-    <div
-      className="flex gap-6 -mx-8 -mt-8"
-      style={{ height: "calc(100vh - 120px)" }}
-    >
-      <FiltersSidebar
-        initialParams={initialParams}
-        yearRangeLabel="Application Submitted Date"
-      />
-      <div className="flex-1 overflow-y-auto px-8 py-8">
+    <div className="flex flex-col lg:flex-row gap-0 lg:gap-6 -mx-4 sm:-mx-6 lg:-mx-8 -mt-4 sm:-mt-6 lg:-mt-8">
+      {/* Mobile Filter Button */}
+      <MobileFilters>
+        <FiltersSidebar
+          initialParams={initialParams}
+          yearRangeLabel="Application Submitted Date"
+        />
+      </MobileFilters>
+
+      {/* Desktop Sidebar */}
+      <div
+        className="hidden lg:block lg:w-80 overflow-y-auto"
+        style={{ height: "calc(100vh - 120px)" }}
+      >
+        <FiltersSidebar
+          initialParams={initialParams}
+          yearRangeLabel="Application Submitted Date"
+        />
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">
           Seattle building applications submitted
         </h1>

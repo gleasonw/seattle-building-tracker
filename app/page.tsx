@@ -397,16 +397,16 @@ async function YearView({ year }: { year: number }) {
           {topPermits.map((permit, idx) => (
             <div
               key={permit.permitNum}
-              className="bg-white rounded-lg shadow p-4 flex flex-row items-center gap-6 overflow-hidden"
+              className="bg-white rounded-lg shadow p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 overflow-hidden"
             >
               {/* Rank badge (subtler) */}
               <div className="flex-none w-10 h-10 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-semibold text-sm">
                 #{idx + 1}
               </div>
               {/* Main info stack */}
-              <div className="flex-1 flex flex-col md:flex-row md:items-center md:gap-6 min-w-0">
+              <div className="flex-1 flex flex-col md:flex-row md:items-center md:gap-6 min-w-0 w-full">
                 {/* Permit meta (fixed width) */}
-                <div className="w-28 flex-shrink-0 flex flex-col">
+                <div className="w-full md:w-28 shrink-0 flex flex-col">
                   <div className="flex items-center gap-2 text-lg font-semibold tabular-nums">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -423,18 +423,18 @@ async function YearView({ year }: { year: number }) {
                   <div className="text-xs text-gray-500">Units</div>
                 </div>
                 {/* Permit number and date (fixed width) */}
-                <div className="w-48 flex-shrink-0 flex flex-col">
+                <div className="w-full md:w-48 shrink-0 flex flex-col">
                   {permit.link ? (
                     <a
                       href={permit.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="font-mono text-blue-600 hover:underline truncate block"
+                      className="font-mono text-sm sm:text-base text-blue-600 hover:underline truncate block"
                     >
                       {permit.permitNum}
                     </a>
                   ) : (
-                    <div className="font-mono text-gray-900 truncate">
+                    <div className="font-mono text-sm sm:text-base text-gray-900 truncate">
                       {permit.permitNum}
                     </div>
                   )}
@@ -445,7 +445,7 @@ async function YearView({ year }: { year: number }) {
                   </div>
                 </div>
                 {/* Address and description (flex, truncates) */}
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 w-full">
                   <div className="text-sm text-gray-700 truncate">
                     {permit.originalAddress1 ? (
                       <a

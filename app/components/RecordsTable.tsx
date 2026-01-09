@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { BuildingPermit } from "@/server/src/db/schema";
 
@@ -61,7 +61,6 @@ export default function RecordsTable({
   extraFields = [],
 }: Props) {
   const searchParams = useSearchParams();
-  const router = useRouter();
 
   const { sortBy, sortOrder } = initialParams;
 
@@ -75,7 +74,8 @@ export default function RecordsTable({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="overflow-x-auto shadow-md rounded-lg overflow-hidden">
+      {/* Desktop Table View */}
+      <div className="hidden md:block overflow-x-auto shadow-md rounded-lg overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-100 border-b border-gray-200">
             <tr>
@@ -227,6 +227,94 @@ export default function RecordsTable({
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden flex flex-col gap-3">
+        {records.length > 0 ? (
+          records.map((record) => (
+            <div
+              key={record.permitNum}
+              className="bg-white rounded-lg shadow p-4 border border-gray-200"
+            >
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex-1 min-w-0">
+                  {record.link ? (
+                    <a
+                      href={record.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-mono text-sm text-blue-600 hover:underline block truncate"
+                    >
+                      {record.permitNum}
+                    </a>
+                  ) : (
+                    <span className="font-mono text-sm text-gray-900 block truncate">
+                      {record.permitNum}
+                    </span>
+                  )}
+                </div>
+                <div className="ml-2 text-sm font-semibold text-gray-900 tabular-nums whitespace-nowrap">
+                  {record.housingUnitsAdded?.toLocaleString() || 0} units
+                </div>
+              </div>
+
+              {record.originalAddress1 && (
+                <div className="mb-2">
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                      record.originalAddress1 + ", Seattle, WA"
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-600 hover:underline line-clamp-2"
+                  >
+                    {record.originalAddress1}
+                  </a>
+                </div>
+              )}
+
+              {record.description && (
+                <div className="text-xs text-gray-500 mb-2 line-clamp-2">
+                  {record.description}
+                </div>
+              )}
+
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600">
+                {record.appliedDate && (
+                  <div>
+                    <span className="font-medium">Applied:</span>{" "}
+                    {new Date(record.appliedDate).toLocaleDateString()}
+                  </div>
+                )}
+                {record.completedDate && (
+                  <div>
+                    <span className="font-medium">Completed:</span>{" "}
+                    {new Date(record.completedDate).toLocaleDateString()}
+                  </div>
+                )}
+              </div>
+
+              {extraFields.length > 0 && (
+                <div className="mt-2 pt-2 border-t border-gray-100">
+                  {extraFields.map((field) => (
+                    <div key={field.key} className="text-xs text-gray-600">
+                      <span className="font-medium">{field.label}:</span>{" "}
+                      {record[field.key] !== null &&
+                      record[field.key] !== undefined
+                        ? String(record[field.key])
+                        : "-"}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))
+        ) : (
+          <div className="p-8 text-center text-gray-500 bg-white rounded-lg shadow">
+            No records found for the selected criteria
+          </div>
+        )}
       </div>
     </div>
   );
