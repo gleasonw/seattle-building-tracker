@@ -2,7 +2,6 @@ import { db } from "@/server/src/db";
 import { and, desc, isNotNull, sql } from "drizzle-orm";
 import { buildingPermits } from "@/server/src/db/schema";
 import Link from "next/link";
-import DashboardNav from "./components/DashboardNav";
 import YearNavigation from "./components/YearNavigation";
 
 async function getYearStats(year: number) {

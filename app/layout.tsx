@@ -4,6 +4,7 @@ import "./globals.css";
 import QueryProvider from "./components/QueryProvider";
 import DataFooter from "./components/DataFooter";
 import DashboardNav from "@/app/components/DashboardNav";
+import { Suspense } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,7 +40,9 @@ export default function RootLayout({
         <QueryProvider>
           <div className="min-h-screen bg-gray-50">
             <div className=" mx-auto p-8">
-              <DashboardNav />
+              <Suspense>
+                <DashboardNav />
+              </Suspense>
 
               {children}
             </div>
