@@ -32,6 +32,7 @@ export type BuildingDashSearchParams = {
   lat?: string;
   lng?: string;
   permitTypeDesc?: string;
+  statusCurrent?: string;
 };
 
 export function PermitRowFilters({

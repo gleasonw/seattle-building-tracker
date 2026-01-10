@@ -13,6 +13,7 @@ import FiltersSidebar from "@/app/components/FiltersSidebar";
 import FilterBadges from "@/app/components/FilterBadges";
 import MobileFilters from "@/app/components/MobileFilters";
 import PermitTypeDescFilter from "@/app/components/PermitTypeDescFilter";
+import StatusCurrentFilter from "@/app/components/StatusCurrentFilter";
 import { Suspense } from "react";
 
 type SortField =
@@ -32,6 +33,7 @@ interface SearchParams {
   lat?: string;
   lng?: string;
   permitTypeDesc?: string;
+  statusCurrent?: string;
 }
 
 async function getTrendsData(params: SearchParams) {
@@ -167,7 +169,10 @@ export default async function ApplicationsPage({
           initialParams={params}
           yearRangeLabel="Application Submitted Date"
           extraTopFilters={
-            <PermitTypeDescFilter currentValue={params.permitTypeDesc} />
+            <>
+              <PermitTypeDescFilter currentValue={params.permitTypeDesc} />
+              <StatusCurrentFilter currentValue={params.statusCurrent} />
+            </>
           }
         />
       </MobileFilters>
@@ -181,7 +186,10 @@ export default async function ApplicationsPage({
           initialParams={params}
           yearRangeLabel="Application Submitted Date"
           extraTopFilters={
-            <PermitTypeDescFilter currentValue={params.permitTypeDesc} />
+            <>
+              <PermitTypeDescFilter currentValue={params.permitTypeDesc} />
+              <StatusCurrentFilter currentValue={params.statusCurrent} />
+            </>
           }
         />
       </div>

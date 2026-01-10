@@ -46,6 +46,16 @@ export default function FilterBadges() {
       });
     }
 
+    // Status filter
+    const statusCurrent = searchParams.get("statusCurrent");
+    if (statusCurrent) {
+      filters.push({
+        key: "statusCurrent",
+        label: `Status: ${statusCurrent}`,
+        value: ["statusCurrent"],
+      });
+    }
+
     return filters;
   };
 
