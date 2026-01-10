@@ -48,7 +48,7 @@ export function buildFiltersFromParams({
   targetDateField: PgColumn;
   initialParams: BuildingDashSearchParams;
 }): SQL<unknown>[] {
-  const { start, end, lat, lng, radius, permitTypeDesc, statusCurrent } =
+  const { start, end, lat, lng, radius, permitTypeDesc, statusCurrent, housingUnitsAddedMin } =
     initialParams;
   const conditions = [isNotNull(targetDateField)];
 
@@ -62,6 +62,13 @@ export function buildFiltersFromParams({
 
   if (statusCurrent) {
     conditions.push(eq(buildingPermits.statusCurrent, statusCurrent));
+  }
+
+  if (housingUnitsAddedMin) {
+    const minUnits = parseInt(housingUnitsAddedMin, 10);
+    if (!isNaN(minUnits)) {
+      conditions.push(sql`${buildingPermits.housingUnitsAdded} >= ${minUnits}`);
+    }
   }
 
   if (start) {

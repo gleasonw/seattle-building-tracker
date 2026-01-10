@@ -33,6 +33,7 @@ export type BuildingDashSearchParams = {
   lng?: string;
   permitTypeDesc?: string;
   statusCurrent?: string;
+  housingUnitsAddedMin?: string;
 };
 
 export function PermitRowFilters({

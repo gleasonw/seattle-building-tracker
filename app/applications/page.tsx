@@ -14,6 +14,7 @@ import FilterBadges from "@/app/components/FilterBadges";
 import MobileFilters from "@/app/components/MobileFilters";
 import PermitTypeDescFilter from "@/app/components/PermitTypeDescFilter";
 import StatusCurrentFilter from "@/app/components/StatusCurrentFilter";
+import HousingUnitsFilter from "@/app/components/HousingUnitsFilter";
 import { Suspense } from "react";
 
 type SortField =
@@ -34,6 +35,7 @@ interface SearchParams {
   lng?: string;
   permitTypeDesc?: string;
   statusCurrent?: string;
+  housingUnitsAddedMin?: string;
 }
 
 async function getTrendsData(params: SearchParams) {
@@ -173,6 +175,9 @@ export default async function ApplicationsPage({
             <>
               <PermitTypeDescFilter currentValue={params.permitTypeDesc} />
               <StatusCurrentFilter currentValue={params.statusCurrent} />
+              <HousingUnitsFilter
+                currentValue={params.housingUnitsAddedMin}
+              />
             </>
           }
         />
@@ -191,6 +196,9 @@ export default async function ApplicationsPage({
             <>
               <PermitTypeDescFilter currentValue={params.permitTypeDesc} />
               <StatusCurrentFilter currentValue={params.statusCurrent} />
+              <HousingUnitsFilter
+                currentValue={params.housingUnitsAddedMin}
+              />
             </>
           }
         />

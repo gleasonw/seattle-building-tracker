@@ -56,6 +56,16 @@ export default function FilterBadges() {
       });
     }
 
+    // Housing units filter
+    const housingUnitsAddedMin = searchParams.get("housingUnitsAddedMin");
+    if (housingUnitsAddedMin) {
+      filters.push({
+        key: "housingUnitsAddedMin",
+        label: `Units: ${housingUnitsAddedMin}+`,
+        value: ["housingUnitsAddedMin"],
+      });
+    }
+
     return filters;
   };
 
