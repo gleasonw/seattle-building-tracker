@@ -8,7 +8,8 @@ export function useFilters() {
   const searchParams = useSearchParams();
 
   const updateFilterParams = (updates: Partial<BuildingDashSearchParams>) => {
-    const newParams = new URLSearchParams(searchParams.toString());
+    const latestSearchParams = window.location.search;
+    const newParams = new URLSearchParams(latestSearchParams);
 
     // Apply all updates
     Object.entries(updates).forEach(([key, value]) => {
