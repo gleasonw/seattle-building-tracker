@@ -201,6 +201,61 @@ async function getTopPermits(year: number) {
     .limit(10);
 }
 
+async function getNeighborhoodStats(year: number) {
+  // Get top 10 neighborhoods by total housing units added
+  const topNeighborhoods = await db
+    .select({
+      neighborhood: buildingPermits.largeNeighborhood,
+      totalUnits: sql<number>`CAST(SUM(COALESCE(${buildingPermits.housingUnitsAdded}, 0)) AS INTEGER)`,
+      permitCount: sql<number>`CAST(COUNT(*) AS INTEGER)`,
+    })
+    .from(buildingPermits)
+    .where(
+      and(
+        sql`EXTRACT(YEAR FROM ${buildingPermits.completedDate}) = ${year}`,
+        isNotNull(buildingPermits.largeNeighborhood),
+        isNotNull(buildingPermits.completedDate),
+        sql`${buildingPermits.housingUnitsAdded} > 0`
+      )
+    )
+    .groupBy(buildingPermits.largeNeighborhood)
+    .orderBy(desc(sql`SUM(COALESCE(${buildingPermits.housingUnitsAdded}, 0))`))
+    .limit(10);
+
+  // For each top neighborhood, get the top 3 permits
+  const neighborhoodsWithTopPermits = await Promise.all(
+    topNeighborhoods.map(async (neighborhood) => {
+      const topPermits = await db
+        .select({
+          permitNum: buildingPermits.permitNum,
+          completedDate: buildingPermits.completedDate,
+          housingUnitsAdded: buildingPermits.housingUnitsAdded,
+          originalAddress1: buildingPermits.originalAddress1,
+          description: buildingPermits.description,
+          link: buildingPermits.link,
+        })
+        .from(buildingPermits)
+        .where(
+          and(
+            sql`EXTRACT(YEAR FROM ${buildingPermits.completedDate}) = ${year}`,
+            sql`${buildingPermits.largeNeighborhood} = ${neighborhood.neighborhood}`,
+            isNotNull(buildingPermits.housingUnitsAdded),
+            sql`${buildingPermits.housingUnitsAdded} > 0`
+          )
+        )
+        .orderBy(desc(buildingPermits.housingUnitsAdded))
+        .limit(3);
+
+      return {
+        ...neighborhood,
+        topPermits,
+      };
+    })
+  );
+
+  return neighborhoodsWithTopPermits;
+}
+
 export default async function Home({
   searchParams,
 }: {
@@ -217,6 +272,7 @@ async function YearView({ year }: { year: number }) {
   const targetYear = year;
   const stats = await getYearStats(targetYear);
   const topPermits = await getTopPermits(targetYear);
+  const neighborhoodStats = await getNeighborhoodStats(targetYear);
 
   const isCurrentYear = targetYear === new Date().getUTCFullYear();
 
@@ -479,6 +535,114 @@ async function YearView({ year }: { year: number }) {
           ))}
         </div>
       </div>
+
+      {/* Neighborhood Breakdown */}
+      {neighborhoodStats.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-lg font-bold mb-4">
+            Housing Units by Neighborhood
+          </h2>
+          <div className="space-y-6">
+            {neighborhoodStats.map((hood, idx) => (
+              <div
+                key={hood.neighborhood}
+                className="bg-white rounded-lg shadow overflow-hidden"
+              >
+                {/* Neighborhood header */}
+                <div className="bg-gradient-to-r from-blue-50 to-white px-6 py-4 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-none w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-semibold text-sm">
+                        #{idx + 1}
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {hood.neighborhood}
+                        </h3>
+                        <div className="text-sm text-gray-600">
+                          {hood.permitCount}{" "}
+                          {hood.permitCount === 1 ? "permit" : "permits"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-gray-900">
+                        {hood.totalUnits.toLocaleString()}
+                      </div>
+                      <div className="text-sm text-gray-600">units added</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Top permits in this neighborhood */}
+                <div className="px-6 py-4">
+                  <div className="text-sm font-medium text-gray-700 mb-3">
+                    Largest Projects
+                  </div>
+                  <div className="space-y-3">
+                    {hood.topPermits.map((permit) => (
+                      <div
+                        key={permit.permitNum}
+                        className="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-50"
+                      >
+                        <div className="flex-none w-16 text-right">
+                          <div className="text-lg font-semibold text-gray-900 tabular-nums">
+                            {permit.housingUnitsAdded?.toLocaleString() || 0}
+                          </div>
+                          <div className="text-xs text-gray-500">units</div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          {permit.link ? (
+                            <a
+                              href={permit.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-mono text-sm text-blue-600 hover:underline"
+                            >
+                              {permit.permitNum}
+                            </a>
+                          ) : (
+                            <div className="font-mono text-sm text-gray-900">
+                              {permit.permitNum}
+                            </div>
+                          )}
+                          {permit.originalAddress1 && (
+                            <div className="text-sm text-gray-700 truncate mt-1">
+                              <a
+                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                                  permit.originalAddress1 + ", Seattle, WA"
+                                )}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:underline"
+                              >
+                                {permit.originalAddress1}
+                              </a>
+                            </div>
+                          )}
+                          {permit.description && (
+                            <div className="text-xs text-gray-500 truncate mt-1">
+                              {permit.description}
+                            </div>
+                          )}
+                          {permit.completedDate && (
+                            <div className="text-xs text-gray-500 mt-1">
+                              Completed:{" "}
+                              {new Date(
+                                permit.completedDate
+                              ).toLocaleDateString()}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

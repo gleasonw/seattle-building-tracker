@@ -58,6 +58,11 @@ export const buildingPermits = pgTable(
     location1: varchar("location1", { length: 255 }),
     zoning: text("zoning"),
 
+    // Neighborhood
+    neighborhoodId: integer("neighborhood_id"),
+    neighborhood: varchar("neighborhood", { length: 255 }),
+    largeNeighborhood: varchar("large_neighborhood", { length: 255 }),
+
     // Contractor
     contractorCompanyName: varchar("contractor_company_name", { length: 500 }),
 
@@ -102,6 +107,37 @@ export const buildingPermits = pgTable(
     remoteUpdatedAtIdx: index("remote_updated_at_idx").on(
       table.remoteUpdatedAt
     ),
+    neighborhoodIdx: index("neighborhood_idx").on(table.neighborhood),
+    largeNeighborhoodIdx: index("large_neighborhood_idx").on(
+      table.largeNeighborhood
+    ),
+  })
+);
+
+export const neighborhoods = pgTable(
+  "neighborhoods",
+  {
+    // Primary key
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+
+    // From GeoJSON properties
+    objectId: integer("object_id").notNull().unique(),
+    largeHood: varchar("large_hood", { length: 255 }).notNull(),
+    smallHood: varchar("small_hood", { length: 255 }).notNull(),
+    altNames: text("alt_names"),
+    shapeArea: decimal("shape_area", { precision: 20, scale: 10 }),
+    shapeLength: decimal("shape_length", { precision: 20, scale: 10 }),
+
+    // Geometry storage as GeoJSON text
+    geojson: text("geojson").notNull(),
+
+    // Metadata
+    createdAt: timestamp("created_at", { mode: "string" }).defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow(),
+  },
+  (table) => ({
+    largeHoodIdx: index("large_hood_idx").on(table.largeHood),
+    smallHoodIdx: index("small_hood_idx").on(table.smallHood),
   })
 );
 
@@ -120,5 +156,7 @@ export const syncMetadata = pgTable("sync_metadata", {
 // Export TypeScript types for type-safe queries
 export type BuildingPermit = InferSelectModel<typeof buildingPermits>;
 export type NewBuildingPermit = InferInsertModel<typeof buildingPermits>;
+export type Neighborhood = InferSelectModel<typeof neighborhoods>;
+export type NewNeighborhood = InferInsertModel<typeof neighborhoods>;
 export type SyncMetadata = InferSelectModel<typeof syncMetadata>;
 export type NewSyncMetadata = InferInsertModel<typeof syncMetadata>;

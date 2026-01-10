@@ -3,6 +3,7 @@ import { buildingPermits, syncMetadata } from "../db/schema";
 import { sql, eq } from "drizzle-orm";
 import pLimit from "p-limit";
 import dotenv from "dotenv";
+import { assignNeighborhoods } from "../db/neighborhoods";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -610,9 +611,16 @@ async function upsertPermits(
 
     try {
       await db.transaction(async (tx) => {
-        for (const record of batch) {
-          const mapped = mapAPIRecordToSchema(record);
+        // Map all records in the batch first
+        const mappedRecords = batch.map((record) =>
+          mapAPIRecordToSchema(record)
+        );
 
+        // Assign neighborhoods to all records in the batch
+        assignNeighborhoods(mappedRecords);
+
+        // Insert/update records with neighborhood data
+        for (const mapped of mappedRecords) {
           await tx
             .insert(buildingPermits)
             .values(mapped)

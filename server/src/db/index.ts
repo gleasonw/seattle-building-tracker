@@ -13,7 +13,6 @@ if (!process.env.DATABASE_URL) {
 // Configure PostgreSQL connection
 // Use max: 10 for development, adjust to 20-30 for production
 const connectionString = process.env.DATABASE_URL;
-const isProd = process.env.NODE_ENV === "production";
 
 // Singleton pattern to prevent connection pool exhaustion during hot reload
 const globalForDb = globalThis as unknown as {
@@ -31,7 +30,7 @@ const client =
 if (process.env.NODE_ENV !== "production") globalForDb.client = client;
 
 // Create Drizzle instance with schema
-export const db = drizzle(client, { schema, logger: !isProd });
+export const db = drizzle(client, { schema, logger: false });
 
 // Export schema for convenience
 export { schema };
