@@ -168,6 +168,7 @@ export default async function ApplicationsPage({
         <FiltersSidebar
           initialParams={params}
           yearRangeLabel="Application Submitted Date"
+          records={records}
           extraTopFilters={
             <>
               <PermitTypeDescFilter currentValue={params.permitTypeDesc} />
@@ -185,6 +186,7 @@ export default async function ApplicationsPage({
         <FiltersSidebar
           initialParams={params}
           yearRangeLabel="Application Submitted Date"
+          records={records}
           extraTopFilters={
             <>
               <PermitTypeDescFilter currentValue={params.permitTypeDesc} />

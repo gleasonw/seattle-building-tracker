@@ -26,16 +26,25 @@ interface SuggestionResult {
   lon: string;
 }
 
+interface Record {
+  latitude: string | null;
+  longitude: string | null;
+  originalAddress1: string | null;
+  permitNum: string;
+}
+
 interface FiltersSidebarProps {
   initialParams: BuildingDashSearchParams;
   yearRangeLabel: React.ReactNode;
   extraTopFilters?: React.ReactNode;
+  records?: Record[];
 }
 
 export default function FiltersSidebar({
   initialParams,
   yearRangeLabel,
   extraTopFilters,
+  records = [],
 }: FiltersSidebarProps) {
   const { updateFilterParams } = useFilters();
 
@@ -347,6 +356,7 @@ export default function FiltersSidebar({
               }
               radius={parseFloat(radius)}
               onLocationSelect={handleMapLocationSelect}
+              records={records}
             />
           </div>
         )}
