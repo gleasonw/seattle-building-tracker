@@ -175,9 +175,7 @@ export default async function ApplicationsPage({
             <>
               <PermitTypeDescFilter currentValue={params.permitTypeDesc} />
               <StatusCurrentFilter currentValue={params.statusCurrent} />
-              <HousingUnitsFilter
-                currentValue={params.housingUnitsAddedMin}
-              />
+              <HousingUnitsFilter currentValue={params.housingUnitsAddedMin} />
             </>
           }
         />
@@ -196,9 +194,7 @@ export default async function ApplicationsPage({
             <>
               <PermitTypeDescFilter currentValue={params.permitTypeDesc} />
               <StatusCurrentFilter currentValue={params.statusCurrent} />
-              <HousingUnitsFilter
-                currentValue={params.housingUnitsAddedMin}
-              />
+              <HousingUnitsFilter currentValue={params.housingUnitsAddedMin} />
             </>
           }
         />

@@ -48,8 +48,16 @@ export function buildFiltersFromParams({
   targetDateField: PgColumn;
   initialParams: BuildingDashSearchParams;
 }): SQL<unknown>[] {
-  const { start, end, lat, lng, radius, permitTypeDesc, statusCurrent, housingUnitsAddedMin } =
-    initialParams;
+  const {
+    start,
+    end,
+    lat,
+    lng,
+    radius,
+    permitTypeDesc,
+    statusCurrent,
+    housingUnitsAddedMin,
+  } = initialParams;
   const conditions = [isNotNull(targetDateField)];
 
   if (targetDateField.name === "completed_date") {
