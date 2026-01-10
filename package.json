@@ -10,7 +10,7 @@
     "db:push": "npx drizzle-kit push",
     "db:studio": "npx drizzle-kit studio",
     "import:bulk": "NODE_ENV=production bun run ./server/src/import/doBulkImport.ts",
-    "sync": "bun run ./server/src/import/doPeriodicSync.ts"
+    "sync": "NODE_ENV=production bun run ./server/src/import/doPeriodicSync.ts"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",

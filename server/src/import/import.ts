@@ -270,7 +270,7 @@ export async function periodicSync(
       .limit(1);
 
     const lastSyncTime = lastSync[0]?.lastSyncCompletedAt
-      ? new Date(lastSync[0].lastSyncCompletedAt)
+      ? new Date(lastSync[0].lastSyncCompletedAt + "Z") // Force UTC interpretation
       : new Date("2000-01-01");
 
     console.log({ lastSync });
@@ -315,7 +315,10 @@ export async function periodicSync(
       lastSyncStatus: "in_progress",
     });
 
-    const records = await fetchUpdatedRecords(lastSyncTime, fullConfig);
+    const records = await fetchNewCompletedAndIssuedRecords(
+      lastSyncTime,
+      fullConfig
+    );
     console.log(`Fetched ${records.length} updated records`);
 
     progress.totalRecords = records.length;
@@ -487,10 +490,7 @@ async function fetchChunkData(
   return allRecords;
 }
 
-/**
- * Fetches records updated since a given timestamp.
- */
-async function fetchUpdatedRecords(
+async function fetchNewCompletedAndIssuedRecords(
   since: Date,
   config: ImportConfig
 ): Promise<SeattlePermitRecord[]> {
@@ -503,11 +503,13 @@ async function fetchUpdatedRecords(
   if (config.appToken) {
     url.searchParams.set("$$app_token", config.appToken);
   }
-  // Filter by update time AND permit type (exclude exemptions/exceptions)
-  // Require applieddate (when permit application was submitted)
+  // the idea is to fetch any records that have been issued since our last sync or completed since our last sync.
+  // of course, if an old record is updated, we won't catch it with this method, but still, we avoid
+  // refetching all the data.
+  const sinceFormatted = formatDateForAPI(since);
   url.searchParams.set(
     "$where",
-    `:updated_at > '${since.toISOString()}' AND permittypemapped IN ('Building', 'Demolition', 'Land Use') AND applieddate IS NOT NULL`
+    `permittypemapped IN ('Building', 'Demolition', 'Land Use') AND applieddate IS NOT NULL AND (issueddate >= '${sinceFormatted}T00:00:00' OR completeddate >= '${sinceFormatted}T00:00:00')`
   );
   url.searchParams.set("$order", ":updated_at ASC");
 
