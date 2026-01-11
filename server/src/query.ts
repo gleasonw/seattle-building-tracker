@@ -72,13 +72,9 @@ ORDER BY \`${targetDateField}\` DESC`;
   return `${baseUrl}/${encodeURIComponent(sqlQuery)}/page/filter`;
 }
 
-export function buildFiltersFromParams({
-  targetDateField,
-  initialParams,
-}: {
-  targetDateField: PgColumn;
-  initialParams: BuildingDashSearchParams;
-}): SQL<unknown>[] {
+export function buildFiltersFromParams(
+  initialParams: BuildingDashSearchParams
+): SQL<unknown>[] {
   const {
     start,
     end,
@@ -88,10 +84,18 @@ export function buildFiltersFromParams({
     permitTypeDesc,
     statusCurrent,
     housingUnitsAddedMin,
+    dateField,
   } = initialParams;
+
+  // Determine which date field to use
+  const targetDateField =
+    dateField === "completed"
+      ? buildingPermits.completedDate
+      : buildingPermits.appliedDate;
+
   const conditions = [isNotNull(targetDateField)];
 
-  if (targetDateField.name === "completed_date") {
+  if (dateField === "completed") {
     conditions.push(gt(buildingPermits.housingUnitsAdded, 0));
   }
 

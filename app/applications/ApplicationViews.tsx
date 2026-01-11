@@ -50,6 +50,7 @@ interface Record {
   completedDate: string | null;
   statusCurrent: string | null;
   housingUnitsAdded: number | null;
+  link: string | null;
 }
 
 interface ApplicationViewsProps {

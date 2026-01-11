@@ -55,6 +55,7 @@ interface Record {
   completedDate: string | null;
   statusCurrent: string | null;
   housingUnitsAdded: number | null;
+  link: string | null;
 }
 
 interface UnifiedMapProps {
@@ -77,7 +78,7 @@ function getStatusLabel(status: StatusCategory): string {
     case "pipeline":
       return "In Pipeline";
     case "done":
-      return "Completed";
+      return "Done";
     case "canceled":
       return "Canceled";
   }
@@ -177,7 +178,12 @@ export default function UnifiedMap({ records }: UnifiedMapProps) {
       }<br/>
           ${
             record.housingUnitsAdded !== null
-              ? `<strong>Units Added:</strong> ${record.housingUnitsAdded}`
+              ? `<strong>Units Added:</strong> ${record.housingUnitsAdded}<br/>`
+              : ""
+          }
+          ${
+            record.link
+              ? `<a href="${record.link}" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: underline;">View on Seattle.gov →</a>`
               : ""
           }
         </div>
@@ -197,15 +203,15 @@ export default function UnifiedMap({ records }: UnifiedMapProps) {
         <div className="flex items-center gap-6 text-sm">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-            <span>In Pipeline</span>
+            <span>{getStatusLabel("pipeline")}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-            <span>Completed</span>
+            <span>{getStatusLabel("done")}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-            <span>Canceled</span>
+            <span>{getStatusLabel("canceled")}</span>
           </div>
         </div>
       </div>

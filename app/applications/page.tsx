@@ -42,10 +42,7 @@ interface SearchParams {
 async function getApplicationTrendsData(params: SearchParams) {
   const dateField = buildingPermits.appliedDate;
 
-  const conditions = buildFiltersFromParams({
-    targetDateField: dateField,
-    initialParams: params,
-  });
+  const conditions = buildFiltersFromParams(params);
 
   const [monthlyData, yearlyData] = await Promise.all([
     db
@@ -102,10 +99,7 @@ async function getApplicationTrendsData(params: SearchParams) {
 async function getConstructionTrendsData(params: SearchParams) {
   const dateField = buildingPermits.completedDate;
 
-  const conditions = buildFiltersFromParams({
-    targetDateField: dateField,
-    initialParams: params,
-  });
+  const conditions = buildFiltersFromParams(params);
 
   const [monthlyData, yearlyData] = await Promise.all([
     db
@@ -151,10 +145,7 @@ async function getRecords(params: BuildingDashSearchParams) {
       ? buildingPermits.completedDate
       : buildingPermits.appliedDate;
 
-  const conditions = buildFiltersFromParams({
-    targetDateField: dateField,
-    initialParams: params,
-  });
+  const conditions = buildFiltersFromParams(params);
 
   const { sortBy = "appliedDate", sortOrder = "desc" } = params;
 
