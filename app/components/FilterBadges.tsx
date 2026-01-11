@@ -7,7 +7,7 @@ import Link from "next/link";
 
 export default function FilterBadges() {
   const searchParams = useSearchParams();
-  const { updateFilterParams } = useFilters();
+  const { updateFilterParams, getDateField } = useFilters();
 
   // Get active filters
   const getActiveFilters = () => {
@@ -16,7 +16,7 @@ export default function FilterBadges() {
     // Date range filter
     const start = searchParams.get("start");
     const end = searchParams.get("end");
-    const dateField = searchParams.get("dateField") || "applied";
+    const dateField = getDateField();
     if (start || end) {
       const startYear = start ? new Date(start).getFullYear() : "";
       const endYear = end ? new Date(end).getFullYear() : "";

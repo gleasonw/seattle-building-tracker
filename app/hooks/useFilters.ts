@@ -23,8 +23,15 @@ export function useFilters() {
     router.push(`?${newParams.toString()}`, { scroll: false });
   };
 
+  const getDateField = (): "applied" | "completed" => {
+    return (
+      (searchParams.get("dateField") as "applied" | "completed") || "applied"
+    );
+  };
+
   return {
     updateFilterParams,
     searchParams,
+    getDateField,
   };
 }

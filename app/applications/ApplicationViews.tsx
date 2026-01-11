@@ -3,6 +3,7 @@
 import ApplicationsChart from "@/app/applications/ApplicationsChart";
 import { ConstructionChart } from "@/app/components/ConstructionChart";
 import dynamic from "next/dynamic";
+import { useFilters } from "@/app/hooks/useFilters";
 
 const UnifiedMap = dynamic(() => import("@/app/components/UnifiedMap"), {
   ssr: false,
@@ -76,13 +77,17 @@ export default function ApplicationViews({
   endDate,
   extra,
 }: ApplicationViewsProps) {
+  const { getDateField } = useFilters();
+  const dateField = getDateField();
   return (
     <div className="space-y-6 mb-6">
       {/* Charts - Side by side on desktop, stacked on mobile */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
           <h2 className="text-lg font-semibold text-gray-900 mb-3">
-            Housing Units Added
+            {dateField === "applied"
+              ? "Projected Housing Units"
+              : "Completed Housing Units"}
           </h2>
           <ConstructionChart
             data={constructionTrends}

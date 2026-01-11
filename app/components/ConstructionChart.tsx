@@ -52,7 +52,7 @@ function getDefaultPeriod(monthsDiff: number | null): Period {
 
 export function ConstructionChart({ data, startDate, endDate }: Props) {
   const { monthlyData, yearlyData } = data;
-  const { updateFilterParams } = useFilters();
+  const { updateFilterParams, getDateField } = useFilters();
   const searchParams = useSearchParams();
   const [exportingReady, setExportingReady] = useState(false);
 
@@ -159,7 +159,7 @@ export function ConstructionChart({ data, startDate, endDate }: Props) {
   let categories: string[];
   let seriesData: number[];
 
-  const dateField = searchParams.get("dateField") || "completed";
+  const dateField = getDateField();
 
   if (period === "month") {
     const monthNames = [
@@ -185,7 +185,10 @@ export function ConstructionChart({ data, startDate, endDate }: Props) {
 
   const series = [
     {
-      name: "Housing Units Added",
+      name:
+        dateField === "applied"
+          ? "Projected housing units"
+          : "Housing units added",
       data: seriesData.map((value, index) => ({
         y: value,
         events: {
@@ -227,7 +230,10 @@ export function ConstructionChart({ data, startDate, endDate }: Props) {
     },
     yAxis: {
       title: {
-        text: "Housing Units Added",
+        text:
+          dateField === "applied"
+            ? "Projected Housing Units"
+            : "Housing Units Added",
       },
       min: 0,
     },

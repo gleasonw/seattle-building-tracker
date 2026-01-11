@@ -58,7 +58,7 @@ function getDefaultPeriod(monthsDiff: number | null): Period {
 
 export default function ApplicationsChart({ data, startDate, endDate }: Props) {
   const { monthlyData, yearlyData } = data;
-  const { updateFilterParams } = useFilters();
+  const { updateFilterParams, getDateField } = useFilters();
   const searchParams = useSearchParams();
   const [exportingReady, setExportingReady] = useState(false);
 
@@ -95,7 +95,7 @@ export default function ApplicationsChart({ data, startDate, endDate }: Props) {
 
   // Read period from URL, fallback to default
   const period = (searchParams.get("period") as Period) || defaultPeriod;
-  const dateField = searchParams.get("dateField") || "completed";
+  const dateField = getDateField();
 
   // Handle click on chart bar to filter by date range
   const handleBarClick = (pointIndex: number) => {
