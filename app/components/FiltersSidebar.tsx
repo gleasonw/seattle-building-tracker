@@ -3,7 +3,7 @@
 import YearRangeSlider from "@/app/components/YearRangeSlider";
 import { DEFAULT_START_DATE } from "@/server/src/query";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Map, X, Calendar, Pencil } from "lucide-react";
+import { Search, Map, X, Calendar, Pencil, SlidersHorizontal } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useDebounceCallback } from "usehooks-ts";
 import { useFilters } from "@/app/hooks/useFilters";
@@ -181,6 +181,12 @@ export default function FiltersSidebar({
 
   return (
     <div className="w-full lg:w-80 bg-white lg:border-r border-gray-200 p-6 overflow-y-auto h-full flex flex-col gap-6">
+      {/* Filters Header */}
+      <div className="flex items-center gap-3 pb-4 border-b border-gray-200">
+        <SlidersHorizontal className="w-6 h-6 text-gray-700" />
+        <h2 className="text-xl font-bold text-gray-900">Filters</h2>
+      </div>
+
       <div>
         <div className="flex items-center justify-between mb-4">
           <label className="block text-sm font-medium text-gray-900">

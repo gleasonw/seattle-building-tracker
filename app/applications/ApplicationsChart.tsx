@@ -12,11 +12,17 @@ interface MonthlyData {
   year: number;
   month: number;
   applicationCount: number;
+  pipelineCount: number;
+  doneCount: number;
+  canceledCount: number;
 }
 
 interface YearlyData {
   year: number;
   applicationCount: number;
+  pipelineCount: number;
+  doneCount: number;
+  canceledCount: number;
 }
 
 interface Props {
@@ -157,7 +163,9 @@ export default function ApplicationsChart({ data, startDate, endDate }: Props) {
 
   // Generate time series categories and data based on period
   let categories: string[];
-  let seriesData: number[];
+  let pipelineData: number[];
+  let doneData: number[];
+  let canceledData: number[];
 
   if (period === "month") {
     const monthNames = [
@@ -175,16 +183,20 @@ export default function ApplicationsChart({ data, startDate, endDate }: Props) {
       "Dec",
     ];
     categories = monthlyData.map((d) => `${monthNames[d.month - 1]} ${d.year}`);
-    seriesData = monthlyData.map((d) => d.applicationCount || 0);
+    pipelineData = monthlyData.map((d) => d.pipelineCount || 0);
+    doneData = monthlyData.map((d) => d.doneCount || 0);
+    canceledData = monthlyData.map((d) => d.canceledCount || 0);
   } else {
     categories = yearlyData.map((d) => d.year.toString());
-    seriesData = yearlyData.map((d) => d.applicationCount || 0);
+    pipelineData = yearlyData.map((d) => d.pipelineCount || 0);
+    doneData = yearlyData.map((d) => d.doneCount || 0);
+    canceledData = yearlyData.map((d) => d.canceledCount || 0);
   }
 
   const series = [
     {
-      name: "Applications Submitted",
-      data: seriesData.map((value, index) => ({
+      name: "In Pipeline",
+      data: pipelineData.map((value, index) => ({
         y: value,
         events: {
           click: () => handleBarClick(index),
@@ -193,12 +205,34 @@ export default function ApplicationsChart({ data, startDate, endDate }: Props) {
       color: "#3b82f6",
       cursor: "pointer",
     },
+    {
+      name: "Completed",
+      data: doneData.map((value, index) => ({
+        y: value,
+        events: {
+          click: () => handleBarClick(index),
+        },
+      })),
+      color: "#22c55e",
+      cursor: "pointer",
+    },
+    {
+      name: "Canceled",
+      data: canceledData.map((value, index) => ({
+        y: value,
+        events: {
+          click: () => handleBarClick(index),
+        },
+      })),
+      color: "#9ca3af",
+      cursor: "pointer",
+    },
   ];
 
   const chartOptions = {
     chart: {
       type: "column",
-      height: 500,
+      height: 300,
       zoomType: "x" as const,
       events: {
         selection: handleSelection,
@@ -224,9 +258,13 @@ export default function ApplicationsChart({ data, startDate, endDate }: Props) {
         text: "Number of Applications",
       },
       min: 0,
+      stackLabels: {
+        enabled: false,
+      },
     },
     plotOptions: {
       column: {
+        stacking: "normal" as const,
         grouping: false,
         shadow: false,
         borderWidth: 0,
@@ -237,7 +275,7 @@ export default function ApplicationsChart({ data, startDate, endDate }: Props) {
       crosshairs: true,
     },
     legend: {
-      enabled: false,
+      enabled: true,
     },
     series,
     credits: {

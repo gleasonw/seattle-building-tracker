@@ -10,8 +10,7 @@ export default function DashboardNav() {
 
   const tabs = [
     { name: "Year in detail", href: "/" },
-    { name: "Housing Unit Totals", href: "/construction" },
-    { name: "Application Totals", href: "/applications" },
+    { name: "Applications & Construction", href: "/applications" },
   ];
 
   return (

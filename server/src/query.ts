@@ -5,6 +5,37 @@ import { PgColumn } from "drizzle-orm/pg-core";
 
 export const DEFAULT_START_DATE = "2010-01-01";
 
+export type StatusCategory = "pipeline" | "done" | "canceled";
+
+export function categorizeStatus(statusCurrent: string | null): StatusCategory {
+  if (!statusCurrent) return "pipeline";
+
+  const status = statusCurrent.toLowerCase();
+
+  // Done: completed states (construction actually finished)
+  if (
+    status === "completed" ||
+    status === "closed" ||
+    status === "approved to occupy" ||
+    status === "inspections completed"
+  ) {
+    return "done";
+  }
+
+  // Canceled: terminal non-completion states
+  if (
+    status === "canceled" ||
+    status === "denied" ||
+    status === "expired" ||
+    status === "withdrawn"
+  ) {
+    return "canceled";
+  }
+
+  // Pipeline: everything else (in progress, pending, issued, application completed, etc.)
+  return "pipeline";
+}
+
 export function createSeattleDataUrl({
   initialParams,
   targetDateField,
@@ -69,7 +100,20 @@ export function buildFiltersFromParams({
   }
 
   if (statusCurrent) {
-    conditions.push(eq(buildingPermits.statusCurrent, statusCurrent));
+    // Handle status category filtering
+    if (statusCurrent === "pipeline") {
+      conditions.push(
+        sql`LOWER(${buildingPermits.statusCurrent}) NOT IN ('completed', 'closed', 'approved to occupy', 'inspections completed', 'canceled', 'denied', 'expired', 'withdrawn')`
+      );
+    } else if (statusCurrent === "done") {
+      conditions.push(
+        sql`LOWER(${buildingPermits.statusCurrent}) IN ('completed', 'closed', 'approved to occupy', 'inspections completed')`
+      );
+    } else if (statusCurrent === "canceled") {
+      conditions.push(
+        sql`LOWER(${buildingPermits.statusCurrent}) IN ('canceled', 'denied', 'expired', 'withdrawn')`
+      );
+    }
   }
 
   if (housingUnitsAddedMin) {

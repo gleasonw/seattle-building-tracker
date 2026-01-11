@@ -5,27 +5,9 @@ import { useFilters } from "@/app/hooks/useFilters";
 
 const STATUS_OPTIONS = [
   { value: "", label: "All Statuses" },
-  { value: "Additional Info Requested", label: "Additional Info Requested" },
-  { value: "Application Completed", label: "Application Completed" },
-  { value: "Approved to Occupy", label: "Approved to Occupy" },
-  { value: "Awaiting Information", label: "Awaiting Information" },
-  { value: "Canceled", label: "Canceled" },
-  { value: "Closed", label: "Closed" },
-  { value: "Completed", label: "Completed" },
-  { value: "Corrections Required", label: "Corrections Required" },
-  { value: "Corrections Submitted", label: "Corrections Submitted" },
-  { value: "Denied", label: "Denied" },
-  { value: "Expired", label: "Expired" },
-  { value: "Initiated", label: "Initiated" },
-  { value: "Inspections Completed", label: "Inspections Completed" },
-  { value: "Issued", label: "Issued" },
-  { value: "Phase Issued", label: "Phase Issued" },
-  { value: "Ready for Intake", label: "Ready for Intake" },
-  { value: "Ready for Issuance", label: "Ready for Issuance" },
-  { value: "Reviews Completed", label: "Reviews Completed" },
-  { value: "Reviews In Process", label: "Reviews In Process" },
-  { value: "Scheduled", label: "Scheduled" },
-  { value: "Withdrawn", label: "Withdrawn" },
+  { value: "pipeline", label: "In Pipeline" },
+  { value: "done", label: "Completed" },
+  { value: "canceled", label: "Canceled" },
 ];
 
 interface StatusCurrentFilterProps {

@@ -7,8 +7,7 @@ import {
   createSeattleDataUrl,
 } from "@/server/src/query";
 import { BuildingDashSearchParams } from "@/app/PermitRowFilters";
-import ApplicationsChart from "@/app/applications/ApplicationsChart";
-import ApplicationsMap from "@/app/applications/ApplicationsMap";
+import ApplicationViews from "@/app/applications/ApplicationViews";
 import RecordsTable from "@/app/components/RecordsTable";
 import FiltersSidebar from "@/app/components/FiltersSidebar";
 import FilterBadges from "@/app/components/FilterBadges";
@@ -37,9 +36,10 @@ interface SearchParams {
   permitTypeDesc?: string;
   statusCurrent?: string;
   housingUnitsAddedMin?: string;
+  dateField?: "applied" | "completed";
 }
 
-async function getTrendsData(params: SearchParams) {
+async function getApplicationTrendsData(params: SearchParams) {
   const dateField = buildingPermits.appliedDate;
 
   const conditions = buildFiltersFromParams({
@@ -53,6 +53,15 @@ async function getTrendsData(params: SearchParams) {
         year: sql<number>`CAST(EXTRACT(YEAR FROM ${dateField}) AS INTEGER)`,
         month: sql<number>`CAST(EXTRACT(MONTH FROM ${dateField}) AS INTEGER)`,
         applicationCount: sql<number>`CAST(COUNT(*) AS INTEGER)`,
+        pipelineCount: sql<number>`CAST(SUM(CASE
+          WHEN LOWER(${buildingPermits.statusCurrent}) NOT IN ('completed', 'closed', 'approved to occupy', 'inspections completed', 'canceled', 'denied', 'expired', 'withdrawn')
+          THEN 1 ELSE 0 END) AS INTEGER)`,
+        doneCount: sql<number>`CAST(SUM(CASE
+          WHEN LOWER(${buildingPermits.statusCurrent}) IN ('completed', 'closed', 'approved to occupy', 'inspections completed')
+          THEN 1 ELSE 0 END) AS INTEGER)`,
+        canceledCount: sql<number>`CAST(SUM(CASE
+          WHEN LOWER(${buildingPermits.statusCurrent}) IN ('canceled', 'denied', 'expired', 'withdrawn')
+          THEN 1 ELSE 0 END) AS INTEGER)`,
       })
       .from(buildingPermits)
       .where(and(...conditions))
@@ -68,6 +77,57 @@ async function getTrendsData(params: SearchParams) {
       .select({
         year: sql<number>`CAST(EXTRACT(YEAR FROM ${dateField}) AS INTEGER)`,
         applicationCount: sql<number>`CAST(COUNT(*) AS INTEGER)`,
+        pipelineCount: sql<number>`CAST(SUM(CASE
+          WHEN LOWER(${buildingPermits.statusCurrent}) NOT IN ('completed', 'closed', 'approved to occupy', 'inspections completed', 'canceled', 'denied', 'expired', 'withdrawn')
+          THEN 1 ELSE 0 END) AS INTEGER)`,
+        doneCount: sql<number>`CAST(SUM(CASE
+          WHEN LOWER(${buildingPermits.statusCurrent}) IN ('completed', 'closed', 'approved to occupy', 'inspections completed')
+          THEN 1 ELSE 0 END) AS INTEGER)`,
+        canceledCount: sql<number>`CAST(SUM(CASE
+          WHEN LOWER(${buildingPermits.statusCurrent}) IN ('canceled', 'denied', 'expired', 'withdrawn')
+          THEN 1 ELSE 0 END) AS INTEGER)`,
+      })
+      .from(buildingPermits)
+      .where(and(...conditions))
+      .groupBy(sql`EXTRACT(YEAR FROM ${dateField})`)
+      .orderBy(sql`EXTRACT(YEAR FROM ${dateField})`),
+  ]);
+
+  return {
+    monthlyData,
+    yearlyData,
+  };
+}
+
+async function getConstructionTrendsData(params: SearchParams) {
+  const dateField = buildingPermits.completedDate;
+
+  const conditions = buildFiltersFromParams({
+    targetDateField: dateField,
+    initialParams: params,
+  });
+
+  const [monthlyData, yearlyData] = await Promise.all([
+    db
+      .select({
+        year: sql<number>`CAST(EXTRACT(YEAR FROM ${dateField}) AS INTEGER)`,
+        month: sql<number>`CAST(EXTRACT(MONTH FROM ${dateField}) AS INTEGER)`,
+        totalUnitsAdded: sql<number>`CAST(SUM(COALESCE(${buildingPermits.housingUnitsAdded}, 0)) AS INTEGER)`,
+      })
+      .from(buildingPermits)
+      .where(and(...conditions))
+      .groupBy(
+        sql`EXTRACT(YEAR FROM ${dateField})`,
+        sql`EXTRACT(MONTH FROM ${dateField})`
+      )
+      .orderBy(
+        sql`EXTRACT(YEAR FROM ${dateField})`,
+        sql`EXTRACT(MONTH FROM ${dateField})`
+      ),
+    db
+      .select({
+        year: sql<number>`CAST(EXTRACT(YEAR FROM ${dateField}) AS INTEGER)`,
+        totalUnitsAdded: sql<number>`CAST(SUM(COALESCE(${buildingPermits.housingUnitsAdded}, 0)) AS INTEGER)`,
       })
       .from(buildingPermits)
       .where(and(...conditions))
@@ -86,8 +146,13 @@ export type ApplicationRecord = Awaited<
 >["records"][number];
 
 async function getRecords(params: BuildingDashSearchParams) {
+  const dateField =
+    params.dateField === "completed"
+      ? buildingPermits.completedDate
+      : buildingPermits.appliedDate;
+
   const conditions = buildFiltersFromParams({
-    targetDateField: buildingPermits.appliedDate,
+    targetDateField: dateField,
     initialParams: params,
   });
 
@@ -145,17 +210,25 @@ export default async function ApplicationsPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const [trendsData, { records, totalCount }] = await Promise.all([
-    getTrendsData(params),
-    getRecords(params),
-  ]);
+  const dateField = params.dateField || "applied";
+
+  const [applicationTrends, constructionTrends, { records, totalCount }] =
+    await Promise.all([
+      getApplicationTrendsData(params),
+      getConstructionTrendsData(params),
+      getRecords(params),
+    ]);
+
+  const targetDateField =
+    dateField === "completed" ? "completeddate" : "applieddate";
   const seattleDataUrl = createSeattleDataUrl({
     initialParams: params,
-    targetDateField: "applieddate",
+    targetDateField,
   });
 
   const sortOptions = [
     { key: "appliedDate", label: "Applied Date" },
+    { key: "completedDate", label: "Completed Date" },
     { key: "housingUnitsAdded", label: "Units Added" },
     { key: "permitNum", label: "Permit Number" },
   ];
@@ -170,7 +243,11 @@ export default async function ApplicationsPage({
       >
         <FiltersSidebar
           initialParams={params}
-          yearRangeLabel="Application Submitted Date"
+          yearRangeLabel={
+            dateField === "completed"
+              ? "Construction Completed Date"
+              : "Application Submitted Date"
+          }
           extraFilters={
             <>
               <PermitTypeDescFilter currentValue={params.permitTypeDesc} />
@@ -188,7 +265,11 @@ export default async function ApplicationsPage({
       >
         <FiltersSidebar
           initialParams={params}
-          yearRangeLabel="Application Submitted Date"
+          yearRangeLabel={
+            dateField === "completed"
+              ? "Construction Completed Date"
+              : "Application Submitted Date"
+          }
           extraFilters={
             <>
               <PermitTypeDescFilter currentValue={params.permitTypeDesc} />
@@ -200,26 +281,17 @@ export default async function ApplicationsPage({
       </div>
 
       <div className="flex-1 overflow-y-auto px-2 sm:px-4 lg:px-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">
-          Building applications submitted
-        </h1>
         <Suspense>
           <FilterBadges />
         </Suspense>
 
-        {/* Chart and Map - Side by side on large screens, stacked on small */}
-        <div className="flex flex-col lg:flex-row gap-6 mb-6">
-          <div className="flex-1">
-            <ApplicationsChart
-              data={trendsData}
-              startDate={params.start}
-              endDate={params.end}
-            />
-          </div>
-          <div className="flex-1">
-            <ApplicationsMap records={records} />
-          </div>
-        </div>
+        <ApplicationViews
+          applicationTrends={applicationTrends}
+          constructionTrends={constructionTrends}
+          records={records}
+          startDate={params.start}
+          endDate={params.end}
+        />
 
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-600 mb-4">
@@ -240,7 +312,10 @@ export default async function ApplicationsPage({
         <RecordsTable
           records={records}
           initialParams={params}
-          dateColumns={[{ key: "appliedDate", label: "Applied Date" }]}
+          dateColumns={[
+            { key: "appliedDate", label: "Applied Date" },
+            { key: "completedDate", label: "Completed Date" },
+          ]}
           extraFields={[
             { key: "statusCurrent", label: "Current Status", sortable: true },
             { key: "permitTypeDesc", label: "Permit Type Description" },
