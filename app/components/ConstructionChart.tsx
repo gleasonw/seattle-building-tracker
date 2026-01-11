@@ -177,7 +177,7 @@ export function ConstructionChart({ data, startDate, endDate }: Props) {
     categories = monthlyData.map((d) => `${monthNames[d.month - 1]} ${d.year}`);
     seriesData = monthlyData.map((d) => d.totalUnitsAdded || 0);
   } else {
-    categories = yearlyData.map((d) => d.year.toString());
+    categories = yearlyData.map((d) => d.year?.toString());
     seriesData = yearlyData.map((d) => d.totalUnitsAdded || 0);
   }
 
