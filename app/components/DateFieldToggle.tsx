@@ -25,7 +25,7 @@ export default function DateFieldToggle() {
               : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-300"
           }`}
         >
-          Applied
+          First received
         </Link>
         <Link
           href={`?${new URLSearchParams({
@@ -38,7 +38,7 @@ export default function DateFieldToggle() {
               : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-300"
           }`}
         >
-          Completed
+          Marked completed
         </Link>
       </div>
     </div>
