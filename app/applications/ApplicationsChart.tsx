@@ -188,7 +188,7 @@ export default function ApplicationsChart({ data, startDate, endDate }: Props) {
     doneData = monthlyData.map((d) => d.doneCount || 0);
     canceledData = monthlyData.map((d) => d.canceledCount || 0);
   } else {
-    categories = yearlyData.map((d) => d.year.toString());
+    categories = yearlyData.map((d) => d.year?.toString());
     pipelineData = yearlyData.map((d) => d.pipelineCount || 0);
     doneData = yearlyData.map((d) => d.doneCount || 0);
     canceledData = yearlyData.map((d) => d.canceledCount || 0);
