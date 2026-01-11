@@ -274,7 +274,7 @@ export default async function ApplicationsPage({
             <DateFieldToggle />
           </Suspense>
         </div>
-        
+
         <Suspense>
           <FilterBadges />
         </Suspense>
