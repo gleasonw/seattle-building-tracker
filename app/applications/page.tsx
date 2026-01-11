@@ -8,6 +8,7 @@ import {
 } from "@/server/src/query";
 import { BuildingDashSearchParams } from "@/app/PermitRowFilters";
 import ApplicationsChart from "@/app/applications/ApplicationsChart";
+import ApplicationsMap from "@/app/applications/ApplicationsMap";
 import RecordsTable from "@/app/components/RecordsTable";
 import FiltersSidebar from "@/app/components/FiltersSidebar";
 import FilterBadges from "@/app/components/FilterBadges";
@@ -170,8 +171,7 @@ export default async function ApplicationsPage({
         <FiltersSidebar
           initialParams={params}
           yearRangeLabel="Application Submitted Date"
-          records={records}
-          extraTopFilters={
+          extraFilters={
             <>
               <PermitTypeDescFilter currentValue={params.permitTypeDesc} />
               <StatusCurrentFilter currentValue={params.statusCurrent} />
@@ -189,8 +189,7 @@ export default async function ApplicationsPage({
         <FiltersSidebar
           initialParams={params}
           yearRangeLabel="Application Submitted Date"
-          records={records}
-          extraTopFilters={
+          extraFilters={
             <>
               <PermitTypeDescFilter currentValue={params.permitTypeDesc} />
               <StatusCurrentFilter currentValue={params.statusCurrent} />
@@ -208,11 +207,20 @@ export default async function ApplicationsPage({
           <FilterBadges />
         </Suspense>
 
-        <ApplicationsChart
-          data={trendsData}
-          startDate={params.start}
-          endDate={params.end}
-        />
+        {/* Chart and Map - Side by side on large screens, stacked on small */}
+        <div className="flex flex-col lg:flex-row gap-6 mb-6">
+          <div className="flex-1">
+            <ApplicationsChart
+              data={trendsData}
+              startDate={params.start}
+              endDate={params.end}
+            />
+          </div>
+          <div className="flex-1">
+            <ApplicationsMap records={records} />
+          </div>
+        </div>
+
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-600 mb-4">
             {totalCount.toLocaleString()} record{totalCount !== 1 ? "s" : ""}{" "}

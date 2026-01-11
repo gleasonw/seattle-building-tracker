@@ -13,30 +13,11 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-// Create orange marker icon
-const orangeIcon = new L.Icon({
-  iconUrl:
-    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
-
-interface Record {
-  latitude: string | null;
-  longitude: string | null;
-  originalAddress1: string | null;
-  permitNum: string;
-}
-
 interface LocationMapProps {
   lat?: number;
   lng?: number;
   radius?: number; // in miles
   onLocationSelect: (lat: number, lng: number, address: string) => void;
-  records?: Record[];
 }
 
 export default function LocationMap({
@@ -44,12 +25,10 @@ export default function LocationMap({
   lng,
   radius = 0.5,
   onLocationSelect,
-  records = [],
 }: LocationMapProps) {
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const circleRef = useRef<L.Circle | null>(null);
-  const recordMarkersRef = useRef<L.Marker[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -157,42 +136,6 @@ export default function LocationMap({
       map.setView([lat, lng], 13);
     }
   }, [lat, lng, radius, onLocationSelect]);
-
-  // Add orange markers for records
-  useEffect(() => {
-    if (!mapRef.current) return;
-
-    const map = mapRef.current;
-
-    // Clear existing record markers
-    recordMarkersRef.current.forEach((marker) => marker.remove());
-    recordMarkersRef.current = [];
-
-    // Add markers for all records with valid coordinates
-    records.forEach((record) => {
-      if (record.latitude && record.longitude) {
-        const lat = parseFloat(record.latitude);
-        const lng = parseFloat(record.longitude);
-
-        if (!isNaN(lat) && !isNaN(lng)) {
-          const marker = L.marker([lat, lng], {
-            icon: orangeIcon,
-          }).addTo(map);
-
-          // Add popup with permit info
-          const popupContent = `
-            <div style="font-size: 12px;">
-              <strong>Permit ${record.permitNum}</strong><br/>
-              ${record.originalAddress1 || "No address"}
-            </div>
-          `;
-          marker.bindPopup(popupContent);
-
-          recordMarkersRef.current.push(marker);
-        }
-      }
-    });
-  }, [records]);
 
   return (
     <div

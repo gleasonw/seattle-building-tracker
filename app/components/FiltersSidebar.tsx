@@ -36,15 +36,14 @@ interface Record {
 interface FiltersSidebarProps {
   initialParams: BuildingDashSearchParams;
   yearRangeLabel: React.ReactNode;
-  extraTopFilters?: React.ReactNode;
+  extraFilters?: React.ReactNode;
   records?: Record[];
 }
 
 export default function FiltersSidebar({
   initialParams,
   yearRangeLabel,
-  extraTopFilters,
-  records = [],
+  extraFilters,
 }: FiltersSidebarProps) {
   const { updateFilterParams } = useFilters();
 
@@ -58,7 +57,7 @@ export default function FiltersSidebar({
   const [address, setAddress] = useState(initialParams.address || "");
   const [radius, setRadius] = useState(initialParams.radius || "0.5");
   const [selectedIndex, setSelectedIndex] = useState(-1);
-  const [geoTab, setGeoTab] = useState<"search" | "map">("map");
+  const [geoTab, setGeoTab] = useState<"search" | "map">("search");
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -181,70 +180,7 @@ export default function FiltersSidebar({
   });
 
   return (
-    <div className="w-full lg:w-80 bg-white lg:border-r border-gray-200 p-6 overflow-y-auto h-full">
-      <h2 className="text-lg font-semibold text-gray-900 mb-6">Filters</h2>
-
-      {/* Extra Top Filters */}
-      {extraTopFilters && <div className="mb-8">{extraTopFilters}</div>}
-
-      {/* Date Range Filter */}
-      <div className="mb-8">
-        <label className="block text-sm font-medium text-gray-900 mb-3">
-          Date Range
-        </label>
-        <Popover>
-          <PopoverTrigger asChild>
-            <button className="w-full inline-flex items-center justify-between gap-2 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-gray-600" />
-                {hasDateFilter ? (
-                  <span className="font-medium">
-                    {initialParams.start &&
-                      new Date(initialParams.start).getFullYear()}
-                    {initialParams.start && initialParams.end && " - "}
-                    {initialParams.end &&
-                      new Date(initialParams.end).getFullYear()}
-                  </span>
-                ) : (
-                  <span className="text-gray-700">Select date range</span>
-                )}
-              </div>
-              <Pencil className="w-3 h-3 text-gray-400" />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-100 p-6" align="start">
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <label className="block text-sm font-medium text-gray-900">
-                  {yearRangeLabel}
-                </label>
-                {hasDateFilter && (
-                  <button
-                    onClick={() =>
-                      updateFilterParams({ start: undefined, end: undefined })
-                    }
-                    className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1"
-                  >
-                    <X className="w-3 h-3" />
-                    Clear
-                  </button>
-                )}
-              </div>
-              <YearRangeSlider
-                minYear={2010}
-                maxYear={2026}
-                startDate={startDate}
-                endDate={endDate}
-                onChange={(start, end) => {
-                  updateFilterParams({ start, end });
-                }}
-              />
-            </div>
-          </PopoverContent>
-        </Popover>
-      </div>
-
-      {/* Geographic Filter */}
+    <div className="w-full lg:w-80 bg-white lg:border-r border-gray-200 p-6 overflow-y-auto h-full flex flex-col gap-6">
       <div>
         <div className="flex items-center justify-between mb-4">
           <label className="block text-sm font-medium text-gray-900">
@@ -356,7 +292,6 @@ export default function FiltersSidebar({
               }
               radius={parseFloat(radius)}
               onLocationSelect={handleMapLocationSelect}
-              records={records}
             />
           </div>
         )}
@@ -380,6 +315,62 @@ export default function FiltersSidebar({
           />
         </div>
       </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-900 mb-3">
+          Date Range
+        </label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className="w-full inline-flex items-center justify-between gap-2 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-gray-600" />
+                {hasDateFilter ? (
+                  <span className="font-medium">
+                    {initialParams.start &&
+                      new Date(initialParams.start).getFullYear()}
+                    {initialParams.start && initialParams.end && " - "}
+                    {initialParams.end &&
+                      new Date(initialParams.end).getFullYear()}
+                  </span>
+                ) : (
+                  <span className="text-gray-700">Select date range</span>
+                )}
+              </div>
+              <Pencil className="w-3 h-3 text-gray-400" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-100 p-6" align="start">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-medium text-gray-900">
+                  {yearRangeLabel}
+                </label>
+                {hasDateFilter && (
+                  <button
+                    onClick={() =>
+                      updateFilterParams({ start: undefined, end: undefined })
+                    }
+                    className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1"
+                  >
+                    <X className="w-3 h-3" />
+                    Clear
+                  </button>
+                )}
+              </div>
+              <YearRangeSlider
+                minYear={2010}
+                maxYear={2026}
+                startDate={startDate}
+                endDate={endDate}
+                onChange={(start, end) => {
+                  updateFilterParams({ start, end });
+                }}
+              />
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+      {extraFilters}
     </div>
   );
 }
