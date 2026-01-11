@@ -97,9 +97,9 @@ export function buildFiltersFromParams(
 
   // Determine which date field to use
   const targetDateField =
-    dateField === "completed"
-      ? buildingPermits.completedDate
-      : buildingPermits.appliedDate;
+    dateField === "applied"
+      ? buildingPermits.appliedDate
+      : buildingPermits.completedDate;
 
   const conditions = [isNotNull(targetDateField)];
 

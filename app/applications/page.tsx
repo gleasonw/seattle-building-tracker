@@ -131,6 +131,8 @@ async function getConstructionTrendsData(params: SearchParams) {
       .orderBy(sql`EXTRACT(YEAR FROM ${dateField})`),
   ]);
 
+  console.log({ monthlyData, yearlyData });
+
   return {
     monthlyData,
     yearlyData,
@@ -285,24 +287,24 @@ export default async function ApplicationsPage({
           records={records}
           startDate={params.start}
           endDate={params.end}
+          extra={
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                {totalCount.toLocaleString()} record
+                {totalCount !== 1 ? "s" : ""} found
+                {totalCount > 500 && " (showing first 500)"}
+              </div>
+              <a
+                href={seattleDataUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-blue-600 hover:underline"
+              >
+                View in Seattle Open Data Portal →
+              </a>
+            </div>
+          }
         />
-
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-600 mb-4">
-            {totalCount.toLocaleString()} record{totalCount !== 1 ? "s" : ""}{" "}
-            found
-            {totalCount > 500 && " (showing first 500)"}
-          </div>
-          <a
-            href={seattleDataUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-blue-600 hover:underline"
-          >
-            View in Seattle Open Data Portal →
-          </a>
-        </div>
-
         <RecordsTable
           records={records}
           initialParams={params}

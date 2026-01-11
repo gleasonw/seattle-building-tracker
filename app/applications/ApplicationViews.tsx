@@ -65,6 +65,7 @@ interface ApplicationViewsProps {
   records: Record[];
   startDate?: string;
   endDate?: string;
+  extra?: React.ReactNode;
 }
 
 export default function ApplicationViews({
@@ -73,16 +74,12 @@ export default function ApplicationViews({
   records,
   startDate,
   endDate,
+  extra,
 }: ApplicationViewsProps) {
   return (
-    <div className="flex flex-col lg:flex-row gap-6 mb-6">
-      {/* Map - Top on mobile, Right on desktop */}
-      <div className="order-1 lg:order-2 lg:flex-1">
-        <UnifiedMap records={records} />
-      </div>
-
-      {/* Charts - Stacked vertically, Below map on mobile, Left on desktop */}
-      <div className="order-2 lg:order-1 lg:flex-1 space-y-6">
+    <div className="space-y-6 mb-6">
+      {/* Charts - Side by side on desktop, stacked on mobile */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
           <h2 className="text-lg font-semibold text-gray-900 mb-3">
             Housing Units Added
@@ -103,6 +100,13 @@ export default function ApplicationViews({
             endDate={endDate}
           />
         </div>
+      </div>
+
+      {/* Map - Full width beneath charts */}
+      <div>
+        {extra}
+
+        <UnifiedMap records={records} />
       </div>
     </div>
   );
