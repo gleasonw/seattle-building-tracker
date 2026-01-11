@@ -10,8 +10,9 @@ async function getYearStats(year: number) {
   const yearEnd = `${year}-12-31`;
 
   const constructionConditions = buildFiltersFromParams({
-    targetDateField: buildingPermits.completedDate,
-    initialParams: { start: yearStart, end: yearEnd },
+    start: yearStart,
+    end: yearEnd,
+    dateField: "completed",
   });
 
   // Housing units completed this year
@@ -23,8 +24,9 @@ async function getYearStats(year: number) {
     .where(and(...constructionConditions));
 
   const permitConditions = buildFiltersFromParams({
-    targetDateField: buildingPermits.appliedDate,
-    initialParams: { start: yearStart, end: yearEnd },
+    start: yearStart,
+    end: yearEnd,
+    dateField: "applied",
   });
 
   // Permits applied this year
@@ -56,8 +58,9 @@ async function getYearStats(year: number) {
       .where(
         and(
           ...buildFiltersFromParams({
-            targetDateField: buildingPermits.completedDate,
-            initialParams: { start: yearStart, end: ytdDate },
+            start: yearStart,
+            end: ytdDate,
+            dateField: "completed",
           })
         )
       );
@@ -70,8 +73,9 @@ async function getYearStats(year: number) {
       .where(
         and(
           ...buildFiltersFromParams({
-            targetDateField: buildingPermits.completedDate,
-            initialParams: { start: lastYearYtdStart, end: lastYearYtdEnd },
+            start: lastYearYtdStart,
+            end: lastYearYtdEnd,
+            dateField: "completed",
           })
         )
       );
@@ -84,8 +88,9 @@ async function getYearStats(year: number) {
       .where(
         and(
           ...buildFiltersFromParams({
-            targetDateField: buildingPermits.appliedDate,
-            initialParams: { start: yearStart, end: ytdDate },
+            start: yearStart,
+            end: ytdDate,
+            dateField: "applied",
           })
         )
       );
@@ -98,8 +103,9 @@ async function getYearStats(year: number) {
       .where(
         and(
           ...buildFiltersFromParams({
-            targetDateField: buildingPermits.appliedDate,
-            initialParams: { start: lastYearYtdStart, end: lastYearYtdEnd },
+            start: lastYearYtdStart,
+            end: lastYearYtdEnd,
+            dateField: "applied",
           })
         )
       );
@@ -126,13 +132,15 @@ async function getYearStats(year: number) {
     const previousYearEnd = `${year - 1}-12-31`;
 
     const previousYearConstructionConditions = buildFiltersFromParams({
-      targetDateField: buildingPermits.completedDate,
-      initialParams: { start: previousYearStart, end: previousYearEnd },
+      start: previousYearStart,
+      end: previousYearEnd,
+      dateField: "completed",
     });
 
     const previousYearPermitConditions = buildFiltersFromParams({
-      targetDateField: buildingPermits.appliedDate,
-      initialParams: { start: previousYearStart, end: previousYearEnd },
+      start: previousYearStart,
+      end: previousYearEnd,
+      dateField: "applied",
     });
 
     const previousYearUnits = await db

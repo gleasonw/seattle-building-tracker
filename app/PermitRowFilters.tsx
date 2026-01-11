@@ -34,6 +34,7 @@ export type BuildingDashSearchParams = {
   permitTypeDesc?: string;
   statusCurrent?: string;
   housingUnitsAddedMin?: string;
+  dateField?: "applied" | "completed";
 };
 
 export function PermitRowFilters({
