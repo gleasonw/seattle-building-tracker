@@ -72,6 +72,14 @@ ORDER BY \`${targetDateField}\` DESC`;
   return `${baseUrl}/${encodeURIComponent(sqlQuery)}/page/filter`;
 }
 
+export function dateFieldFromParams(params: BuildingDashSearchParams) {
+  if (params.dateField === "applied") {
+    return buildingPermits.appliedDate;
+  } else {
+    return buildingPermits.completedDate;
+  }
+}
+
 export function buildFiltersFromParams(
   initialParams: BuildingDashSearchParams
 ): SQL<unknown>[] {

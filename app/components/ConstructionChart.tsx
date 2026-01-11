@@ -159,6 +159,8 @@ export function ConstructionChart({ data, startDate, endDate }: Props) {
   let categories: string[];
   let seriesData: number[];
 
+  const dateField = searchParams.get("dateField") || "completed";
+
   if (period === "month") {
     const monthNames = [
       "Jan",
@@ -190,7 +192,7 @@ export function ConstructionChart({ data, startDate, endDate }: Props) {
           click: () => handleBarClick(index),
         },
       })),
-      color: "#22c55e",
+      color: "black",
       cursor: "pointer",
     },
   ];
@@ -210,7 +212,11 @@ export function ConstructionChart({ data, startDate, endDate }: Props) {
     xAxis: {
       categories,
       title: {
-        text: "Permit Completed",
+        text: `${
+          dateField === "applied"
+            ? "Permit Received Date"
+            : "Permit Completed Date"
+        }`,
       },
       labels: {
         rotation: period === "month" ? -45 : 0,

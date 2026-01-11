@@ -95,6 +95,7 @@ export default function ApplicationsChart({ data, startDate, endDate }: Props) {
 
   // Read period from URL, fallback to default
   const period = (searchParams.get("period") as Period) || defaultPeriod;
+  const dateField = searchParams.get("dateField") || "completed";
 
   // Handle click on chart bar to filter by date range
   const handleBarClick = (pointIndex: number) => {
@@ -206,7 +207,7 @@ export default function ApplicationsChart({ data, startDate, endDate }: Props) {
       cursor: "pointer",
     },
     {
-      name: "Completed",
+      name: "Done",
       data: doneData.map((value, index) => ({
         y: value,
         events: {
@@ -244,7 +245,11 @@ export default function ApplicationsChart({ data, startDate, endDate }: Props) {
     xAxis: {
       categories,
       title: {
-        text: period === "month" ? "Month" : "Year",
+        text: `${
+          dateField === "applied"
+            ? "Permit Received Date"
+            : "Permit Completed Date"
+        }`,
       },
       labels: {
         rotation: period === "month" ? -45 : 0,

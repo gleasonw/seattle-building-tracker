@@ -1,10 +1,11 @@
 import { db } from "@/server/src/db";
 import { buildingPermits } from "@/server/src/db/schema";
-import { sql, and } from "drizzle-orm";
+import { sql, and, isNotNull } from "drizzle-orm";
 import { asc, desc } from "drizzle-orm";
 import {
   buildFiltersFromParams,
   createSeattleDataUrl,
+  dateFieldFromParams,
 } from "@/server/src/query";
 import { BuildingDashSearchParams } from "@/app/PermitRowFilters";
 import ApplicationViews from "@/app/applications/ApplicationViews";
@@ -15,7 +16,9 @@ import MobileFilters from "@/app/components/MobileFilters";
 import PermitTypeDescFilter from "@/app/components/PermitTypeDescFilter";
 import StatusCurrentFilter from "@/app/components/StatusCurrentFilter";
 import HousingUnitsFilter from "@/app/components/HousingUnitsFilter";
+import DateFieldToggle from "@/app/components/DateFieldToggle";
 import { Suspense } from "react";
+import { date } from "drizzle-orm/mysql-core";
 
 type SortField =
   | "appliedDate"
@@ -40,7 +43,7 @@ interface SearchParams {
 }
 
 async function getApplicationTrendsData(params: SearchParams) {
-  const dateField = buildingPermits.appliedDate;
+  const dateField = dateFieldFromParams(params);
 
   const conditions = buildFiltersFromParams(params);
 
@@ -97,8 +100,7 @@ async function getApplicationTrendsData(params: SearchParams) {
 }
 
 async function getConstructionTrendsData(params: SearchParams) {
-  const dateField = buildingPermits.completedDate;
-
+  const dateField = dateFieldFromParams(params);
   const conditions = buildFiltersFromParams(params);
 
   const [monthlyData, yearlyData] = await Promise.all([
@@ -140,11 +142,6 @@ export type ApplicationRecord = Awaited<
 >["records"][number];
 
 async function getRecords(params: BuildingDashSearchParams) {
-  const dateField =
-    params.dateField === "completed"
-      ? buildingPermits.completedDate
-      : buildingPermits.appliedDate;
-
   const conditions = buildFiltersFromParams(params);
 
   const { sortBy = "appliedDate", sortOrder = "desc" } = params;
@@ -272,6 +269,12 @@ export default async function ApplicationsPage({
       </div>
 
       <div className="flex-1 overflow-y-auto px-2 sm:px-4 lg:px-6">
+        <div className="mb-4">
+          <Suspense>
+            <DateFieldToggle />
+          </Suspense>
+        </div>
+        
         <Suspense>
           <FilterBadges />
         </Suspense>

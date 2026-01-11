@@ -95,7 +95,7 @@ export default function ApplicationViews({
         </div>
         <div>
           <h2 className="text-lg font-semibold text-gray-900 mb-3">
-            Applications Submitted
+            Total Permits
           </h2>
           <ApplicationsChart
             data={applicationTrends}
