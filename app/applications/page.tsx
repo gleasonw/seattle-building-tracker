@@ -250,7 +250,7 @@ export default async function ApplicationsPage({
 
       {/* Desktop Sidebar */}
       <div
-        className="hidden lg:block lg:w-80 overflow-y-auto"
+        className="hidden lg:block lg:w-80 overflow-y-auto sticky top-0"
         style={{ height: "calc(100vh - 120px)" }}
       >
         <FiltersSidebar
@@ -271,12 +271,6 @@ export default async function ApplicationsPage({
       </div>
 
       <div className="flex-1 overflow-y-auto px-2 sm:px-4 lg:px-6">
-        <div className="mb-4">
-          <Suspense>
-            <DateFieldToggle />
-          </Suspense>
-        </div>
-
         <Suspense>
           <FilterBadges />
         </Suspense>
@@ -288,7 +282,7 @@ export default async function ApplicationsPage({
           startDate={params.start}
           endDate={params.end}
           extra={
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between" key="extra">
               <div className="text-sm text-gray-600">
                 {totalCount.toLocaleString()} record
                 {totalCount !== 1 ? "s" : ""} found

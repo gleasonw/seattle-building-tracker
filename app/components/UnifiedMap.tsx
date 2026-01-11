@@ -198,7 +198,7 @@ export default function UnifiedMap({ records }: UnifiedMapProps) {
   }, [records]);
 
   return (
-    <div className="bg-white rounded-lg shadow flex flex-col h-[400px]">
+    <div className="bg-white rounded-lg shadow flex flex-col h-255">
       <div className="p-4 border-b">
         <div className="flex items-center gap-6 text-sm">
           <div className="flex items-center gap-2">

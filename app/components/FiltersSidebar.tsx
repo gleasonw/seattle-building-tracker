@@ -3,8 +3,15 @@
 import YearRangeSlider from "@/app/components/YearRangeSlider";
 import { DEFAULT_START_DATE } from "@/server/src/query";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Map, X, Calendar, Pencil, SlidersHorizontal } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import {
+  Search,
+  Map,
+  X,
+  Calendar,
+  Pencil,
+  SlidersHorizontal,
+} from "lucide-react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useDebounceCallback } from "usehooks-ts";
 import { useFilters } from "@/app/hooks/useFilters";
 import { BuildingDashSearchParams } from "@/app/PermitRowFilters";
@@ -14,6 +21,7 @@ import {
   PopoverTrigger,
 } from "@/app/components/ui/popover";
 import dynamic from "next/dynamic";
+import DateFieldToggle from "@/app/components/DateFieldToggle";
 
 const LocationMap = dynamic(() => import("@/app/components/LocationMap"), {
   ssr: false,
@@ -321,10 +329,11 @@ export default function FiltersSidebar({
           />
         </div>
       </div>
-      <div>
+      <div className="flex flex-col gap-2">
         <label className="block text-sm font-medium text-gray-900 mb-3">
           Date Range
         </label>
+        <DateFieldToggle />
         <Popover>
           <PopoverTrigger asChild>
             <button className="w-full inline-flex items-center justify-between gap-2 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors">
