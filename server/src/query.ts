@@ -1,7 +1,7 @@
 import { BuildingDashSearchParams } from "@/app/PermitRowFilters";
 import { buildingPermits } from "@/server/src/db/schema";
+import { DEFAULT_DATE_FIELD } from "@/utils";
 import { eq, gt, isNotNull, sql, SQL } from "drizzle-orm";
-import { PgColumn } from "drizzle-orm/pg-core";
 
 export const DEFAULT_START_DATE = "2010-01-01";
 
@@ -73,10 +73,26 @@ ORDER BY \`${targetDateField}\` DESC`;
 }
 
 export function dateFieldFromParams(params: BuildingDashSearchParams) {
-  if (params.dateField === "applied") {
-    return buildingPermits.appliedDate;
-  } else {
-    return buildingPermits.completedDate;
+  const dateField = params.dateField;
+  switch (dateField) {
+    case "applied": {
+      return buildingPermits.appliedDate;
+    }
+    case "completed": {
+      return buildingPermits.completedDate;
+    }
+    case undefined: {
+      if (DEFAULT_DATE_FIELD === "applied") {
+        return buildingPermits.appliedDate;
+      } else {
+        // wonky
+        return buildingPermits.completedDate;
+      }
+    }
+    default: {
+      const _exhaustive: never = dateField;
+      throw new Error(`unrecognized date field ${_exhaustive}`);
+    }
   }
 }
 
@@ -96,10 +112,7 @@ export function buildFiltersFromParams(
   } = initialParams;
 
   // Determine which date field to use
-  const targetDateField =
-    dateField === "applied"
-      ? buildingPermits.appliedDate
-      : buildingPermits.completedDate;
+  const targetDateField = dateFieldFromParams(initialParams);
 
   const conditions = [isNotNull(targetDateField)];
 

@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { BuildingDashSearchParams } from "@/app/PermitRowFilters";
+import { DEFAULT_DATE_FIELD } from "@/utils";
 
 export function useFilters() {
   const router = useRouter();
@@ -25,7 +26,8 @@ export function useFilters() {
 
   const getDateField = (): "applied" | "completed" => {
     return (
-      (searchParams.get("dateField") as "applied" | "completed") || "applied"
+      (searchParams.get("dateField") as "applied" | "completed") ||
+      DEFAULT_DATE_FIELD
     );
   };
 

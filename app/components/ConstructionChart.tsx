@@ -187,7 +187,7 @@ export function ConstructionChart({ data, startDate, endDate }: Props) {
     {
       name:
         dateField === "applied"
-          ? "Projected housing units"
+          ? "Applied for housing units"
           : "Housing units added",
       data: seriesData.map((value, index) => ({
         y: value,
@@ -232,7 +232,7 @@ export function ConstructionChart({ data, startDate, endDate }: Props) {
       title: {
         text:
           dateField === "applied"
-            ? "Projected Housing Units"
+            ? "Applied for Housing Units"
             : "Housing Units Added",
       },
       min: 0,

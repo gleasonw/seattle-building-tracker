@@ -86,7 +86,7 @@ export default function ApplicationViews({
         <div>
           <h2 className="text-lg font-semibold text-gray-900 mb-3">
             {dateField === "applied"
-              ? "Projected Housing Units"
+              ? "Applied for Housing Units"
               : "Completed Housing Units"}
           </h2>
           <ConstructionChart
