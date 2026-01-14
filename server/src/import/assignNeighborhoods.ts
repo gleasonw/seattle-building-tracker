@@ -64,7 +64,7 @@ export async function assignNeighborhoods() {
       const result = await db.execute(sql`
         UPDATE building_permits
         SET neighborhood = ${neighborhood}
-        WHERE latitude IS NOT NULL 
+        WHERE latitude IS NOT NULL
           AND longitude IS NOT NULL
           AND ST_Contains(
             ST_GeomFromGeoJSON(${geojsonStr}),
@@ -90,7 +90,7 @@ export async function assignNeighborhoods() {
   const unassignedResult = await db.execute(sql`
     SELECT COUNT(*) as count
     FROM building_permits
-    WHERE latitude IS NOT NULL 
+    WHERE latitude IS NOT NULL
       AND longitude IS NOT NULL
       AND neighborhood IS NULL
   `);

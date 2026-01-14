@@ -125,7 +125,11 @@ export default function ApplicationViews({
       <div>
         {extra}
 
-        <UnifiedMap records={records} clusters={clusters} isCluster={isCluster} />
+        <UnifiedMap
+          records={records}
+          clusters={clusters}
+          isCluster={isCluster}
+        />
       </div>
     </div>
   );

@@ -202,7 +202,7 @@ export default function UnifiedMap({
 
         // Add permanent label with neighborhood name and count
         const divIcon = L.divIcon({
-          className: 'cluster-label',
+          className: "cluster-label",
           html: `
             <div style="
               background: rgba(255, 255, 255, 0.95);
@@ -283,7 +283,9 @@ export default function UnifiedMap({
         const popupContent = `
           <div style="font-size: 12px; min-width: 150px;">
             <strong>Permit ${record.permitNum}</strong><br/>
-            <strong>Address:</strong> ${record.originalAddress1 || "Unknown"}<br/>
+            <strong>Address:</strong> ${
+              record.originalAddress1 || "Unknown"
+            }<br/>
             <strong>Applied:</strong> ${appliedDate}<br/>
             <strong>Completed:</strong> ${completedDate}<br/>
             <strong>Status:</strong> ${statusLabel}${

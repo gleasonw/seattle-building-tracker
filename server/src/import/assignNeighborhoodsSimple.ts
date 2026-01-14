@@ -16,7 +16,7 @@ function isPointInPolygon(
   // Check first ring (outer boundary)
   const ring = polygon[0];
   let inside = false;
-  
+
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
     const xi = ring[i][0];
     const yi = ring[i][1];
@@ -28,7 +28,7 @@ function isPointInPolygon(
       point[0] < ((xj - xi) * (point[1] - yi)) / (yj - yi) + xi;
     if (intersect) inside = !inside;
   }
-  
+
   return inside;
 }
 
@@ -46,7 +46,10 @@ async function assignNeighborhoods() {
   console.log("Starting neighborhood assignment...");
 
   // Load GeoJSON file
-  const geoJsonPath = path.join(__dirname, "../../../Neighborhood_Map_Atlas_Neighborhoods.geojson");
+  const geoJsonPath = path.join(
+    __dirname,
+    "../../../Neighborhood_Map_Atlas_Neighborhoods.geojson"
+  );
   const geoJsonContent = await readFile(geoJsonPath, "utf-8");
   const geoJson = JSON.parse(geoJsonContent);
 
@@ -61,8 +64,8 @@ async function assignNeighborhoods() {
     })
     .from(buildingPermits)
     .where(
-      sql`${buildingPermits.latitude} IS NOT NULL 
-          AND ${buildingPermits.longitude} IS NOT NULL 
+      sql`${buildingPermits.latitude} IS NOT NULL
+          AND ${buildingPermits.longitude} IS NOT NULL
           AND ${buildingPermits.neighborhood} IS NULL`
     )
     .execute();
@@ -110,7 +113,11 @@ async function assignNeighborhoods() {
       }
     }
 
-    console.log(`Processed ${Math.min(i + batchSize, permits.length)} / ${permits.length} permits`);
+    console.log(
+      `Processed ${Math.min(i + batchSize, permits.length)} / ${
+        permits.length
+      } permits`
+    );
   }
 
   console.log(`\nNeighborhood assignment complete!`);
@@ -120,7 +127,7 @@ async function assignNeighborhoods() {
   const unassignedResult = await db.execute(sql`
     SELECT COUNT(*) as count
     FROM building_permits
-    WHERE latitude IS NOT NULL 
+    WHERE latitude IS NOT NULL
       AND longitude IS NOT NULL
       AND neighborhood IS NULL
   `);
