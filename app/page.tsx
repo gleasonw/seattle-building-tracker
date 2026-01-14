@@ -246,7 +246,7 @@ async function YearView({ year }: { year: number }) {
                 )
               </div>
               <Link
-                href={`/construction?start=${targetYear}-01-01&end=${
+                href={`/applications?start=${targetYear}-01-01&end=${
                   new Date().toISOString().split("T")[0]
                 }&period=month`}
                 className="block text-4xl font-bold mb-2 text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
@@ -265,7 +265,7 @@ async function YearView({ year }: { year: number }) {
                 last year
               </div>
               <Link
-                href={`/construction?start=${targetYear - 1}-01-01&end=${
+                href={`/applications?start=${targetYear - 1}-01-01&end=${
                   new Date(new Date().setFullYear(targetYear - 1))
                     .toISOString()
                     .split("T")[0]
@@ -324,7 +324,7 @@ async function YearView({ year }: { year: number }) {
                 Housing Units Completed ({targetYear})
               </div>
               <Link
-                href={`/construction?start=${targetYear}-01-01&end=${targetYear}-12-31&period=month`}
+                href={`/applications?start=${targetYear}-01-01&end=${targetYear}-12-31&period=month`}
                 className="block text-4xl font-bold mb-2 text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
               >
                 {stats.housingUnitsCompleted.toLocaleString()}
@@ -347,7 +347,7 @@ async function YearView({ year }: { year: number }) {
                     % vs {targetYear - 1}
                   </div>
                   <Link
-                    href={`/construction?start=${targetYear - 1}-01-01&end=${
+                    href={`/applications?start=${targetYear - 1}-01-01&end=${
                       targetYear - 1
                     }-12-31&period=month`}
                     className="text-sm text-gray-500 hover:text-gray-700"
