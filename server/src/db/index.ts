@@ -31,7 +31,7 @@ const client =
 if (process.env.NODE_ENV !== "production") globalForDb.client = client;
 
 // Create Drizzle instance with schema
-export const db = drizzle(client, { schema, logger: !isProd });
+export const db = drizzle(client, { schema, logger: false });
 
 // Export schema for convenience
 export { schema };

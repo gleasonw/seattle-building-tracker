@@ -109,6 +109,10 @@ export function buildFiltersFromParams(
     statusCurrent,
     housingUnitsAddedMin,
     dateField,
+    north,
+    south,
+    east,
+    west,
   } = initialParams;
 
   // Determine which date field to use
@@ -159,25 +163,52 @@ export function buildFiltersFromParams(
     conditions.push(sql`${targetDateField} <= ${end}`);
   }
 
-  // Add geographic filter if coordinates and radius are provided
-  if (lat && lng && radius) {
+  // Note: Geographic filters (bounding box, radius) are NOT included here
+  // They should only be applied to map queries in getRecords
+  return conditions;
+}
+
+// Helper to build map-specific geographic filters
+export function buildMapFiltersFromParams(
+  params: BuildingDashSearchParams
+): SQL<unknown>[] {
+  const { lat, lng, radius, north, south, east, west } = params;
+  const conditions: SQL<unknown>[] = [];
+
+  // Add bounding box filter if all coordinates are provided
+  // Prefer bounding box over radius-based search
+  if (north && south && east && west) {
+    const northNum = parseFloat(north);
+    const southNum = parseFloat(south);
+    const eastNum = parseFloat(east);
+    const westNum = parseFloat(west);
+
+    conditions.push(
+      sql`CAST(${buildingPermits.latitude} AS DOUBLE PRECISION) >= ${southNum}`,
+      sql`CAST(${buildingPermits.latitude} AS DOUBLE PRECISION) <= ${northNum}`,
+      sql`CAST(${buildingPermits.longitude} AS DOUBLE PRECISION) >= ${westNum}`,
+      sql`CAST(${buildingPermits.longitude} AS DOUBLE PRECISION) <= ${eastNum}`,
+      isNotNull(buildingPermits.latitude),
+      isNotNull(buildingPermits.longitude)
+    );
+  }
+  // Add geographic filter if coordinates and radius are provided (using PostGIS)
+  else if (lat && lng && radius) {
     const latNum = parseFloat(lat);
     const lngNum = parseFloat(lng);
     const radiusMiles = parseFloat(radius);
+    const radiusMeters = radiusMiles * 1609.34; // Convert miles to meters
 
     conditions.push(
-      sql`(
-        3959 * acos(
-          cos(radians(${latNum})) *
-          cos(radians(CAST(${buildingPermits.latitude} AS DOUBLE PRECISION))) *
-          cos(radians(CAST(${buildingPermits.longitude} AS DOUBLE PRECISION)) - radians(${lngNum})) +
-          sin(radians(${latNum})) *
-          sin(radians(CAST(${buildingPermits.latitude} AS DOUBLE PRECISION)))
-        )
-      ) <= ${radiusMiles}`
+      sql`ST_DWithin(
+        ST_SetSRID(ST_MakePoint(CAST(${buildingPermits.longitude} AS DOUBLE PRECISION), CAST(${buildingPermits.latitude} AS DOUBLE PRECISION)), 4326)::geography,
+        ST_SetSRID(ST_MakePoint(${lngNum}, ${latNum}), 4326)::geography,
+        ${radiusMeters}
+      )`
     );
     conditions.push(isNotNull(buildingPermits.latitude));
     conditions.push(isNotNull(buildingPermits.longitude));
   }
+
   return conditions;
 }

@@ -54,6 +54,16 @@ interface Record {
   link: string | null;
 }
 
+interface Cluster {
+  neighborhood: string | null;
+  count: number;
+  centerLat: number;
+  centerLng: number;
+  pipelineCount: number;
+  doneCount: number;
+  canceledCount: number;
+}
+
 interface ApplicationViewsProps {
   applicationTrends: {
     monthlyData: MonthlyApplicationData[];
@@ -63,7 +73,9 @@ interface ApplicationViewsProps {
     monthlyData: MonthlyConstructionData[];
     yearlyData: YearlyConstructionData[];
   };
-  records: Record[];
+  records?: Record[];
+  clusters?: Cluster[];
+  isCluster?: boolean;
   startDate?: string;
   endDate?: string;
   extra?: React.ReactNode;
@@ -73,6 +85,8 @@ export default function ApplicationViews({
   applicationTrends,
   constructionTrends,
   records,
+  clusters,
+  isCluster,
   startDate,
   endDate,
   extra,
@@ -111,7 +125,7 @@ export default function ApplicationViews({
       <div>
         {extra}
 
-        <UnifiedMap records={records} />
+        <UnifiedMap records={records} clusters={clusters} isCluster={isCluster} />
       </div>
     </div>
   );

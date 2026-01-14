@@ -56,6 +56,7 @@ export const buildingPermits = pgTable(
     latitude: decimal("latitude", { precision: 10, scale: 8 }),
     longitude: decimal("longitude", { precision: 11, scale: 8 }),
     location1: varchar("location1", { length: 255 }),
+    neighborhood: varchar("neighborhood", { length: 255 }),
     zoning: text("zoning"),
 
     // Contractor
@@ -95,6 +96,7 @@ export const buildingPermits = pgTable(
       table.originalCity,
       table.originalZip
     ),
+    neighborhoodIdx: index("neighborhood_idx").on(table.neighborhood),
     relatedMupIdx: index("related_mup_idx").on(table.relatedMup),
     parentPermitNumIdx: index("parent_permit_num_idx").on(
       table.parentPermitNum

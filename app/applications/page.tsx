@@ -4,6 +4,7 @@ import { sql, and, isNotNull } from "drizzle-orm";
 import { asc, desc } from "drizzle-orm";
 import {
   buildFiltersFromParams,
+  buildMapFiltersFromParams,
   createSeattleDataUrl,
   dateFieldFromParams,
 } from "@/server/src/query";
@@ -144,10 +145,61 @@ export type ApplicationRecord = Awaited<
 >["records"][number];
 
 async function getRecords(params: BuildingDashSearchParams) {
-  const conditions = buildFiltersFromParams(params);
+  // Get base filters (everything except geographic filters)
+  const baseConditions = buildFiltersFromParams(params);
+  // Get map-specific geographic filters (bounding box or radius)
+  const mapConditions = buildMapFiltersFromParams(params);
+  // Combine for map queries
+  const conditions = [...baseConditions, ...mapConditions];
 
-  const { sortBy = "appliedDate", sortOrder = "desc" } = params;
+  const { sortBy = "appliedDate", sortOrder = "desc", zoom } = params;
 
+  // Check if we should return neighborhood clusters (zoom < 17)
+  const shouldCluster = zoom && parseInt(zoom) < 15;
+
+  if (shouldCluster) {
+    // Return neighborhood-aggregated data with map filters
+    const [countResult, clusters] = await Promise.all([
+      db
+        .select({
+          count: sql<number>`CAST(COUNT(*) AS INTEGER)`,
+        })
+        .from(buildingPermits)
+        .where(and(...conditions)),
+      db
+        .select({
+          neighborhood: buildingPermits.neighborhood,
+          count: sql<number>`CAST(COUNT(*) AS INTEGER)`,
+          centerLat: sql<number>`AVG(CAST(${buildingPermits.latitude} AS DOUBLE PRECISION))`,
+          centerLng: sql<number>`AVG(CAST(${buildingPermits.longitude} AS DOUBLE PRECISION))`,
+          pipelineCount: sql<number>`CAST(SUM(CASE
+            WHEN LOWER(${buildingPermits.statusCurrent}) NOT IN ('completed', 'closed', 'approved to occupy', 'inspections completed', 'canceled', 'denied', 'expired', 'withdrawn')
+            THEN 1 ELSE 0 END) AS INTEGER)`,
+          doneCount: sql<number>`CAST(SUM(CASE
+            WHEN LOWER(${buildingPermits.statusCurrent}) IN ('completed', 'closed', 'approved to occupy', 'inspections completed')
+            THEN 1 ELSE 0 END) AS INTEGER)`,
+          canceledCount: sql<number>`CAST(SUM(CASE
+            WHEN LOWER(${buildingPermits.statusCurrent}) IN ('canceled', 'denied', 'expired', 'withdrawn')
+            THEN 1 ELSE 0 END) AS INTEGER)`,
+        })
+        .from(buildingPermits)
+        .where(
+          and(
+            ...conditions,
+            isNotNull(buildingPermits.neighborhood),
+            isNotNull(buildingPermits.latitude),
+            isNotNull(buildingPermits.longitude)
+          )
+        )
+        .groupBy(buildingPermits.neighborhood),
+    ]);
+
+    const totalCount = countResult[0]?.count || 0;
+
+    return { clusters, totalCount, isCluster: true as const };
+  }
+
+  // Return individual records (zoom >= 17 or no zoom specified)
   // Dynamically access the sort column from buildingPermits schema
   const sortColumn =
     sortBy in buildingPermits
@@ -191,7 +243,7 @@ async function getRecords(params: BuildingDashSearchParams) {
 
   const totalCount = countResult[0]?.count || 0;
 
-  return { records: results, totalCount };
+  return { records: results, totalCount, isCluster: false as const };
 }
 
 export default async function ApplicationsPage({
@@ -202,12 +254,17 @@ export default async function ApplicationsPage({
   const params = await searchParams;
   const dateField = params.dateField || "applied";
 
-  const [applicationTrends, constructionTrends, { records, totalCount }] =
+  const [applicationTrends, constructionTrends, recordsResult] =
     await Promise.all([
       getApplicationTrendsData(params),
       getConstructionTrendsData(params),
       getRecords(params),
     ]);
+
+  const { isCluster } = recordsResult;
+  const records = isCluster ? undefined : recordsResult.records;
+  const clusters = isCluster ? recordsResult.clusters : undefined;
+  const totalCount = recordsResult.totalCount;
 
   const targetDateField =
     dateField === "completed" ? "completeddate" : "applieddate";
@@ -279,6 +336,8 @@ export default async function ApplicationsPage({
           applicationTrends={applicationTrends}
           constructionTrends={constructionTrends}
           records={records}
+          clusters={clusters}
+          isCluster={isCluster}
           startDate={params.start}
           endDate={params.end}
           extra={
@@ -286,7 +345,11 @@ export default async function ApplicationsPage({
               <div className="text-sm text-gray-600">
                 {totalCount.toLocaleString()} record
                 {totalCount !== 1 ? "s" : ""} found
-                {totalCount > 500 && " (showing first 500)"}
+                {isCluster
+                  ? " (zoom in to see individual permits)"
+                  : records && records.length < totalCount
+                  ? ` (showing ${records.length} in view)`
+                  : ""}
               </div>
               <a
                 href={seattleDataUrl}
@@ -299,18 +362,20 @@ export default async function ApplicationsPage({
             </div>
           }
         />
-        <RecordsTable
-          records={records}
-          initialParams={params}
-          dateColumns={[
-            { key: "appliedDate", label: "Applied Date" },
-            { key: "completedDate", label: "Completed Date" },
-          ]}
-          extraFields={[
-            { key: "statusCurrent", label: "Current Status", sortable: true },
-            { key: "permitTypeDesc", label: "Permit Type Description" },
-          ]}
-        />
+        {!isCluster && records && (
+          <RecordsTable
+            records={records}
+            initialParams={params}
+            dateColumns={[
+              { key: "appliedDate", label: "Applied Date" },
+              { key: "completedDate", label: "Completed Date" },
+            ]}
+            extraFields={[
+              { key: "statusCurrent", label: "Current Status", sortable: true },
+              { key: "permitTypeDesc", label: "Permit Type Description" },
+            ]}
+          />
+        )}
       </div>
     </div>
   );

@@ -35,6 +35,11 @@ export type BuildingDashSearchParams = {
   statusCurrent?: string;
   housingUnitsAddedMin?: string;
   dateField?: "applied" | "completed";
+  zoom?: string;
+  north?: string;
+  south?: string;
+  east?: string;
+  west?: string;
 };
 
 export function PermitRowFilters({

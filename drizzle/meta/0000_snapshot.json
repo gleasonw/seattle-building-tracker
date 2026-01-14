@@ -1,0 +1,510 @@
+{
+  "id": "cc202d4b-be6d-4e95-bf49-abb4a27e382e",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.building_permits": {
+      "name": "building_permits",
+      "schema": "",
+      "columns": {
+        "permit_num": {
+          "name": "permit_num",
+          "type": "varchar(100)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "related_mup": {
+          "name": "related_mup",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "parent_permit_num": {
+          "name": "parent_permit_num",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "permit_class": {
+          "name": "permit_class",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "permit_class_mapped": {
+          "name": "permit_class_mapped",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "permit_type_mapped": {
+          "name": "permit_type_mapped",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "permit_type_desc": {
+          "name": "permit_type_desc",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "housing_units": {
+          "name": "housing_units",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "housing_units_removed": {
+          "name": "housing_units_removed",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "housing_units_added": {
+          "name": "housing_units_added",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "est_project_cost": {
+          "name": "est_project_cost",
+          "type": "numeric(15, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "applied_date": {
+          "name": "applied_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "issued_date": {
+          "name": "issued_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "expires_date": {
+          "name": "expires_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "completed_date": {
+          "name": "completed_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "initial_review_complete_date": {
+          "name": "initial_review_complete_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "plan_review_complete_date": {
+          "name": "plan_review_complete_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ready_to_issue_date": {
+          "name": "ready_to_issue_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status_current": {
+          "name": "status_current",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "original_address1": {
+          "name": "original_address1",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "original_city": {
+          "name": "original_city",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "original_state": {
+          "name": "original_state",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "original_zip": {
+          "name": "original_zip",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "latitude": {
+          "name": "latitude",
+          "type": "numeric(10, 8)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "longitude": {
+          "name": "longitude",
+          "type": "numeric(11, 8)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "location1": {
+          "name": "location1",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "neighborhood": {
+          "name": "neighborhood",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "zoning": {
+          "name": "zoning",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contractor_company_name": {
+          "name": "contractor_company_name",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "link": {
+          "name": "link",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "remote_created_at": {
+          "name": "remote_created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "remote_updated_at": {
+          "name": "remote_updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "local_updated_at": {
+          "name": "local_updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "total_days_plan_review": {
+          "name": "total_days_plan_review",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "days_initial_plan_review": {
+          "name": "days_initial_plan_review",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "days_plan_review_city": {
+          "name": "days_plan_review_city",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "days_out_corrections": {
+          "name": "days_out_corrections",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "number_review_cycles": {
+          "name": "number_review_cycles",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "days_issue_permit_city": {
+          "name": "days_issue_permit_city",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dwelling_unit_type": {
+          "name": "dwelling_unit_type",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "housing_category": {
+          "name": "housing_category",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "standard_plan": {
+          "name": "standard_plan",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dependent_building": {
+          "name": "dependent_building",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "issued_date_idx": {
+          "name": "issued_date_idx",
+          "columns": [
+            {
+              "expression": "issued_date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "applied_date_idx": {
+          "name": "applied_date_idx",
+          "columns": [
+            {
+              "expression": "applied_date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "status_current_idx": {
+          "name": "status_current_idx",
+          "columns": [
+            {
+              "expression": "status_current",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "permit_class_mapped_idx": {
+          "name": "permit_class_mapped_idx",
+          "columns": [
+            {
+              "expression": "permit_class_mapped",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "location_idx": {
+          "name": "location_idx",
+          "columns": [
+            {
+              "expression": "original_city",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "original_zip",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "neighborhood_idx": {
+          "name": "neighborhood_idx",
+          "columns": [
+            {
+              "expression": "neighborhood",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "related_mup_idx": {
+          "name": "related_mup_idx",
+          "columns": [
+            {
+              "expression": "related_mup",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "parent_permit_num_idx": {
+          "name": "parent_permit_num_idx",
+          "columns": [
+            {
+              "expression": "parent_permit_num",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "remote_updated_at_idx": {
+          "name": "remote_updated_at_idx",
+          "columns": [
+            {
+              "expression": "remote_updated_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sync_metadata": {
+      "name": "sync_metadata",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(100)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "last_sync_started_at": {
+          "name": "last_sync_started_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_sync_completed_at": {
+          "name": "last_sync_completed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_sync_status": {
+          "name": "last_sync_status",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_sync_error": {
+          "name": "last_sync_error",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_records_processed": {
+          "name": "total_records_processed",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "records_inserted": {
+          "name": "records_inserted",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "records_updated": {
+          "name": "records_updated",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "records_failed": {
+          "name": "records_failed",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
