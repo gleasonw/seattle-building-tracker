@@ -4,6 +4,7 @@ import { buildingPermits } from "@/server/src/db/schema";
 import Link from "next/link";
 import YearNavigation from "./components/YearNavigation";
 import { buildFiltersFromParams } from "@/server/src/query";
+import { buildingPermitLink } from "@/lib/utils";
 
 async function getYearStats(year: number) {
   const yearStart = `${year}-01-01`;
@@ -246,9 +247,11 @@ async function YearView({ year }: { year: number }) {
                 )
               </div>
               <Link
-                href={`/applications?start=${targetYear}-01-01&end=${
-                  new Date().toISOString().split("T")[0]
-                }&period=month`}
+                href={buildingPermitLink("/applications", {
+                  start: `${targetYear}-01-01`,
+                  end: new Date().toISOString().split("T")[0],
+                  period: "month",
+                })}
                 className="block text-4xl font-bold mb-2 text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
               >
                 {stats.ytdStats.units.toLocaleString()}
@@ -265,11 +268,13 @@ async function YearView({ year }: { year: number }) {
                 last year
               </div>
               <Link
-                href={`/applications?start=${targetYear - 1}-01-01&end=${
-                  new Date(new Date().setFullYear(targetYear - 1))
+                href={buildingPermitLink("/applications", {
+                  start: `${targetYear - 1}-01-01`,
+                  end: new Date(new Date().setFullYear(targetYear - 1))
                     .toISOString()
-                    .split("T")[0]
-                }&period=month`}
+                    .split("T")[0],
+                  period: "month",
+                })}
                 className="text-sm text-gray-500 hover:text-gray-700"
               >
                 {stats.ytdStats.lastYearUnits.toLocaleString()} units same
@@ -286,9 +291,11 @@ async function YearView({ year }: { year: number }) {
                 )
               </div>
               <Link
-                href={`/applications?start=${targetYear}-01-01&end=${
-                  new Date().toISOString().split("T")[0]
-                }&period=month`}
+                href={buildingPermitLink("/applications", {
+                  start: `${targetYear}-01-01`,
+                  end: new Date().toISOString().split("T")[0],
+                  period: "month",
+                })}
                 className="block text-4xl font-bold mb-2 text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
               >
                 {stats.ytdStats.permits.toLocaleString()}
@@ -305,11 +312,13 @@ async function YearView({ year }: { year: number }) {
                 last year
               </div>
               <Link
-                href={`/applications?start=${targetYear - 1}-01-01&end=${
-                  new Date(new Date().setFullYear(targetYear - 1))
+                href={buildingPermitLink("/applications", {
+                  start: `${targetYear - 1}-01-01`,
+                  end: new Date(new Date().setFullYear(targetYear - 1))
                     .toISOString()
-                    .split("T")[0]
-                }&period=month`}
+                    .split("T")[0],
+                  period: "month",
+                })}
                 className="text-sm text-gray-500 hover:text-gray-700"
               >
                 {stats.ytdStats.lastYearPermits.toLocaleString()} permits same
@@ -324,7 +333,11 @@ async function YearView({ year }: { year: number }) {
                 Housing Units Completed ({targetYear})
               </div>
               <Link
-                href={`/applications?start=${targetYear}-01-01&end=${targetYear}-12-31&period=month`}
+                href={buildingPermitLink("/applications", {
+                  start: `${targetYear}-01-01`,
+                  end: `${targetYear}-12-31`,
+                  period: "month",
+                })}
                 className="block text-4xl font-bold mb-2 text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
               >
                 {stats.housingUnitsCompleted.toLocaleString()}
@@ -347,9 +360,11 @@ async function YearView({ year }: { year: number }) {
                     % vs {targetYear - 1}
                   </div>
                   <Link
-                    href={`/applications?start=${targetYear - 1}-01-01&end=${
-                      targetYear - 1
-                    }-12-31&period=month`}
+                    href={buildingPermitLink("/applications", {
+                      start: `${targetYear - 1}-01-01`,
+                      end: `${targetYear - 1}-12-31`,
+                      period: "month",
+                    })}
                     className="text-sm text-gray-500 hover:text-gray-700"
                   >
                     {stats.previousYearStats.units.toLocaleString()} units in{" "}
@@ -363,7 +378,11 @@ async function YearView({ year }: { year: number }) {
                 Building permit applications ({targetYear})
               </div>
               <Link
-                href={`/applications?start=${targetYear}-01-01&end=${targetYear}-12-31&period=month`}
+                href={buildingPermitLink("/applications", {
+                  start: `${targetYear}-01-01`,
+                  end: `${targetYear}-12-31`,
+                  period: "month",
+                })}
                 className="block text-4xl font-bold mb-2 text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
               >
                 {stats.permitsApplied.toLocaleString()}
@@ -386,9 +405,10 @@ async function YearView({ year }: { year: number }) {
                     % vs {targetYear - 1}
                   </div>
                   <Link
-                    href={`/applications?start=${targetYear - 1}-01-01&end=${
-                      targetYear - 1
-                    }-12-31`}
+                    href={buildingPermitLink("/applications", {
+                      start: `${targetYear - 1}-01-01`,
+                      end: `${targetYear - 1}-12-31`,
+                    })}
                     className="text-sm text-gray-500 hover:text-gray-700"
                   >
                     {stats.previousYearStats.permits.toLocaleString()} permits

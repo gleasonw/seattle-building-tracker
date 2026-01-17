@@ -1,9 +1,11 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
 import { BuildingPermit } from "@/server/src/db/schema";
 import { ArrowDown, ArrowDownUp, ArrowUp } from "lucide-react";
+import { buildingPermitLink } from "@/lib/utils";
+import { BuildingDashSearchParams } from "@/app/PermitRowFilters";
 
 interface Record {
   permitNum: string;
@@ -73,15 +75,19 @@ export default function RecordsTable({
   extraFields = [],
 }: Props) {
   const searchParams = useSearchParams();
+  const pathname = usePathname();
 
   const { sortBy, sortOrder } = initialParams;
 
   const createSortUrl = (field: string) => {
     const newOrder = sortBy === field && sortOrder === "desc" ? "asc" : "desc";
-    const newParams = new URLSearchParams(searchParams.toString());
-    newParams.set("sortBy", field);
-    newParams.set("sortOrder", newOrder);
-    return `?${newParams.toString()}`;
+    const params = Object.fromEntries(
+      searchParams.entries()
+    ) as Partial<BuildingDashSearchParams>;
+    return buildingPermitLink(
+      (pathname as "/" | "/applications") || "/applications",
+      { ...params, sortBy: field, sortOrder: newOrder }
+    );
   };
 
   return (

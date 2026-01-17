@@ -1,23 +1,27 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
-import { Calendar } from "lucide-react";
 import { useFilters } from "@/app/hooks/useFilters";
+import { buildingPermitLink } from "@/lib/utils";
+import { BuildingDashSearchParams } from "@/app/PermitRowFilters";
 
 export default function DateFieldToggle() {
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const { getDateField } = useFilters();
   const dateField = getDateField();
-  const params = Object.fromEntries(searchParams.entries());
+  const params = Object.fromEntries(
+    searchParams.entries()
+  ) as Partial<BuildingDashSearchParams>;
 
   return (
     <div className="flex gap-1">
       <Link
-        href={`?${new URLSearchParams({
+        href={buildingPermitLink((pathname as "/" | "/applications") || "/", {
           ...params,
           dateField: "applied",
-        }).toString()}`}
+        })}
         className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
           dateField === "applied"
             ? "bg-blue-600 text-white shadow-sm"
@@ -27,10 +31,10 @@ export default function DateFieldToggle() {
         First received
       </Link>
       <Link
-        href={`?${new URLSearchParams({
+        href={buildingPermitLink((pathname as "/" | "/applications") || "/", {
           ...params,
           dateField: "completed",
-        }).toString()}`}
+        })}
         className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
           dateField === "completed"
             ? "bg-blue-600 text-white shadow-sm"

@@ -1,8 +1,10 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
 import { ArrowDown, ArrowUp } from "lucide-react";
+import { buildingPermitLink } from "@/lib/utils";
+import { BuildingDashSearchParams } from "@/app/PermitRowFilters";
 
 interface SortOption {
   key: string;
@@ -21,12 +23,17 @@ export default function SortControls({
   currentOrder,
 }: SortControlsProps) {
   const searchParams = useSearchParams();
+  const pathname = usePathname();
 
   const createSortUrl = (field: string, order: "asc" | "desc") => {
-    const newParams = new URLSearchParams(searchParams.toString());
-    newParams.set("sortBy", field);
-    newParams.set("sortOrder", order);
-    return `?${newParams.toString()}`;
+    const params = Object.fromEntries(
+      searchParams.entries()
+    ) as Partial<BuildingDashSearchParams>;
+    return buildingPermitLink((pathname as "/" | "/applications") || "/", {
+      ...params,
+      sortBy: field,
+      sortOrder: order,
+    });
   };
 
   const isActive = (field: string, order: "asc" | "desc") => {
