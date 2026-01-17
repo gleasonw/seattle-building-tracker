@@ -8,7 +8,7 @@ import { useFilters } from "@/app/hooks/useFilters";
 const UnifiedMap = dynamic(() => import("@/app/components/UnifiedMap"), {
   ssr: false,
   loading: () => (
-    <div className="bg-white rounded-lg shadow p-6 h-[500px] flex items-center justify-center">
+    <div className="bg-white rounded-lg shadow p-6 w-full flex items-center justify-center">
       <div className="text-gray-500">Loading map...</div>
     </div>
   ),
@@ -67,6 +67,7 @@ interface ApplicationViewsProps {
   startDate?: string;
   endDate?: string;
   extra?: React.ReactNode;
+  table?: React.ReactNode;
 }
 
 export default function ApplicationViews({
@@ -76,6 +77,7 @@ export default function ApplicationViews({
   startDate,
   endDate,
   extra,
+  table,
 }: ApplicationViewsProps) {
   const { getDateField } = useFilters();
   const dateField = getDateField();
@@ -83,7 +85,7 @@ export default function ApplicationViews({
     <div className="space-y-6 mb-6">
       {/* Charts - Side by side on desktop, stacked on mobile */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div>
+        <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-3">
             {dateField === "applied"
               ? "Applied for Housing Units"
@@ -95,7 +97,7 @@ export default function ApplicationViews({
             endDate={endDate}
           />
         </div>
-        <div>
+        <div className="bg-white rounded-lg shadow p-6 ">
           <h2 className="text-lg font-semibold text-gray-900 mb-3">
             Total Permits
           </h2>
@@ -111,7 +113,10 @@ export default function ApplicationViews({
       <div>
         {extra}
 
-        <UnifiedMap records={records} />
+        <div className="flex gap-2">
+          {table}
+          <UnifiedMap records={records} />
+        </div>
       </div>
     </div>
   );

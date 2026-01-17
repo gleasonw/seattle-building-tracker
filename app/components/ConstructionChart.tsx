@@ -276,7 +276,7 @@ export function ConstructionChart({ data, startDate, endDate }: Props) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="">
       <div className="mb-6 flex text-sm items-center gap-4">
         <div className="flex gap-2">
           <button

@@ -11,6 +11,7 @@ import { BuildingDashSearchParams } from "@/app/PermitRowFilters";
 import ApplicationViews from "@/app/applications/ApplicationViews";
 import RecordsTable from "@/app/components/RecordsTable";
 import FiltersSidebar from "@/app/components/FiltersSidebar";
+import FiltersTopBar from "@/app/components/FiltersTopBar";
 import FilterBadges from "@/app/components/FilterBadges";
 import MobileFilters from "@/app/components/MobileFilters";
 import PermitTypeDescFilter from "@/app/components/PermitTypeDescFilter";
@@ -224,7 +225,7 @@ export default async function ApplicationsPage({
   ];
 
   return (
-    <div className="flex flex-col lg:flex-row gap-0 lg:gap-6">
+    <div className="flex flex-col">
       {/* Mobile Filter Button */}
       <MobileFilters
         sortOptions={sortOptions}
@@ -248,32 +249,18 @@ export default async function ApplicationsPage({
         />
       </MobileFilters>
 
-      {/* Desktop Sidebar */}
-      <div
-        className="hidden lg:block lg:w-80 overflow-y-auto sticky top-0"
-        style={{ height: "calc(100vh - 120px)" }}
-      >
-        <FiltersSidebar
-          initialParams={params}
-          yearRangeLabel={
-            dateField === "completed"
-              ? "Construction Completed Date"
-              : "Application Submitted Date"
-          }
-          extraFilters={
-            <>
-              <PermitTypeDescFilter currentValue={params.permitTypeDesc} />
-              <StatusCurrentFilter currentValue={params.statusCurrent} />
-              <HousingUnitsFilter currentValue={params.housingUnitsAddedMin} />
-            </>
-          }
-        />
-      </div>
-
-      <div className="flex-1 overflow-y-auto px-2 sm:px-4 lg:px-6">
-        <Suspense>
-          <FilterBadges />
-        </Suspense>
+      <div className="px-4 flex flex-col gap-2">
+        {/* Desktop Horizontal Filter Bar */}
+        <div className="hidden lg:block">
+          <FiltersTopBar
+            initialParams={params}
+            yearRangeLabel={
+              dateField === "completed"
+                ? "Construction Completed Date"
+                : "Application Submitted Date"
+            }
+          />
+        </div>
 
         <ApplicationViews
           applicationTrends={applicationTrends}
@@ -298,18 +285,26 @@ export default async function ApplicationsPage({
               </a>
             </div>
           }
-        />
-        <RecordsTable
-          records={records}
-          initialParams={params}
-          dateColumns={[
-            { key: "appliedDate", label: "Applied Date" },
-            { key: "completedDate", label: "Completed Date" },
-          ]}
-          extraFields={[
-            { key: "statusCurrent", label: "Current Status", sortable: true },
-            { key: "permitTypeDesc", label: "Permit Type Description" },
-          ]}
+          table={
+            <RecordsTable
+              key={"records_table"}
+              records={records}
+              initialParams={params}
+              dateColumns={
+                params.dateField === "applied"
+                  ? [{ key: "appliedDate", label: "Applied Date" }]
+                  : [{ key: "completedDate", label: "Completed Date" }]
+              }
+              extraFields={[
+                {
+                  key: "statusCurrent",
+                  label: "Current Status",
+                  sortable: true,
+                },
+                { key: "permitTypeDesc", label: "Permit Type Description" },
+              ]}
+            />
+          }
         />
       </div>
     </div>

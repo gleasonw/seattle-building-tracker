@@ -91,7 +91,7 @@ export default function FilterBadges() {
   }
 
   return (
-    <div className="flex flex-wrap gap-2 mb-4">
+    <div className="flex flex-wrap gap-2">
       {activeFilters.map((filter) => (
         <button
           key={filter.key}

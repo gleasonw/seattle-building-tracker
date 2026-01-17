@@ -15,7 +15,7 @@ export default function DashboardNav() {
   ];
 
   return (
-    <div className="flex gap-2 sm:gap-4 mb-4 sm:mb-6 border-b border-gray-200 overflow-x-auto">
+    <div className="flex gap-2 sm:gap-4 mb-4 border-b border-gray-200 overflow-x-auto">
       {tabs.map((tab) => {
         const isActive = pathname === tab.href;
         // Preserve query params when switching tabs, but only for /applications route
