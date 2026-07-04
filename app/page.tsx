@@ -1,5 +1,5 @@
 import { db } from "@/server/src/db";
-import { and, desc, isNotNull, sql } from "drizzle-orm";
+import { and, desc, eq, isNotNull, sql } from "drizzle-orm";
 import { buildingPermits } from "@/server/src/db/schema";
 import Link from "next/link";
 import YearNavigation from "./components/YearNavigation";
@@ -22,7 +22,12 @@ async function getYearStats(year: number) {
       total: sql<number>`CAST(SUM(COALESCE(${buildingPermits.housingUnitsAdded}, 0)) AS INTEGER)`,
     })
     .from(buildingPermits)
-    .where(and(...constructionConditions));
+    .where(
+      and(
+        ...constructionConditions,
+        eq(buildingPermits.permitTypeMapped, "Building"),
+      ),
+    );
 
   const permitConditions = buildFiltersFromParams({
     start: yearStart,
@@ -56,7 +61,7 @@ async function getYearStats(year: number) {
     const ytdDate = now.toISOString().split("T")[0];
     const lastYearYtdStart = `${year - 1}-01-01`;
     const lastYearYtdEnd = `${year - 1}-${String(
-      now.getUTCMonth() + 1
+      now.getUTCMonth() + 1,
     ).padStart(2, "0")}-${String(now.getUTCDate()).padStart(2, "0")}`;
 
     const ytdUnits = await db
@@ -70,8 +75,8 @@ async function getYearStats(year: number) {
             start: yearStart,
             end: ytdDate,
             dateField: "completed",
-          })
-        )
+          }),
+        ),
       );
 
     const lastYearYtdUnits = await db
@@ -85,8 +90,8 @@ async function getYearStats(year: number) {
             start: lastYearYtdStart,
             end: lastYearYtdEnd,
             dateField: "completed",
-          })
-        )
+          }),
+        ),
       );
 
     const ytdPermits = await db
@@ -100,8 +105,8 @@ async function getYearStats(year: number) {
             start: yearStart,
             end: ytdDate,
             dateField: "applied",
-          })
-        )
+          }),
+        ),
       );
 
     const lastYearYtdPermits = await db
@@ -115,8 +120,8 @@ async function getYearStats(year: number) {
             start: lastYearYtdStart,
             end: lastYearYtdEnd,
             dateField: "applied",
-          })
-        )
+          }),
+        ),
       );
 
     const ytdPlannedUnits = await db
@@ -130,8 +135,8 @@ async function getYearStats(year: number) {
             start: yearStart,
             end: ytdDate,
             dateField: "applied",
-          })
-        )
+          }),
+        ),
       );
 
     const lastYearYtdPlannedUnits = await db
@@ -145,8 +150,8 @@ async function getYearStats(year: number) {
             start: lastYearYtdStart,
             end: lastYearYtdEnd,
             dateField: "applied",
-          })
-        )
+          }),
+        ),
       );
 
     ytdStats = {
@@ -264,8 +269,9 @@ async function getTopPermits(year: number) {
         sql`EXTRACT(YEAR FROM ${buildingPermits.completedDate}) = ${year}`,
         isNotNull(buildingPermits.housingUnitsAdded),
         isNotNull(buildingPermits.completedDate),
-        sql`${buildingPermits.housingUnitsAdded} > 0`
-      )
+        sql`${buildingPermits.housingUnitsAdded} > 0`,
+        eq(buildingPermits.permitTypeMapped, "Building"),
+      ),
     )
     .orderBy(desc(buildingPermits.housingUnitsAdded))
     .limit(10);
@@ -525,7 +531,7 @@ async function YearView({ year }: { year: number }) {
                       ? "↑"
                       : "↓"}{" "}
                     {Math.abs(
-                      stats.previousYearStats.unitsPercentChange
+                      stats.previousYearStats.unitsPercentChange,
                     ).toFixed(1)}
                     % vs {targetYear - 1}
                   </div>
@@ -584,7 +590,7 @@ async function YearView({ year }: { year: number }) {
                       ? "↑"
                       : "↓"}{" "}
                     {Math.abs(
-                      stats.previousYearStats.permitsPercentChange
+                      stats.previousYearStats.permitsPercentChange,
                     ).toFixed(1)}
                     % vs {targetYear - 1}
                   </div>
@@ -648,7 +654,7 @@ async function YearView({ year }: { year: number }) {
                       ? "↑"
                       : "↓"}{" "}
                     {Math.abs(
-                      stats.previousYearStats.plannedUnitsPercentChange
+                      stats.previousYearStats.plannedUnitsPercentChange,
                     ).toFixed(1)}
                     % vs {targetYear - 1}
                   </div>
@@ -734,7 +740,7 @@ async function YearView({ year }: { year: number }) {
                     {permit.originalAddress1 ? (
                       <a
                         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                          permit.originalAddress1 + ", Seattle, WA"
+                          permit.originalAddress1 + ", Seattle, WA",
                         )}`}
                         target="_blank"
                         rel="noopener noreferrer"
