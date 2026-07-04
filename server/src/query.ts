@@ -53,12 +53,12 @@ export function createSeattleDataUrl({
 
   if (initialParams.start) {
     conditions.push(
-      `\`${targetDateField}\` >= '${initialParams.start}T00:00:00'`
+      `\`${targetDateField}\` >= '${initialParams.start}T00:00:00'`,
     );
   }
   if (initialParams.end) {
     conditions.push(
-      `\`${targetDateField}\` <= '${initialParams.end}T23:59:59'`
+      `\`${targetDateField}\` <= '${initialParams.end}T23:59:59'`,
     );
   }
 
@@ -97,7 +97,7 @@ export function dateFieldFromParams(params: BuildingDashSearchParams) {
 }
 
 export function buildFiltersFromParams(
-  initialParams: BuildingDashSearchParams
+  initialParams: BuildingDashSearchParams,
 ): SQL<unknown>[] {
   const {
     start,
@@ -116,6 +116,10 @@ export function buildFiltersFromParams(
 
   const conditions = [isNotNull(targetDateField)];
 
+  // pretty sure we only want building permits. If we allow demo, can get misleading in the
+  // dashboard, since sometimes demo permits include "housing units added"
+  conditions.push(eq(buildingPermits.permitTypeMapped, "Building"));
+
   if (dateField === "completed") {
     conditions.push(gt(buildingPermits.housingUnitsAdded, 0));
   }
@@ -128,15 +132,15 @@ export function buildFiltersFromParams(
     // Handle status category filtering
     if (statusCurrent === "pipeline") {
       conditions.push(
-        sql`LOWER(${buildingPermits.statusCurrent}) NOT IN ('completed', 'closed', 'approved to occupy', 'inspections completed', 'canceled', 'denied', 'expired', 'withdrawn')`
+        sql`LOWER(${buildingPermits.statusCurrent}) NOT IN ('completed', 'closed', 'approved to occupy', 'inspections completed', 'canceled', 'denied', 'expired', 'withdrawn')`,
       );
     } else if (statusCurrent === "done") {
       conditions.push(
-        sql`LOWER(${buildingPermits.statusCurrent}) IN ('completed', 'closed', 'approved to occupy', 'inspections completed')`
+        sql`LOWER(${buildingPermits.statusCurrent}) IN ('completed', 'closed', 'approved to occupy', 'inspections completed')`,
       );
     } else if (statusCurrent === "canceled") {
       conditions.push(
-        sql`LOWER(${buildingPermits.statusCurrent}) IN ('canceled', 'denied', 'expired', 'withdrawn')`
+        sql`LOWER(${buildingPermits.statusCurrent}) IN ('canceled', 'denied', 'expired', 'withdrawn')`,
       );
     }
   }
@@ -152,7 +156,7 @@ export function buildFiltersFromParams(
     conditions.push(sql`${targetDateField} >= ${start}`);
   } else {
     conditions.push(
-      sql`${targetDateField} >= ${new Date(DEFAULT_START_DATE).toISOString()}`
+      sql`${targetDateField} >= ${new Date(DEFAULT_START_DATE).toISOString()}`,
     );
   }
   if (end) {
@@ -174,7 +178,7 @@ export function buildFiltersFromParams(
           sin(radians(${latNum})) *
           sin(radians(CAST(${buildingPermits.latitude} AS DOUBLE PRECISION)))
         )
-      ) <= ${radiusMiles}`
+      ) <= ${radiusMiles}`,
     );
     conditions.push(isNotNull(buildingPermits.latitude));
     conditions.push(isNotNull(buildingPermits.longitude));
