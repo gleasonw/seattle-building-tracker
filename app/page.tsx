@@ -549,64 +549,6 @@ async function YearView({ year }: { year: number }) {
                 </>
               )}
             </div>
-            <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
-              <div className="flex items-center gap-2 mb-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="w-5 h-5 text-blue-600 flex-shrink-0"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M4.5 2A1.5 1.5 0 003 3.5v13A1.5 1.5 0 004.5 18h11a1.5 1.5 0 001.5-1.5V7.621a1.5 1.5 0 00-.44-1.06l-4.12-4.122A1.5 1.5 0 0011.378 2H4.5zm2.25 8.5a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5zm0 3a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <div className="text-sm text-gray-600">
-                  Building permit applications ({targetYear})
-                </div>
-              </div>
-              <Link
-                href={buildingPermitLink("/applications", {
-                  start: `${targetYear}-01-01`,
-                  end: `${targetYear}-12-31`,
-                  period: "month",
-                })}
-                className="block text-4xl font-bold mb-2 text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
-              >
-                {stats.permitsApplied.toLocaleString()}
-              </Link>
-              {stats.previousYearStats && (
-                <>
-                  <div
-                    className={`text-sm mb-3 ${
-                      stats.previousYearStats.permitsPercentChange >= 0
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    {stats.previousYearStats.permitsPercentChange >= 0
-                      ? "↑"
-                      : "↓"}{" "}
-                    {Math.abs(
-                      stats.previousYearStats.permitsPercentChange,
-                    ).toFixed(1)}
-                    % vs {targetYear - 1}
-                  </div>
-                  <Link
-                    href={buildingPermitLink("/applications", {
-                      start: `${targetYear - 1}-01-01`,
-                      end: `${targetYear - 1}-12-31`,
-                    })}
-                    className="text-sm text-gray-500 hover:text-gray-700"
-                  >
-                    {stats.previousYearStats.permits.toLocaleString()} permits
-                    in {targetYear - 1} →
-                  </Link>
-                </>
-              )}
-            </div>
             <div className="bg-white rounded-lg shadow p-6 border-l-4 border-amber-500">
               <div className="flex items-center gap-2 mb-2">
                 <svg
