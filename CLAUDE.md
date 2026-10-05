@@ -11,19 +11,25 @@ Use shadcn/ui and Tailwind for all UI, including shadcn Charts for charts. Don't
 - `docs/SPEC.md` describes what users should be able to find out from the app. It is the source of truth for the rewrite. Keep it free of implementation details.
 - `docs/DEV_REWRITE_SPEC.md` covers how the rewrite is built: data pipeline, architecture, forecast and phased plan. It's a working plan: change it freely when a better approach turns up, as long as the result still satisfies `SPEC.md`, and update it in the same PR.
 
-## Rewrite layout (branch `rewrite`)
+## Layout
 
 - `packages/data`: shared Drizzle schema, domain rules (status, housing type, normalization), and the nightly sync. Run `pnpm --filter @sbt/data <sync|verify:portal|report:housing-type|test|db:migrate|seed>`.
-- `apps/web`: the new Next.js app. Run `pnpm --filter @sbt/web dev`.
+- `apps/web`: the Next.js app. Run `pnpm --filter @sbt/web dev`; tests (against the local DB) with `pnpm --filter @sbt/web test`.
 - Local dev DB: PostGIS in Docker (`docker run -d --name sbt-postgis -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=sbt -p 5433:5432 postgis/postgis:17-3.5`), with `DATABASE_URL=postgres://postgres:postgres@localhost:5433/sbt` in `packages/data/.env` and `apps/web/.env.local`.
-- The old app at the repo root keeps running in production until cutover.
+- The pre-rewrite app (root `app/`, `server/`, etc.) is no longer deployed and can be removed.
 
 ## Hosting & data access
 
-The app is hosted on Railway (project `unique-purpose`, environment `production`). Its services are `seattle-building-permits` (web), `import job` (sync) and `Postgres`. The Railway CLI is installed and logged in.
+The app is hosted on Railway (project `unique-purpose`, environment `production`), deployed from `main`. The Railway CLI is installed and logged in.
+
+- `seattle-building-permits`: the web app (`apps/web`). Runs migrations, then starts; healthcheck `/methodology`.
+- `import-v2`: the nightly sync (`0 3 * * *` UTC), on `main`.
+- `PostGIS`: the database both use.
+- `web-v2`: a staging copy of the web app on the `rewrite` branch.
+- Retired, kept for rollback for now: `Postgres` (old database) and `import job` (old importer; no schedule, no repo connected).
 
 - Link this directory: `railway link -p unique-purpose -e production -s seattle-building-permits`
-- Query Postgres: `psql "$(railway variables -s Postgres --json | jq -r .DATABASE_PUBLIC_URL)"`
+- Query the database: build the URL from `railway variables -s PostGIS --json` (`POSTGRES_USER`, `POSTGRES_PASSWORD`, `RAILWAY_TCP_PROXY_DOMAIN`, `RAILWAY_TCP_PROXY_PORT`, `POSTGRES_DB`).
 - This is the **production** database. Run read-only queries only, unless the user explicitly asks for a write.
 
 ## Source of truth

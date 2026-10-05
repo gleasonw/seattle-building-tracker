@@ -3,6 +3,7 @@ import type { SearchParams } from "nuqs/server";
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { FilterBar } from "@/components/filter-bar";
+import { StreetViewLink } from "@/components/street-view-link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -84,6 +85,7 @@ export default async function StalledPage({ searchParams }: { searchParams: Prom
                             City record <ExternalLink className="size-3" />
                           </a>
                         )}
+                        <StreetViewLink lat={p.latitude} lng={p.longitude} />
                       </div>
                     </TableCell>
                     <TableCell>{housingTypeLabel(p.housingType)}</TableCell>

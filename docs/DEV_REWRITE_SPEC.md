@@ -493,6 +493,11 @@ the date it was generated (SPEC §7).
   old `import job` keeps running until cutover.
 - **Cutover:** point the `seattle-building-permits` service at the rewritten app and the new
   database. Retire the old cron and the old Postgres service a few weeks later.
+  *Done 2026-10-05:* `rewrite` was fast-forwarded into `main`; `seattle-building-permits` builds
+  `apps/web` from `main` against PostGIS, and `import-v2` syncs from `main`. The web service runs
+  `db:migrate` before starting, because a web deploy once went out ahead of the sync job's
+  migration and failed its healthcheck. The old `import job` was stopped (no schedule, repo
+  disconnected) and the old `Postgres` is untouched, for rollback.
   - **Exception:** `permit_events` rows captured in phase 0 by the old job are copied into the new
     database before cutover, since that history can't be fetched again.
 
@@ -500,11 +505,10 @@ the date it was generated (SPEC §7).
 
 Each phase ends with something verifiable.
 
-**Status (2026-10-05):** phases 1–4 are done locally, apart from deployment. That covers filters,
+**Status (2026-10-05):** phases 1–4 are done and deployed to production. That covers filters,
 the metrics layer, the reliability rule, `/permits` with its map, the radius picker (map point;
 address search comes with L2), net units, the Output view, the "What we count" page and invariant
-tests (`pnpm --filter @sbt/web test`, run against the local database). Still to do for cutover:
-create the PostGIS service and `import v2` cron on Railway, which needs the user's go-ahead. The code
+tests (`pnpm --filter @sbt/web test`, run against the local database). Cutover is done (§8). The code
 is in `packages/data` (schema, domain rules, sync) and `apps/web`.
 
 **Phase 0: Start capturing history now** (*superseded*)

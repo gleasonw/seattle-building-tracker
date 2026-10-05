@@ -2,6 +2,7 @@ import type { SearchParams } from "nuqs/server";
 import { ArrowDown, ArrowUp, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { FilterBar } from "@/components/filter-bar";
+import { StreetViewLink } from "@/components/street-view-link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -121,6 +122,7 @@ export default async function PermitsPage({ searchParams }: { searchParams: Prom
                     ) : (
                       p.permitNum
                     )}
+                    <StreetViewLink lat={p.latitude} lng={p.longitude} className="text-muted-foreground mt-1 flex w-fit font-sans" />
                   </TableCell>
                   <TableCell>
                     <div className="font-medium">{p.address ?? "—"}</div>

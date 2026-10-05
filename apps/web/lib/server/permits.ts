@@ -30,6 +30,8 @@ export interface PermitRow {
   projectKey: string;
   description: string | null;
   link: string | null;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 export interface PermitList {
@@ -62,7 +64,7 @@ export async function listPermits(
              to_char(p.completed_date, 'YYYY-MM-DD') AS "completedDate",
              to_char(p.expires_date, 'YYYY-MM-DD') AS "expiresDate",
              to_char(${s.date}, 'YYYY-MM-DD') AS "creditedDate",
-             p.project_key AS "projectKey", p.description, p.link
+             p.project_key AS "projectKey", p.description, p.link, p.latitude, p.longitude
         FROM permits p LEFT JOIN areas a ON a.id = p.cra_id
        WHERE ${s.where}
        ORDER BY ${order} ${direction}, p.permit_num

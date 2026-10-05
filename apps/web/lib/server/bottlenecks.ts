@@ -191,6 +191,8 @@ export interface StalledProject {
   slowDays: number;
   expiresDate: string | null;
   link: string | null;
+  latitude: number | null;
+  longitude: number | null;
   craName: string | null;
   buildingPermits: number;
 }
@@ -237,7 +239,7 @@ export async function getStalledProjects(filters: Filters, limit = 200): Promise
            f.housing_type AS "housingType", f.units_added AS units, f.stage,
            to_char(f.stage_start, 'YYYY-MM-DD') AS "stageStart", f.days_in_stage AS "daysInStage",
            f.typical::int AS "typicalDays", f.slow::int AS "slowDays",
-           to_char(f.expires_date, 'YYYY-MM-DD') AS "expiresDate", m.link, a.name AS "craName",
+           to_char(f.expires_date, 'YYYY-MM-DD') AS "expiresDate", m.link, m.latitude, m.longitude, a.name AS "craName",
            f.building_permit_count AS "buildingPermits",
            count(*) OVER ()::int AS total, sum(f.units_added) OVER ()::int AS total_units
       FROM flagged f

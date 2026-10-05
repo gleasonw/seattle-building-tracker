@@ -258,6 +258,8 @@ Five views at most. Past that, curation turns back into a menu.
 - Searching an address lists the permits there: status, housing type, units added and
   removed, the key dates (applied / issued / completed / expires), the description and a link
   to the City's official record.
+- Wherever individual permits or projects are listed, the user can open a street-level view of
+  the site. It is labeled as possibly older than the permit.
 
 **L3. Project history**
 - Any project can be opened to show all of its permits on one timeline (demolition,

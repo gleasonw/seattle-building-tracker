@@ -3,6 +3,7 @@ import Link from "next/link";
 import { HOUSING_TYPES } from "@sbt/data/domain/housing-type";
 import { ComparisonCard } from "@/components/comparison-card";
 import { FilterBar } from "@/components/filter-bar";
+import { StreetViewLink } from "@/components/street-view-link";
 import { TrailingChart } from "@/components/charts/trailing-chart";
 import { UnitsByYearChart, type YearDatum } from "@/components/charts/units-by-year-chart";
 import { PolicyEventList } from "@/components/policy-event-list";
@@ -197,6 +198,7 @@ export default async function OutputPage({ searchParams }: { searchParams: Promi
                   <TableCell>
                     <div className="font-medium">{p.address ?? p.permitNum}</div>
                     <div className="text-muted-foreground max-w-md truncate text-xs">{p.description}</div>
+                    <StreetViewLink lat={p.latitude} lng={p.longitude} className="text-muted-foreground text-xs" />
                   </TableCell>
                   <TableCell>{housingTypeLabel(p.housingType)}</TableCell>
                   <TableCell>{formatDate(p.date)}</TableCell>

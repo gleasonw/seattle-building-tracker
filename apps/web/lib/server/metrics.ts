@@ -135,6 +135,8 @@ export interface TopPermit {
   link: string | null;
   projectKey: string;
   description: string | null;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 /** The permits adding the most units. */
@@ -142,7 +144,7 @@ export async function getTopPermits(filters: Filters, milestone: Milestone, limi
   const s = scope(filters, { milestone, units: "added" });
   return query<TopPermit & Record<string, unknown>>(sql`
     SELECT p.permit_num AS "permitNum", p.address, p.housing_units_added AS units,
-           to_char(${s.date}, 'YYYY-MM-DD') AS date, p.housing_type AS "housingType", p.link,
+           to_char(${s.date}, 'YYYY-MM-DD') AS date, p.housing_type AS "housingType", p.link, p.latitude, p.longitude,
            p.project_key AS "projectKey", p.description
       FROM permits p
      WHERE ${s.where}

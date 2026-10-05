@@ -4,6 +4,7 @@ import "leaflet/dist/leaflet.css";
 import { useEffect } from "react";
 import { Circle, CircleMarker, MapContainer, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import type { LatLngBoundsExpression, LatLngExpression } from "leaflet";
+import { streetViewUrl } from "@/components/street-view-link";
 import { formatDate, formatNumber } from "@/lib/format";
 import type { MapPoint } from "@/lib/server/map";
 
@@ -95,6 +96,9 @@ export default function PermitMap({ points = [], radius, onPick, className }: Pe
                     {p.permitNum} on the City&apos;s site
                   </a>
                 )}
+                <a href={streetViewUrl(p.lat, p.lng)} target="_blank" rel="noreferrer">
+                  Street View (may predate the work)
+                </a>
               </div>
             </Popup>
           </CircleMarker>
