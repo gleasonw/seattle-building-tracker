@@ -29,3 +29,24 @@ export const totalChartConfig = {
   units: { label: "Units", color: "var(--chart-3)" },
   trailing12: { label: "Net units, trailing 12 months", color: "oklch(0.55 0.14 255)" },
 } satisfies ChartConfig;
+
+/** Funnel segments in lifecycle order: built, still moving, then lost. */
+export const FUNNEL_SEGMENTS = ["done", "issued", "applied", "lapsed", "dead"] as const;
+
+export const funnelChartConfig = {
+  done: { label: "Built", color: "oklch(0.55 0.14 255)" },
+  issued: { label: "Issued, not completed", color: "oklch(0.72 0.1 240)" },
+  applied: { label: "Still in review", color: "oklch(0.85 0.05 240)" },
+  lapsed: { label: "Lapsed after issue", color: "oklch(0.78 0.13 75)" },
+  dead: { label: "Dead (cancelled, withdrawn, denied)", color: "oklch(0.64 0.19 25)" },
+} satisfies ChartConfig;
+
+export const cohortChartConfig = {
+  all: { label: "All types", color: "var(--foreground)" },
+  ...housingTypeChartConfig,
+} satisfies ChartConfig;
+
+export const reviewChartConfig = {
+  cityDays: { label: "City reviewing", color: "oklch(0.55 0.14 255)" },
+  applicantDays: { label: "Applicant making corrections", color: "oklch(0.78 0.13 75)" },
+} satisfies ChartConfig;

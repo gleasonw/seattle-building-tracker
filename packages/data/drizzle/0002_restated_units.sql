@@ -1,0 +1,1 @@
+ALTER TABLE "permits" ADD COLUMN "restated_units" boolean DEFAULT false NOT NULL;

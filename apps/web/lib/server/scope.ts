@@ -27,9 +27,10 @@ export function milestoneColumn(on: Milestone): SQL {
 
 /**
  * Housing permits: building permits that add units, excluding shoring/excavation permits
- * that restate their building's units (see "What we count").
+ * and permits that restate another permit's units (see "What we count").
  */
-const HOUSING_SQL = "(p.permit_type_mapped = 'Building' AND p.housing_units_added > 0 AND NOT p.site_prep_only)";
+const HOUSING_SQL =
+  "(p.permit_type_mapped = 'Building' AND p.housing_units_added > 0 AND NOT p.site_prep_only AND NOT p.restated_units)";
 const IS_HOUSING = sql.raw(HOUSING_SQL);
 const IS_BUILDING_REMOVAL = sql.raw(
   "(p.permit_type_mapped = 'Building' AND p.housing_units_removed > 0 AND NOT p.site_prep_only)",
@@ -111,11 +112,26 @@ export function scope(
 
   const conditions: SQL[] = [LIVE, rows];
 
-  if (!opts.ignoreDates) {
-    const { from, to } = dateRange(filters);
-    conditions.push(sql`${date} >= ${from}::date AND ${date} <= ${to}::date`);
+  if (filters.by === "project") {
+    // Dates and status describe the whole project (DEV_REWRITE_SPEC §4.5): list every permit
+    // of the projects whose milestone falls in range.
+    const projectConditions: SQL[] = [sql`pr.project_key = p.project_key`];
+    if (!opts.ignoreDates) {
+      const { from, to } = dateRange(filters);
+      const col = sql.raw(`pr.${milestone}_date`);
+      projectConditions.push(sql`${col} >= ${from}::date AND ${col} <= ${to}::date`);
+    }
+    if (filters.status?.length) projectConditions.push(sql`pr.status_category IN (${list(filters.status)})`);
+    conditions.push(sql`EXISTS (SELECT 1 FROM projects pr WHERE ${sql.join(projectConditions, sql` AND `)})`);
+  } else {
+    if (!opts.ignoreDates) {
+      const { from, to } = dateRange(filters);
+      conditions.push(sql`${date} >= ${from}::date AND ${date} <= ${to}::date`);
+    }
+    if (filters.status?.length) conditions.push(sql`p.status_category IN (${list(filters.status)})`);
   }
-  if (filters.status?.length) conditions.push(sql`p.status_category IN (${list(filters.status)})`);
+  if (filters.project) conditions.push(sql`p.project_key = ${filters.project}`);
+  if (filters.stage?.length) conditions.push(sql`p.stage IN (${list(filters.stage)})`);
   if (filters.area?.length) conditions.push(sql`p.cra_id IN (${list(filters.area)})`);
   if (filters.lat != null && filters.lng != null && filters.r != null) {
     conditions.push(
@@ -133,7 +149,7 @@ export function scope(
     } else {
       const viaProject = sql`EXISTS (SELECT 1 FROM permits b
         WHERE b.project_key = p.project_key AND b.removed_at IS NULL AND b.permit_type_mapped = 'Building'
-          AND b.housing_units_added > 0 AND NOT b.site_prep_only AND ${sql.join(segmentConditions(filters, "b"), sql` AND `)})`;
+          AND b.housing_units_added > 0 AND NOT b.site_prep_only AND NOT b.restated_units AND ${sql.join(segmentConditions(filters, "b"), sql` AND `)})`;
       conditions.push(sql`((${IS_HOUSING} AND ${ownMatch}) OR (NOT ${IS_HOUSING} AND ${viaProject}))`);
     }
   }

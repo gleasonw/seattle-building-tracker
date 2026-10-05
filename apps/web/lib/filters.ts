@@ -12,7 +12,7 @@ import {
   parseAsStringLiteral,
 } from "nuqs/server";
 import { HOUSING_TYPES } from "@sbt/data/domain/housing-type";
-import { STATUS_CATEGORIES } from "@sbt/data/domain/status";
+import { STAGES, STATUS_CATEGORIES } from "@sbt/data/domain/status";
 
 export const MILESTONES = ["applied", "issued", "completed"] as const;
 export type Milestone = (typeof MILESTONES)[number];
@@ -24,6 +24,10 @@ export type Milestone = (typeof MILESTONES)[number];
 export const UNIT_KINDS = ["net", "added", "removed"] as const;
 export type UnitKind = (typeof UNIT_KINDS)[number];
 
+/** Whether dates and status refer to each permit (default) or to its whole project. */
+export const GRAINS = ["permit", "project"] as const;
+export type Grain = (typeof GRAINS)[number];
+
 export const SORT_FIELDS = ["date", "units", "permit"] as const;
 
 /** Earliest year shown by default (SPEC open question 6). */
@@ -34,6 +38,7 @@ export const filterParsers = {
   to: parseAsString,
   on: parseAsStringLiteral(MILESTONES),
   status: parseAsArrayOf(parseAsStringLiteral(STATUS_CATEGORIES)),
+  stage: parseAsArrayOf(parseAsStringLiteral(STAGES)),
   type: parseAsArrayOf(parseAsStringLiteral(HOUSING_TYPES)),
   area: parseAsArrayOf(parseAsString),
   lat: parseAsFloat,
@@ -42,6 +47,8 @@ export const filterParsers = {
   min: parseAsInteger,
   sub: parseAsArrayOf(parseAsString),
   units: parseAsStringLiteral(UNIT_KINDS),
+  by: parseAsStringLiteral(GRAINS),
+  project: parseAsString,
 };
 
 export const listParsers = {
@@ -55,6 +62,7 @@ export type Filters = {
   to?: string | null;
   on?: Milestone | null;
   status?: (typeof STATUS_CATEGORIES)[number][] | null;
+  stage?: (typeof STAGES)[number][] | null;
   type?: (typeof HOUSING_TYPES)[number][] | null;
   area?: string[] | null;
   lat?: number | null;
@@ -63,12 +71,15 @@ export type Filters = {
   min?: number | null;
   sub?: string[] | null;
   units?: UnitKind | null;
+  by?: Grain | null;
+  /** One project's permits. */
+  project?: string | null;
 };
 
 /** The filter subset of parsed search params (drops list settings like sort and page). */
 export function pickFilters(parsed: Filters & Record<string, unknown>): Filters {
-  const { from, to, on, status, type, area, lat, lng, r, min, sub, units } = parsed;
-  return { from, to, on, status, type, area, lat, lng, r, min, sub, units };
+  const { from, to, on, status, stage, type, area, lat, lng, r, min, sub, units, by, project } = parsed;
+  return { from, to, on, status, stage, type, area, lat, lng, r, min, sub, units, by, project };
 }
 
 const serialize = createSerializer({ ...filterParsers, ...listParsers });
@@ -81,6 +92,11 @@ export function permitsHref(filters: Filters): `/permits${string}` {
 /** Same filters on another route. */
 export function hrefWith(path: string, filters: Filters): string {
   return serialize(path, filters);
+}
+
+/** Every permit of one project, whatever its dates (applied since the earliest real date). */
+export function projectHref(projectKey: string): string {
+  return permitsHref({ project: projectKey, on: "applied", from: "1950-01-01", units: null });
 }
 
 export const isoDate = (d: Date) => d.toISOString().slice(0, 10);

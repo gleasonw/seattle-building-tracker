@@ -12,7 +12,7 @@ import { normalizeRecord, type StagingRow } from "../domain/normalize";
 import { UnknownStatusError } from "../domain/status";
 import { eq } from "drizzle-orm";
 import { countSource, fetchAllRecords } from "./portal";
-import { deriveGeography, rebuildProjects, removeMissing, upsertPermits, writeEvents, type Tx } from "./merge";
+import { deriveGeography, flagRestatedUnits, rebuildProjects, removeMissing, upsertPermits, writeEvents, type Tx } from "./merge";
 
 const INSERT_BATCH = 1_000;
 const FETCH_ATTEMPTS = 2;
@@ -102,8 +102,9 @@ async function main() {
       const { inserted, updated } = await upsertPermits(tx);
       const removed = await removeMissing(tx, runId);
       await deriveGeography(tx, startedAt);
+      const restated = await flagRestatedUnits(tx);
       const projects = await rebuildProjects(tx);
-      return { eventsWritten: eventsWritten + removed, inserted, updated, removed, projects };
+      return { eventsWritten: eventsWritten + removed, inserted, updated, removed, projects, restated };
     });
 
     await db
@@ -117,7 +118,7 @@ async function main() {
         updated: result.updated,
         removed: result.removed,
         eventsWritten: result.eventsWritten,
-        details: { duplicates, projects: result.projects },
+        details: { duplicates, projects: result.projects, restated: result.restated },
       })
       .where(eq(syncRuns.id, runId));
     if (!process.argv.includes("--keep-staging")) await sql`TRUNCATE permits_staging`;

@@ -243,6 +243,12 @@ Project grouping is in scope for v1.
   appearing on more than one building permit (e.g. a master permit plus dependent permits that
   restate its units). Use `dependent_building` and `parent_permit_num` as signals. If the effect
   is material, add a dedup rule to the project unit totals.
+  *Found (2026-10-05):* besides shoring permits (`site_prep_only`), one withdrawn development
+  without a development site (Stone Ave N, 2022) listed its full 238 units on each of 24
+  building permits, inflating 2022 dead units about tenfold. The merge step now flags
+  `restated_units` where 3+ unlinked permits on the same street, applied for in the same year,
+  each list the same 50+ units, and keeps the units on one of them. Smaller repeats, such as a
+  row of 20-unit buildings, are plausibly real and left alone.
 
 ### 4.6 CRA assignment
 
@@ -341,6 +347,10 @@ mobile), a filter bar, and a freshness footer.
   credited at and the signed units it contributes (net, added or removed, §4.8). Every aggregate,
   map and drill-down list uses it. That's what guarantees the drill-down list adds up exactly to
   the number that was clicked (X3).
+- **Grain.** `by=project` makes dates and status refer to each permit's project (its earliest
+  application, last issue, last completion). Project-level measures (durations, review breakdown)
+  drill down this way, so the list holds every permit of the projects behind the number. `stage`
+  and `project` filters exist for the funnel and stalled-project drill-downs.
 - **Filter UI:** shadcn `Popover` + `Command` for multi-selects, `Calendar` for date ranges,
   `ToggleGroup` for the milestone, `Slider` for radius, and `Badge` chips with remove buttons for
   active filters. On mobile, `Sheet` holds the filter set.
@@ -484,7 +494,7 @@ the date it was generated (SPEC §7).
 
 Each phase ends with something verifiable.
 
-**Status (2026-10-05):** phases 1–3 are done locally, apart from deployment. That covers filters,
+**Status (2026-10-05):** phases 1–4 are done locally, apart from deployment. That covers filters,
 the metrics layer, the reliability rule, `/permits` with its map, the radius picker (map point;
 address search comes with L2), net units, the Output view, the "What we count" page and invariant
 tests (`pnpm --filter @sbt/web test`, run against the local database). Still to do for cutover:
@@ -534,9 +544,19 @@ is in `packages/data` (schema, domain rules, sync) and `apps/web`.
 - **Cutover:** the rewrite replaces the current app at this point, since it's already more correct
   (no undercounting).
 
-**Phase 4: Bottlenecks**
+**Phase 4: Bottlenecks** — *done locally (2026-10-05)*
 - Measures M4–M6, V3 Bottlenecks (funnel, durations, review breakdown by housing type), and V5
   Stalled.
+  - Share built (M4) is per permit, by the permit's own application year and status, so every
+    cell drills down exactly. Dead permits superseded by a live one on the same project turned
+    out to be negligible (3 units), so no project-level adjustment is needed.
+  - Durations (M5), review breakdown (M6) and stalled projects are per project.
+  - A cohort is provisional until the 90th percentile of applied→completed time for its type has
+    passed (the 75th left visibly unsettled years unshaded).
+  - Review breakdown starts with 2018 applications: before that the City didn't record the
+    City/applicant split (corrections read 0).
+  - Stalled = in the current stage longer than the 90th percentile for its type (last 10 years of
+    applications), or an issued permit expiring within 90 days.
 
 **Phase 5: Where + Explorer**
 - V2 Where (CRA choropleth + ranked table, compared with the prior 12 months).

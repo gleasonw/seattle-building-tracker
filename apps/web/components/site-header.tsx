@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 
 const VIEWS = [
   { href: "/", label: "Output" },
+  { href: "/bottlenecks", label: "Bottlenecks" },
+  { href: "/stalled", label: "Stalled" },
   { href: "/permits", label: "Permits" },
   { href: "/methodology", label: "What we count" },
 ] as const;

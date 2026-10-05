@@ -15,7 +15,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { filterParsers, MILESTONES, UNIT_KINDS, type Milestone, type UnitKind } from "@/lib/filters";
 import { RadiusPicker } from "@/components/radius-picker";
-import { STATUS_LABELS } from "@/lib/format";
+import { STAGE_LABELS, STATUS_LABELS } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 interface Option {
@@ -129,6 +129,13 @@ export function FilterBar({
       label: STATUS_LABELS[s] ?? s,
       clear: () => set({ status: f.status!.filter((x) => x !== s).length ? f.status!.filter((x) => x !== s) : null }),
     })),
+    ...(f.stage ?? []).map((s) => ({
+      key: `stage-${s}`,
+      label: STAGE_LABELS[s] ?? s,
+      clear: () => set({ stage: f.stage!.filter((x) => x !== s).length ? f.stage!.filter((x) => x !== s) : null }),
+    })),
+    ...(f.project ? [{ key: "project", label: `Project ${f.project}`, clear: () => set({ project: null }) }] : []),
+    ...(f.by === "project" ? [{ key: "by", label: "Dates refer to whole projects", clear: () => set({ by: null }) }] : []),
     ...(f.sub ?? []).map((s) => ({
       key: `sub-${s}`,
       label: s,
@@ -263,7 +270,7 @@ export function FilterBar({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => set({ type: null, area: null, status: null, sub: null, min: null, lat: null, lng: null, r: null, from: null, to: null })}
+            onClick={() => set({ type: null, area: null, status: null, stage: null, by: null, project: null, sub: null, min: null, lat: null, lng: null, r: null, from: null, to: null })}
           >
             Clear all
           </Button>

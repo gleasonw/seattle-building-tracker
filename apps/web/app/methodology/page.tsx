@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatNumber } from "@/lib/format";
 import { CONCENTRATION_THRESHOLD, MIN_PROJECTS } from "@/lib/reliability";
+import { EXPIRING_WITHIN_DAYS, REVIEW_DATA_START_YEAR, STALLED_PERCENTILE } from "@/lib/server/bottlenecks";
 import { getDwellingTypeCoverage, getExclusions, getHousingTypeAccuracy } from "@/lib/server/methodology";
 
 export const metadata: Metadata = { title: "What we count · Seattle Housing Tracker" };
@@ -123,6 +124,16 @@ export default async function MethodologyPage() {
               <TableCell className="text-right tabular-nums">{formatNumber(x.site_prep_units)}</TableCell>
             </TableRow>
             <TableRow>
+              <TableCell>Repeated development totals</TableCell>
+              <TableCell className="whitespace-normal">
+                A few multi-building developments list the whole development&apos;s units on every building&apos;s permit. Where
+                three or more unlinked permits on the same street, applied for on the same day, each list the same 50+ units,
+                we count the units once.
+              </TableCell>
+              <TableCell className="text-right tabular-nums">{formatNumber(x.restated_permits)}</TableCell>
+              <TableCell className="text-right tabular-nums">{formatNumber(x.restated_units)}</TableCell>
+            </TableRow>
+            <TableRow>
               <TableCell>Permits without a location</TableCell>
               <TableCell className="whitespace-normal">
                 Counted in citywide totals but not in any area, map or radius view.
@@ -218,6 +229,33 @@ export default async function MethodologyPage() {
         <p className="text-muted-foreground">
           Detached houses are the weakest: the inference tends to label them as townhouses or ADUs, so recent detached-house
           counts are likely understated.
+        </p>
+      </Section>
+
+      <Section id="bottlenecks" title="Bottlenecks and stalled projects">
+        <p>
+          <strong>Share built</strong> follows each permit from the year it was applied for: the units it adds count as
+          built, still in progress, lapsed or dead according to its current status. Share built is built units divided by
+          all units applied for that year, leaving out lapsed permits because their outcome is unknown.
+        </p>
+        <p>
+          <strong>Time per stage</strong> is measured per project, so a site permitted building by building counts once:
+          from its first application to its last building permit being issued, and from that issue to its last building
+          being completed. Medians come with the middle half of projects (25th–75th percentile).
+        </p>
+        <p>
+          <strong>Recent application years are provisional.</strong> An application year is provisional until 90% of past
+          projects of that type would have finished. Until then its share built will keep rising, and its durations are
+          biased short because only the fastest projects have finished.
+        </p>
+        <p>
+          <strong>City review vs. applicant corrections</strong> uses the City&apos;s own split of plan-review time on each
+          project&apos;s main permit. The City has only recorded it for applications since {REVIEW_DATA_START_YEAR}.
+        </p>
+        <p>
+          <strong>Stalled projects</strong> are pipeline projects that have spent longer in their current stage than{" "}
+          {Math.round(STALLED_PERCENTILE * 100)}% of past projects of the same type (applications from the last 10 years), or
+          whose issued permit expires within {EXPIRING_WITHIN_DAYS} days.
         </p>
       </Section>
 

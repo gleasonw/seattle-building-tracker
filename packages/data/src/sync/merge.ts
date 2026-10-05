@@ -108,6 +108,40 @@ export async function deriveGeography(tx: Tx, runStartedAt: string): Promise<voi
   `;
 }
 
+/** Groups at least this large, restating at least this many units, are treated as restatements. */
+const RESTATED_MIN_PERMITS = 3;
+const RESTATED_MIN_UNITS = 50;
+
+/**
+ * Some multi-building developments without a development site repeat the whole
+ * development's unit count on every building's permit (e.g. 24 townhouse-structure permits
+ * each listing 238 units). Where at least RESTATED_MIN_PERMITS unlinked building permits share
+ * a street, an application year and an identical unit count of RESTATED_MIN_UNITS or more, keep the
+ * units on the lowest permit number and flag the rest. Smaller repeats (a row of 20-unit
+ * buildings) are plausibly real and are left alone.
+ */
+export async function flagRestatedUnits(tx: Tx): Promise<number> {
+  await tx`UPDATE permits SET restated_units = false WHERE restated_units`;
+  const result = await tx`
+    WITH candidates AS (
+      SELECT permit_num,
+             row_number() OVER w AS rn,
+             count(*) OVER w AS n
+        FROM permits
+       WHERE removed_at IS NULL AND permit_type_mapped = 'Building' AND NOT site_prep_only
+         AND development_site IS NULL AND applied_date IS NOT NULL
+         AND housing_units_added >= ${RESTATED_MIN_UNITS}
+      WINDOW w AS (PARTITION BY regexp_replace(upper(address), '^[0-9A-Z-]+[[:space:]]+', ''),
+                                date_trunc('year', applied_date), housing_units_added
+                   ORDER BY permit_num ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
+    )
+    UPDATE permits p SET restated_units = true
+      FROM candidates c
+     WHERE c.permit_num = p.permit_num AND c.n >= ${RESTATED_MIN_PERMITS} AND c.rn > 1
+  `;
+  return result.count;
+}
+
 /**
  * Rebuild the projects table (DEV_REWRITE_SPEC §4.5). A project is every unit-adding
  * building permit sharing a project key, plus demolitions on the same key.
@@ -118,7 +152,7 @@ export async function rebuildProjects(tx: Tx): Promise<number> {
     WITH b AS (
       SELECT * FROM permits
        WHERE removed_at IS NULL AND permit_type_mapped = 'Building' AND housing_units_added > 0
-         AND NOT site_prep_only
+         AND NOT site_prep_only AND NOT restated_units
     ),
     demo AS (
       SELECT project_key, count(*)::int AS n, coalesce(sum(housing_units_removed), 0)::int AS removed

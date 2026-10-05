@@ -26,3 +26,12 @@ export const STATUS_LABELS: Record<string, string> = {
   lapsed: "Lapsed",
   dead: "Dead",
 };
+
+export const STAGE_LABELS: Record<string, string> = {
+  pre_intake: "Pre-application",
+  applied: "In review",
+  issued: "Issued, not completed",
+  done: "Built",
+  lapsed: "Lapsed after issue",
+  dead: "Dead",
+};

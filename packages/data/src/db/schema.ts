@@ -103,6 +103,11 @@ export const permits = pgTable(
     ...permitColumns(),
     geom: point("geom"),
     craId: text("cra_id").references(() => areas.id),
+    /**
+     * One of several permits that each restate the same development's total units
+     * (sync/merge.ts flagRestatedUnits). Its units are counted once, on another permit.
+     */
+    restatedUnits: boolean("restated_units").notNull().default(false),
     firstSeenAt: ts("first_seen_at").notNull().defaultNow(),
     updatedAt: ts("updated_at").notNull().defaultNow(),
     removedAt: ts("removed_at"),

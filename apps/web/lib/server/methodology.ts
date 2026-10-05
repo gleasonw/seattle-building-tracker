@@ -21,15 +21,19 @@ type ExclusionCounts = Record<
   | "demolition_units_uncounted"
   | "building_units_removed"
   | "site_prep_permits"
-  | "site_prep_units",
+  | "site_prep_units"
+  | "restated_permits"
+  | "restated_units",
   number
 >;
 
 export async function getExclusions() {
   const [row] = await query<ExclusionCounts>(sql`
     SELECT
-      count(*) FILTER (WHERE permit_type_mapped = 'Building' AND housing_units_added > 0 AND NOT site_prep_only)::int AS housing_permits,
-      coalesce(sum(housing_units_added) FILTER (WHERE permit_type_mapped = 'Building' AND housing_units_added > 0 AND NOT site_prep_only), 0)::int AS housing_units,
+      count(*) FILTER (WHERE permit_type_mapped = 'Building' AND housing_units_added > 0 AND NOT site_prep_only AND NOT restated_units)::int AS housing_permits,
+      coalesce(sum(housing_units_added) FILTER (WHERE permit_type_mapped = 'Building' AND housing_units_added > 0 AND NOT site_prep_only AND NOT restated_units), 0)::int AS housing_units,
+      count(*) FILTER (WHERE restated_units)::int AS restated_permits,
+      coalesce(sum(housing_units_added) FILTER (WHERE restated_units), 0)::int AS restated_units,
       count(*) FILTER (WHERE permit_type_mapped = 'Building' AND housing_units_added > 0 AND site_prep_only)::int AS site_prep_permits,
       coalesce(sum(housing_units_added) FILTER (WHERE permit_type_mapped = 'Building' AND housing_units_added > 0 AND site_prep_only), 0)::int AS site_prep_units,
       count(*) FILTER (WHERE permit_type_mapped = 'Building' AND coalesce(housing_units_added, 0) <= 0)::int AS no_units_permits,
