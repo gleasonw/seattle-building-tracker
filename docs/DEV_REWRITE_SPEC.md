@@ -294,10 +294,26 @@ permits (2,010). Definition:
 
 - **Units added:** building permits only. Demolition permits sometimes report "units added"
   incorrectly, so theirs are ignored.
-- **Units removed:** building-permit removals plus demolition-permit removals, dated by the
-  demolition's completed date (or issued date if never completed). Validate this choice in phase 1.
-- **Net = added − removed.** This is the headline if the phase 1 sanity check passes, i.e. no
-  implausible years. Otherwise the headline is gross units added, labeled as such (SPEC §3).
+- **Units removed:**
+  - building permits that remove units (e.g. combining apartments), dated by their own milestone;
+  - demolition permits that were issued and are done or still in the pipeline, dated by their
+    **issued** date. Cancelled demolitions, and demolitions that were issued and then expired,
+    aren't counted.
+- **Net = added − removed.** This is the headline for completions. Applied and issued counts
+  stay gross (units added), since removals don't have a meaningful "applied" date.
+
+*Changed (phase 1 check, 2026-10-05):* dating demolitions by completion was planned, but their
+completed dates are unreliable. The median issue→completion gap is 290 days, 41% exceed a year,
+and in Feb–Mar 2017 the City bulk-closed hundreds of demolitions issued in 2007–2011, which put
+1,600 removals into 2017. Dating by issue gives a smooth 300–800 removals a year. With that rule,
+removals are 4–13% of additions every year from 2010 on, so net passes the sanity check.
+Building and demolition permits restating the same removal on one project is negligible
+(15 projects, under 10 units).
+
+**Filters on removals.** Type, size and sub-type describe new housing, so a removal-only row
+(demolition or conversion) matches them when a housing permit on the same project does. Area,
+radius and status apply to the row itself. All of this lives in `scope()` (§5.2), so drill-downs
+still add up.
 
 ## 5. Application architecture
 
@@ -321,9 +337,10 @@ mobile), a filter bar, and a freshness footer.
 
 - **One `filters` definition** (nuqs parsers) covers date range, date milestone, status category,
   housing type, CRA, radius (lat/lng/miles), minimum units, and permit sub-type.
-- **One function, `filtersToWhere(filters)`, builds the SQL `WHERE`.** Every aggregate and every
-  drill-down list uses it. That's what guarantees the drill-down list adds up exactly to the
-  number that was clicked (X3).
+- **One function, `scope(filters)`, builds the SQL `WHERE`** together with the date each row is
+  credited at and the signed units it contributes (net, added or removed, §4.8). Every aggregate,
+  map and drill-down list uses it. That's what guarantees the drill-down list adds up exactly to
+  the number that was clicked (X3).
 - **Filter UI:** shadcn `Popover` + `Command` for multi-selects, `Calendar` for date ranges,
   `ToggleGroup` for the milestone, `Slider` for radius, and `Badge` chips with remove buttons for
   active filters. On mobile, `Sheet` holds the filter set.
@@ -352,7 +369,8 @@ type Cell = {
 ```
 
 - **Reliability rule (T2)** is applied in exactly one place, in this layer. N is a single
-  constant, calibrated in phase 2.
+  constant, calibrated in phase 2. Concentration compares the largest project with the gross
+  units (added plus removed) behind a total, so net totals near zero aren't flagged spuriously.
 - **Medians and percentiles** use Postgres `percentile_cont`.
 - **Cohort measures** (share built) group by application year and mark the most recent cohorts
   as provisional. The cutoff comes from the M5 duration distributions, e.g. any cohort younger than
@@ -466,9 +484,11 @@ the date it was generated (SPEC §7).
 
 Each phase ends with something verifiable.
 
-**Status (2026-10-04):** phase 1 is done locally (not yet deployed). Phases 2–3 are partly done:
-filters, metrics layer, reliability rule, `/permits`, Output view and the "What we count" page
-are built. Still to do: the map, radius picker, net units, invariant tests, deployment. The code
+**Status (2026-10-05):** phases 1–3 are done locally, apart from deployment. That covers filters,
+the metrics layer, the reliability rule, `/permits` with its map, the radius picker (map point;
+address search comes with L2), net units, the Output view, the "What we count" page and invariant
+tests (`pnpm --filter @sbt/web test`, run against the local database). Still to do for cutover:
+create the PostGIS service and `import v2` cron on Railway, which needs the user's go-ahead. The code
 is in `packages/data` (schema, domain rules, sync) and `apps/web`.
 
 **Phase 0: Start capturing history now** (*superseded*)
@@ -489,7 +509,7 @@ is in `packages/data` (schema, domain rules, sync) and `apps/web`.
 - Housing-type classifier v1 plus its accuracy report. Choose the multifamily cutoffs. *Done*
   (classifier v3): 97% of units / 92% of permits correct on 2018–2023, 99% / 93% on 2010–2017.
   The weakest type is detached houses in recent years. Cutoffs are provisional at 20 and 150 units.
-- Net-units check (§4.8).
+- Net-units check (§4.8). *Done:* net is the headline, with demolitions dated by issue.
 - Write `pnpm verify:portal`. *Done.* Yearly units completed and applied, and permits by status, all
   match the portal exactly.
 - **Exit:** yearly totals match the portal within 0.1%. The classifier report is reviewed. The open
@@ -537,7 +557,7 @@ is in `packages/data` (schema, domain rules, sync) and `apps/web`.
    Any use beyond a current snapshot depends on `permit_events` history accumulating.
 2. **CRA groups:** expose the 13 CRA groups as a coarser level in the UI, or use them only as a
    fallback for the reliability rule?
-3. **Net vs. gross headline:** decided by the phase 1 check (§4.8).
+3. ~~**Net vs. gross headline**~~: net, decided by the phase 1 check (§4.8).
 4. **Forecast refresh:** nightly or weekly, depending on job runtime.
 5. **Display start year:** data now goes back further. Should displays still start in 2010 by
    default? Records before ~2005 are probably sparse; profile in phase 1.

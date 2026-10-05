@@ -13,7 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { filterParsers, MILESTONES, type Milestone } from "@/lib/filters";
+import { filterParsers, MILESTONES, UNIT_KINDS, type Milestone, type UnitKind } from "@/lib/filters";
+import { RadiusPicker } from "@/components/radius-picker";
 import { STATUS_LABELS } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -135,7 +136,7 @@ export function FilterBar({
     })),
     ...(f.min != null ? [{ key: "min", label: `≥ ${f.min} units`, clear: () => set({ min: null }) }] : []),
     ...(f.lat != null && f.lng != null && f.r != null
-      ? [{ key: "radius", label: `Within ${f.r} mi of a point`, clear: () => set({ lat: null, lng: null, r: null }) }]
+      ? [{ key: "radius", label: `Within ${f.r} mi of ${f.lat.toFixed(4)}, ${f.lng.toFixed(4)}`, clear: () => set({ lat: null, lng: null, r: null }) }]
       : []),
     ...(showDates && (f.from || f.to)
       ? [{ key: "dates", label: `${f.from ?? "start"} → ${f.to ?? "today"}`, clear: () => set({ from: null, to: null }) }]
@@ -156,6 +157,10 @@ export function FilterBar({
           options={subTypes.map((s) => ({ value: s, label: s }))}
           selected={f.sub ?? []}
           onChange={(sub) => set({ sub })}
+        />
+        <RadiusPicker
+          value={f.lat != null && f.lng != null && f.r != null ? { lat: f.lat, lng: f.lng, miles: f.r } : null}
+          onChange={(v) => set(v ? { lat: v.lat, lng: v.lng, r: Number(v.miles.toFixed(2)) } : { lat: null, lng: null, r: null })}
         />
         {showStatus && (
           <MultiSelect
@@ -201,6 +206,24 @@ export function FilterBar({
               {MILESTONES.map((m) => (
                 <ToggleGroupItem key={m} value={m} className="capitalize">
                   {m}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          </div>
+        )}
+        {showMilestone && (f.on ?? "completed") === "completed" && (
+          <div className="flex flex-col gap-1">
+            <span className="text-muted-foreground text-xs">Units</span>
+            <ToggleGroup
+              type="single"
+              variant="outline"
+              size="sm"
+              value={f.units ?? "net"}
+              onValueChange={(v) => v && set({ units: v === "net" ? null : (v as UnitKind) })}
+            >
+              {UNIT_KINDS.map((k) => (
+                <ToggleGroupItem key={k} value={k} className="capitalize">
+                  {k}
                 </ToggleGroupItem>
               ))}
             </ToggleGroup>

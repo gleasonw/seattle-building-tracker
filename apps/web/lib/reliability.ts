@@ -20,7 +20,10 @@ export interface Support {
   /** Units from the single largest project, and which project that is. */
   topProjectUnits?: number;
   topProjectLabel?: string | null;
+  /** Signed total (net when removals are included). */
   totalUnits?: number;
+  addedUnits?: number;
+  removedUnits?: number;
 }
 
 export function grade(support: Support): Reliability {
@@ -29,9 +32,11 @@ export function grade(support: Support): Reliability {
   return "ok";
 }
 
+/** The largest project's share of the gross units (added plus removed) behind a total. */
 export function topShare(support: Support): number {
-  if (!support.totalUnits || !support.topProjectUnits) return 0;
-  return support.topProjectUnits / support.totalUnits;
+  const gross = (support.addedUnits ?? support.totalUnits ?? 0) + (support.removedUnits ?? 0);
+  if (!gross || !support.topProjectUnits) return 0;
+  return support.topProjectUnits / gross;
 }
 
 /** Whether a derived number (change, median, share, rank) may be shown. */

@@ -42,7 +42,7 @@ function lastTwelveMonths(today: Date) {
 /** V1 Output: how much are we building, and what kind? */
 export default async function OutputPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   // The Output view always measures completions, so the milestone and status filters don't apply.
-  const filters: Filters = { ...pickFilters(await filtersCache.parse(searchParams)), on: null, status: null };
+  const filters: Filters = { ...pickFilters(await filtersCache.parse(searchParams)), on: null, status: null, units: null };
   const segment: Filters = { ...filters, from: null, to: null };
   const today = new Date();
   const year = today.getUTCFullYear();
@@ -57,7 +57,7 @@ export default async function OutputPage({ searchParams }: { searchParams: Promi
       getSupport({ ...segment, ...t12.current }, MILESTONE),
       getSupport({ ...segment, ...t12.previous }, MILESTONE),
       getTopPermits(filters, MILESTONE),
-      getSupport(filters, MILESTONE),
+      getSupport(filters, MILESTONE, "added"),
       getTypeSourceShares(filters, MILESTONE),
       getPolicyEvents(),
       listAreas(),
@@ -69,7 +69,9 @@ export default async function OutputPage({ searchParams }: { searchParams: Promi
   const chartData: YearDatum[] = years.map((y) => {
     const row: YearDatum = { year: y, label: y === year ? `${y} (so far)` : String(y), provisional: y === year };
     for (const t of HOUSING_TYPES) row[t] = 0;
-    for (const r of byYear.filter((r) => r.year === y)) row[r.housingType] = r.units;
+    row.removed = 0;
+    for (const r of byYear.filter((r) => r.year === y)) row[r.series] = r.units;
+    row.net = byYear.filter((r) => r.year === y).reduce((sum, r) => sum + r.units, 0);
     return row;
   });
   const visibleEvents = events.filter((e) => e.date >= from && e.date <= to);
@@ -79,15 +81,18 @@ export default async function OutputPage({ searchParams }: { searchParams: Promi
     visibleEvents.forEach((e, i) => grouped.set(key(e.date), [...(grouped.get(key(e.date)) ?? []), i + 1]));
     return [...grouped].map(([k, n]) => ({ key: k, label: n.join(", ") }));
   };
-  const total = rangeSupport.totalUnits ?? 0;
+  const total = rangeSupport.addedUnits ?? 0;
 
   return (
     <>
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">How much housing is Seattle building?</h1>
         <p className="text-muted-foreground max-w-3xl text-sm">
-          Units added by building permits as they reach completion (final inspection). Gross units added; net of
-          demolitions is coming once the demolition data is validated.
+          Net new homes: units added by building permits as they reach completion (final inspection), minus units
+          demolished.{" "}
+          <Link href="/methodology#counting" className="underline underline-offset-2">
+            How units are counted
+          </Link>
         </p>
       </div>
 
@@ -95,7 +100,7 @@ export default async function OutputPage({ searchParams }: { searchParams: Promi
 
       <div className="grid gap-4 md:grid-cols-3">
         <ComparisonCard
-          title="Units completed, last 12 months"
+          title="Net units completed, last 12 months"
           current={t12Current}
           previous={t12Previous}
           currentHref={permitsHref({ ...segment, ...t12.current, on: MILESTONE })}
@@ -103,7 +108,7 @@ export default async function OutputPage({ searchParams }: { searchParams: Promi
           previousLabel="in the 12 months before"
         />
         <ComparisonCard
-          title={`Units completed, ${year} so far`}
+          title={`Net units completed, ${year} so far`}
           current={ytd.current}
           previous={ytd.previous}
           currentHref={permitsHref({ ...segment, from: ytd.current.from, to: ytd.current.to, on: MILESTONE })}
@@ -125,8 +130,8 @@ export default async function OutputPage({ searchParams }: { searchParams: Promi
         <CardHeader>
           <CardTitle>Units completed per year, by housing type</CardTitle>
           <CardDescription>
-            Look for which kinds of housing drive the totals and how the mix shifts after policy changes. Click a bar to
-            see its permits.
+            Units added by housing type above the line, units demolished below it, and the net as a line. Look for which
+            kinds of housing drive the totals and how the mix shifts after policy changes. Click a bar to see its permits.
           </CardDescription>
           <CardAction>
             <ReliabilityBadge support={rangeSupport} />
@@ -155,7 +160,7 @@ export default async function OutputPage({ searchParams }: { searchParams: Promi
         <CardHeader>
           <CardTitle>Trailing 12-month total</CardTitle>
           <CardDescription>
-            Units completed in the 12 months up to each month. Smooths out seasonal swings, so it&apos;s the fairest way
+            Net units completed in the 12 months up to each month. Smooths out seasonal swings, so it&apos;s the fairest way
             to tell whether the city is speeding up or slowing down.
           </CardDescription>
         </CardHeader>
@@ -172,7 +177,7 @@ export default async function OutputPage({ searchParams }: { searchParams: Promi
           <CardTitle>Largest completions</CardTitle>
           <CardDescription>
             The biggest permits completed between {formatDate(from)} and {formatDate(to)}, and their share of the{" "}
-            {formatNumber(total)} units in that period.
+            {formatNumber(total)} units added in that period.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -204,10 +209,10 @@ export default async function OutputPage({ searchParams }: { searchParams: Promi
             </TableBody>
           </Table>
           <Link
-            href={permitsHref({ ...filters, on: MILESTONE })}
+            href={permitsHref({ ...filters, on: MILESTONE, units: "added" })}
             className="text-muted-foreground mt-3 inline-block text-xs hover:underline underline-offset-2"
           >
-            All {formatNumber(rangeSupport.permitCount)} permits in this period →
+            All permits adding units in this period →
           </Link>
         </CardContent>
       </Card>

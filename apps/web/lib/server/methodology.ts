@@ -17,6 +17,9 @@ type ExclusionCounts = Record<
   | "demolition_permits"
   | "demolition_units_added"
   | "demolition_units_removed"
+  | "demolition_units_counted"
+  | "demolition_units_uncounted"
+  | "building_units_removed"
   | "site_prep_permits"
   | "site_prep_units",
   number
@@ -38,7 +41,10 @@ export async function getExclusions() {
       coalesce(sum(housing_units_added) FILTER (WHERE permit_type_mapped = 'Building' AND housing_units_added > 0 AND cra_id IS NULL), 0)::int AS unlocated_units,
       count(*) FILTER (WHERE permit_type_mapped = 'Demolition')::int AS demolition_permits,
       coalesce(sum(housing_units_added) FILTER (WHERE permit_type_mapped = 'Demolition'), 0)::int AS demolition_units_added,
-      coalesce(sum(housing_units_removed) FILTER (WHERE permit_type_mapped = 'Demolition'), 0)::int AS demolition_units_removed
+      coalesce(sum(housing_units_removed) FILTER (WHERE permit_type_mapped = 'Demolition'), 0)::int AS demolition_units_removed,
+      coalesce(sum(housing_units_removed) FILTER (WHERE permit_type_mapped = 'Demolition' AND issued_date IS NOT NULL AND status_category IN ('done', 'pipeline')), 0)::int AS demolition_units_counted,
+      coalesce(sum(housing_units_removed) FILTER (WHERE permit_type_mapped = 'Demolition' AND NOT (issued_date IS NOT NULL AND status_category IN ('done', 'pipeline'))), 0)::int AS demolition_units_uncounted,
+      coalesce(sum(housing_units_removed) FILTER (WHERE permit_type_mapped = 'Building' AND NOT site_prep_only), 0)::int AS building_units_removed
     FROM permits WHERE removed_at IS NULL
   `);
   const [removed] = await query<{ n: number }>(sql`SELECT count(*)::int AS n FROM permits WHERE removed_at IS NOT NULL`);

@@ -19,7 +19,13 @@ export const housingTypeChartConfig = Object.fromEntries(
   HOUSING_TYPES.map((t) => [t, { label: HOUSING_TYPE_LABELS[t], color: HOUSING_TYPE_COLORS[t] }]),
 ) satisfies ChartConfig;
 
+export const unitsByYearChartConfig = {
+  ...housingTypeChartConfig,
+  removed: { label: "Removed (demolished)", color: "oklch(0.64 0.19 25)" },
+  net: { label: "Net", color: "var(--foreground)" },
+} satisfies ChartConfig;
+
 export const totalChartConfig = {
   units: { label: "Units", color: "var(--chart-3)" },
-  trailing12: { label: "Trailing 12 months", color: "oklch(0.55 0.14 255)" },
+  trailing12: { label: "Net units, trailing 12 months", color: "oklch(0.55 0.14 255)" },
 } satisfies ChartConfig;

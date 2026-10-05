@@ -17,6 +17,13 @@ import { STATUS_CATEGORIES } from "@sbt/data/domain/status";
 export const MILESTONES = ["applied", "issued", "completed"] as const;
 export type Milestone = (typeof MILESTONES)[number];
 
+/**
+ * Which units a completion count includes (DEV_REWRITE_SPEC §4.8). Net is the headline;
+ * other milestones always count units added.
+ */
+export const UNIT_KINDS = ["net", "added", "removed"] as const;
+export type UnitKind = (typeof UNIT_KINDS)[number];
+
 export const SORT_FIELDS = ["date", "units", "permit"] as const;
 
 /** Earliest year shown by default (SPEC open question 6). */
@@ -34,6 +41,7 @@ export const filterParsers = {
   r: parseAsFloat,
   min: parseAsInteger,
   sub: parseAsArrayOf(parseAsString),
+  units: parseAsStringLiteral(UNIT_KINDS),
 };
 
 export const listParsers = {
@@ -54,12 +62,13 @@ export type Filters = {
   r?: number | null;
   min?: number | null;
   sub?: string[] | null;
+  units?: UnitKind | null;
 };
 
 /** The filter subset of parsed search params (drops list settings like sort and page). */
 export function pickFilters(parsed: Filters & Record<string, unknown>): Filters {
-  const { from, to, on, status, type, area, lat, lng, r, min, sub } = parsed;
-  return { from, to, on, status, type, area, lat, lng, r, min, sub };
+  const { from, to, on, status, type, area, lat, lng, r, min, sub, units } = parsed;
+  return { from, to, on, status, type, area, lat, lng, r, min, sub, units };
 }
 
 const serialize = createSerializer({ ...filterParsers, ...listParsers });

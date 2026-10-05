@@ -53,8 +53,16 @@ export default async function MethodologyPage() {
           lag move-in by weeks to months, so the most recent months are provisional.
         </p>
         <p>
-          Unit totals are currently <strong>gross</strong>: units added, not net of demolitions. Demolition permits record{" "}
-          {formatNumber(x.demolition_units_removed)} units removed; net figures will be added once that data is validated.
+          Completions are shown <strong>net</strong>: units added minus units removed. Units removed come from demolition
+          permits ({formatNumber(x.demolition_units_counted)} units) and from building permits that remove units, for
+          example by combining apartments ({formatNumber(x.building_units_removed)} units).
+        </p>
+        <p>
+          A demolition is counted on the date it was <strong>issued</strong>, not completed. Demolitions usually happen soon
+          after issue, but the City often records their completion much later: the median gap is about 10 months, and in
+          early 2017 hundreds of demolitions from 2007–2011 were closed out at once. Dating by completion would put those
+          removals in the wrong year. Demolitions that were cancelled, or issued and then expired, aren&apos;t counted (
+          {formatNumber(x.demolition_units_uncounted)} units). The permit list can show units added, removed or net.
         </p>
       </Section>
 

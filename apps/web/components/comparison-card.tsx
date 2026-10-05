@@ -46,6 +46,11 @@ export function ComparisonCard({
         </CardAction>
       </CardHeader>
       <CardContent className="text-muted-foreground flex flex-col gap-1 text-sm">
+        {current.removedUnits ? (
+          <p className="text-xs tabular-nums">
+            {formatNumber(current.addedUnits ?? 0)} added − {formatNumber(current.removedUnits)} demolished
+          </p>
+        ) : null}
         {!change && <p className="text-xs">Change not shown: too few projects to compare reliably.</p>}
         <Link href={previousHref} className="hover:underline underline-offset-2">
           {formatNumber(prev)} {previousLabel} →

@@ -1,35 +1,44 @@
 import "server-only";
 import { sql } from "drizzle-orm";
 import type { HousingType } from "@sbt/data/domain/housing-type";
-import type { Filters, Milestone } from "@/lib/filters";
+import type { Filters, Milestone, UnitKind } from "@/lib/filters";
 import type { Support } from "@/lib/reliability";
 import { query } from "./db";
-import { dateRange, filtersToWhere, milestoneColumn } from "./scope";
+import { dateRange, scope } from "./scope";
 
 /** Units, permits, projects and concentration behind a set of filters (SPEC T2). */
-export async function getSupport(filters: Filters, milestone?: Milestone): Promise<Support> {
-  const where = filtersToWhere(filters, { milestone });
+export async function getSupport(filters: Filters, milestone?: Milestone, units?: UnitKind): Promise<Support> {
+  const s = scope(filters, { milestone, units });
   const [row] = await query<{
     units: number;
+    added: number;
+    removed: number;
     permits: number;
     projects: number;
     top_units: number | null;
     top_label: string | null;
   }>(sql`
-    WITH scoped AS (SELECT p.* FROM permits p WHERE ${where}),
+    WITH scoped AS (
+      SELECT p.project_key, p.address, ${s.units} AS units, ${s.added} AS added, ${s.removed} AS removed
+        FROM permits p WHERE ${s.where}
+    ),
     by_project AS (
-      SELECT project_key, sum(housing_units_added)::int AS units, min(address) AS address
+      SELECT project_key, sum(added)::int AS added, sum(removed)::int AS removed, min(address) AS address
         FROM scoped GROUP BY project_key
     ),
-    top AS (SELECT * FROM by_project ORDER BY units DESC LIMIT 1)
-    SELECT coalesce((SELECT sum(housing_units_added) FROM scoped), 0)::int AS units,
+    top AS (SELECT * FROM by_project ORDER BY greatest(added, removed) DESC LIMIT 1)
+    SELECT coalesce((SELECT sum(units) FROM scoped), 0)::int AS units,
+           coalesce((SELECT sum(added) FROM scoped), 0)::int AS added,
+           coalesce((SELECT sum(removed) FROM scoped), 0)::int AS removed,
            (SELECT count(*) FROM scoped)::int AS permits,
            (SELECT count(*) FROM by_project)::int AS projects,
-           (SELECT units FROM top) AS top_units,
+           (SELECT greatest(added, removed) FROM top) AS top_units,
            (SELECT address FROM top) AS top_label
   `);
   return {
     totalUnits: row?.units ?? 0,
+    addedUnits: row?.added ?? 0,
+    removedUnits: row?.removed ?? 0,
     permitCount: row?.permits ?? 0,
     projectCount: row?.projects ?? 0,
     topProjectUnits: row?.top_units ?? 0,
@@ -39,23 +48,30 @@ export async function getSupport(filters: Filters, milestone?: Milestone): Promi
 
 export interface YearTypeRow {
   year: number;
-  housingType: HousingType;
+  /** A housing type for units added, or "removed" for units removed (as a negative number). */
+  series: HousingType | "removed";
   units: number;
-  permits: number;
 }
 
-/** Units per year and housing type for the given milestone. */
+/** Units per year: added by housing type, plus removals as their own (negative) series. */
 export async function getUnitsByYearAndType(filters: Filters, milestone: Milestone): Promise<YearTypeRow[]> {
-  const col = milestoneColumn(milestone);
-  const rows = await query<{ year: number; housing_type: HousingType; units: number; permits: number }>(sql`
-    SELECT extract(year FROM ${col})::int AS year, p.housing_type,
-           sum(p.housing_units_added)::int AS units, count(*)::int AS permits
+  const s = scope(filters, { milestone });
+  const rows = await query<{ year: number; housing_type: HousingType | null; added: number; removed: number }>(sql`
+    SELECT extract(year FROM ${s.date})::int AS year, p.housing_type,
+           sum(${s.added})::int AS added, sum(${s.removed})::int AS removed
       FROM permits p
-     WHERE ${filtersToWhere(filters, { milestone })}
+     WHERE ${s.where}
      GROUP BY 1, 2
      ORDER BY 1, 2
   `);
-  return rows.map((r) => ({ year: r.year, housingType: r.housing_type, units: r.units, permits: r.permits }));
+  const out: YearTypeRow[] = [];
+  const removed = new Map<number, number>();
+  for (const r of rows) {
+    if (r.added > 0 && r.housing_type) out.push({ year: r.year, series: r.housing_type, units: r.added });
+    if (r.removed > 0) removed.set(r.year, (removed.get(r.year) ?? 0) + r.removed);
+  }
+  for (const [year, units] of removed) out.push({ year, series: "removed", units: -units });
+  return out;
 }
 
 export interface MonthPoint {
@@ -67,17 +83,17 @@ export interface MonthPoint {
 /** Monthly units with a trailing 12-month total; months with no permits are zero. */
 export async function getMonthlyWithTrailing(filters: Filters, milestone: Milestone): Promise<MonthPoint[]> {
   const { from, to } = dateRange(filters);
-  const col = milestoneColumn(milestone);
   // Look back 11 extra months so the first trailing total in range is complete.
   const lookback = { ...filters, from: shiftMonths(from, -11) };
+  const s = scope(lookback, { milestone });
   const rows = await query<{ month: string; units: number; trailing12: number; n: number }>(sql`
     WITH months AS (
       SELECT generate_series(date_trunc('month', ${lookback.from}::date), date_trunc('month', ${to}::date), interval '1 month')::date AS month
     ),
     monthly AS (
-      SELECT date_trunc('month', ${col})::date AS month, sum(p.housing_units_added)::int AS units
+      SELECT date_trunc('month', ${s.date})::date AS month, sum(${s.units})::int AS units
         FROM permits p
-       WHERE ${filtersToWhere(lookback, { milestone })}
+       WHERE ${s.where}
        GROUP BY 1
     )
     SELECT to_char(m.month, 'YYYY-MM-DD') AS month,
@@ -121,15 +137,16 @@ export interface TopPermit {
   description: string | null;
 }
 
+/** The permits adding the most units. */
 export async function getTopPermits(filters: Filters, milestone: Milestone, limit = 10): Promise<TopPermit[]> {
-  const col = milestoneColumn(milestone);
+  const s = scope(filters, { milestone, units: "added" });
   return query<TopPermit & Record<string, unknown>>(sql`
     SELECT p.permit_num AS "permitNum", p.address, p.housing_units_added AS units,
-           to_char(${col}, 'YYYY-MM-DD') AS date, p.housing_type AS "housingType", p.link,
+           to_char(${s.date}, 'YYYY-MM-DD') AS date, p.housing_type AS "housingType", p.link,
            p.project_key AS "projectKey", p.description
       FROM permits p
-     WHERE ${filtersToWhere(filters, { milestone })}
-     ORDER BY p.housing_units_added DESC, ${col} DESC
+     WHERE ${s.where}
+     ORDER BY p.housing_units_added DESC, ${s.date} DESC
      LIMIT ${limit}
   `);
 }
@@ -140,7 +157,7 @@ export async function getTypeSourceShares(filters: Filters, milestone: Milestone
     SELECT coalesce(sum(p.housing_units_added), 0)::int AS total,
            coalesce(sum(p.housing_units_added) FILTER (WHERE p.housing_type_source = 'inferred'), 0)::int AS inferred,
            coalesce(sum(p.housing_units_added) FILTER (WHERE p.housing_type = 'other'), 0)::int AS unknown
-      FROM permits p WHERE ${filtersToWhere(filters, { milestone })}
+      FROM permits p WHERE ${scope(filters, { milestone, units: "added" }).where}
   `);
   const total = row?.total ?? 0;
   return {

@@ -7,13 +7,23 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { hrefWith, pickFilters, type Filters } from "@/lib/filters";
+import { hrefWith, pickFilters, type Filters, type UnitKind } from "@/lib/filters";
 import { formatDate, formatNumber, housingTypeLabel, STATUS_LABELS } from "@/lib/format";
+import { FilteredPermitMap } from "@/components/map/filtered-permit-map";
+import { getMapPoints, MAP_POINT_LIMIT } from "@/lib/server/map";
 import { listAreas, listPermits, listSubTypes, PAGE_SIZE } from "@/lib/server/permits";
 import { dateRange } from "@/lib/server/scope";
 import { filtersCache } from "@/lib/server/search-params";
 
 type Sort = "date" | "units" | "permit";
+
+const KIND_DESCRIPTIONS: Record<UnitKind, string> = {
+  net: "Building permits that add or remove housing, and demolitions",
+  added: "Building permits that add housing",
+  removed: "Building permits and demolitions that remove housing",
+};
+
+const signed = (n: number) => (n > 0 ? `+${formatNumber(n)}` : n < 0 ? `−${formatNumber(-n)}` : "0");
 
 function SortIcon({ field, sort, dir }: { field: Sort; sort: Sort; dir: "asc" | "desc" }) {
   if (sort !== field) return null;
@@ -26,8 +36,9 @@ export default async function PermitsPage({ searchParams }: { searchParams: Prom
   const { sort, dir, page } = parsed;
   const filters = pickFilters(parsed);
   const on = filters.on ?? "completed";
-  const [list, areas, subTypes] = await Promise.all([
+  const [list, map, areas, subTypes] = await Promise.all([
     listPermits(filters, { sort, dir, page }),
+    getMapPoints(filters),
     listAreas(),
     listSubTypes(),
   ]);
@@ -44,7 +55,8 @@ export default async function PermitsPage({ searchParams }: { searchParams: Prom
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">Permits</h1>
         <p className="text-muted-foreground text-sm">
-          Building permits that add housing, {on} between {formatDate(from)} and {formatDate(to)}.
+          {KIND_DESCRIPTIONS[list.kind]}, {on} between {formatDate(from)} and {formatDate(to)}.
+          {list.kind !== "added" && " Demolitions are dated by when they were issued."}
         </p>
       </div>
 
@@ -58,14 +70,27 @@ export default async function PermitsPage({ searchParams }: { searchParams: Prom
       <Card>
         <CardHeader>
           <CardTitle className="tabular-nums">
-            {formatNumber(list.totalUnits)} units · {formatNumber(list.totalPermits)} permits ·{" "}
-            {formatNumber(list.totalProjects)} projects
+            {formatNumber(list.kind === "removed" ? list.totalRemoved : list.totalUnits)}{" "}
+            {list.kind === "net" ? "net units" : list.kind === "removed" ? "units removed" : "units"} ·{" "}
+            {formatNumber(list.totalPermits)} permits · {formatNumber(list.totalProjects)} projects
           </CardTitle>
+          {list.kind === "net" && (
+            <p className="text-muted-foreground text-sm tabular-nums">
+              {formatNumber(list.totalAdded)} added − {formatNumber(list.totalRemoved)} removed
+            </p>
+          )}
           <CardDescription>
             These totals are computed from exactly the rows below, so they match the number you clicked to get here.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
+          <FilteredPermitMap points={map.points} className="h-[28rem]" />
+          <p className="text-muted-foreground -mt-2 text-xs">
+            Circle size shows units; blue adds housing, red removes it. Click the map to count only permits near that point.
+            {map.total - map.unlocated > MAP_POINT_LIMIT &&
+              ` Showing the ${formatNumber(MAP_POINT_LIMIT)} largest of ${formatNumber(map.total - map.unlocated)} located permits.`}
+            {map.unlocated > 0 && ` ${formatNumber(map.unlocated)} permits have no location and aren't on the map.`}
+          </p>
           <Table>
             <TableHeader>
               <TableRow>
@@ -99,6 +124,7 @@ export default async function PermitsPage({ searchParams }: { searchParams: Prom
                   </TableCell>
                   <TableCell>
                     <div className="font-medium">{p.address ?? "—"}</div>
+                    {p.permitType === "Demolition" && <Badge variant="outline" className="mr-1">Demolition</Badge>}
                     <div className="text-muted-foreground text-xs">{p.craName ?? "Unlocated"}</div>
                   </TableCell>
                   <TableCell>
@@ -121,9 +147,19 @@ export default async function PermitsPage({ searchParams }: { searchParams: Prom
                   <TableCell className="whitespace-nowrap">{formatDate(p.appliedDate)}</TableCell>
                   <TableCell className="whitespace-nowrap">{formatDate(p.issuedDate)}</TableCell>
                   <TableCell className="whitespace-nowrap">
-                    {formatDate(on === "applied" ? p.appliedDate : on === "issued" ? p.issuedDate : p.completedDate)}
+                    {formatDate(p.creditedDate)}
+                    {p.permitType === "Demolition" && on === "completed" && (
+                      <div className="text-muted-foreground text-xs">demolition issued</div>
+                    )}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">{formatNumber(p.units)}</TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {list.kind === "added" ? formatNumber(p.units) : signed(p.units)}
+                    {list.kind === "net" && p.added > 0 && p.removed > 0 && (
+                      <div className="text-muted-foreground text-xs">
+                        +{formatNumber(p.added)} −{formatNumber(p.removed)}
+                      </div>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))}
               {list.rows.length === 0 && (
