@@ -22,7 +22,7 @@
 
 - **UI: shadcn/ui + Tailwind CSS v4, everywhere.**
   - Every interactive element and layout primitive comes from shadcn/ui (`components/ui`,
-    style `new-york`, base color `neutral`, CSS variables), or is composed from shadcn parts.
+    the current default preset `radix-nova`, base color `neutral`, CSS variables), or is composed from shadcn parts.
   - Styling is Tailwind utility classes and the shadcn theme tokens in `app/globals.css`.
   - No other component libraries, no CSS modules, no inline style objects. The one exception
     is the map library's own required CSS.
@@ -357,10 +357,10 @@ type Cell = {
 - **Cohort measures** (share built) group by application year and mark the most recent cohorts
   as provisional. The cutoff comes from the M5 duration distributions, e.g. any cohort younger than
   the 75th-percentile time to completion.
-- **Caching.** Results go through Next's data cache, tagged `permits`, and the tag is
-  invalidated when a sync succeeds: the job calls an authenticated revalidate route. At about
-  170k rows, plain indexed SQL is fast enough. Materialized views are added only if profiling
-  shows a need.
+- **Caching.** None yet. Pages render in about 0.1–0.5s against about 170k rows with plain indexed
+  SQL, so caching was deferred. If it's needed, use Next's cache tagged `permits` and invalidate it
+  after each successful sync (the job already calls `WEB_REVALIDATE_URL` when that's set).
+  Materialized views are added only if profiling shows a need.
 
 ### 5.4 UI composition
 
@@ -466,11 +466,15 @@ the date it was generated (SPEC §7).
 
 Each phase ends with something verifiable.
 
-**Phase 0: Start capturing history now** (tiny, ships first)
-- Add a `permit_events` writer to the *current* nightly job, comparing status and milestone dates
-  before each upsert. Every day without it is history the backtest can never recover.
-- Also take a nightly snapshot of pre-intake records (`applieddate IS NULL`), which the current
-  importer skips. Their only dates will be the ones we observe ourselves.
+**Status (2026-10-04):** phase 1 is done locally (not yet deployed). Phases 2–3 are partly done:
+filters, metrics layer, reliability rule, `/permits`, Output view and the "What we count" page
+are built. Still to do: the map, radius picker, net units, invariant tests, deployment. The code
+is in `packages/data` (schema, domain rules, sync) and `apps/web`.
+
+**Phase 0: Start capturing history now** (*superseded*)
+- *Changed:* the v2 sync was built first, and it already writes `permit_events` and covers
+  pre-intake records, so the old job doesn't need patching. Deploying the v2 sync job is now the
+  urgent first step, since history only accumulates once it runs nightly.
 
 **Phase 1: Data pipeline v2**
 - Create the PostGIS Postgres service on Railway (confirm with the user before creating it).
@@ -478,10 +482,16 @@ Each phase ends with something verifiable.
   reconciliation, soft deletes, placeholder-date handling and `development_site`.
 - Build the status mapping with an unknown-status failure.
 - Seed the CRA snapshot and assign CRAs with PostGIS.
-- Build the `projects` table and run the double-counting audit.
-- Housing-type classifier v1 plus its accuracy report. Choose the multifamily cutoffs.
+- Build the `projects` table and run the double-counting audit. *Done.* The audit found that
+  shoring/excavation permits restate their building's units without being linked to it. They're
+  flagged `site_prep_only` and excluded from housing counts (about 4k units), and the "What we
+  count" page lists them.
+- Housing-type classifier v1 plus its accuracy report. Choose the multifamily cutoffs. *Done*
+  (classifier v3): 97% of units / 92% of permits correct on 2018–2023, 99% / 93% on 2010–2017.
+  The weakest type is detached houses in recent years. Cutoffs are provisional at 20 and 150 units.
 - Net-units check (§4.8).
-- Write `pnpm verify:portal`.
+- Write `pnpm verify:portal`. *Done.* Yearly units completed and applied, and permits by status, all
+  match the portal exactly.
 - **Exit:** yearly totals match the portal within 0.1%. The classifier report is reviewed. The open
   data questions (§10) are answered.
 
