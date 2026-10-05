@@ -130,7 +130,7 @@ export default async function BottlenecksPage({ searchParams }: { searchParams: 
         </p>
       </div>
 
-      <FilterBar areas={areas.map((a) => ({ value: a.id, label: a.name }))} subTypes={subTypes} />
+      <FilterBar areas={areas} subTypes={subTypes} />
 
       <Card>
         <CardHeader>

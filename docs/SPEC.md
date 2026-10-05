@@ -138,7 +138,7 @@ and can be removed individually.
 - Which milestone the date refers to (applied / issued / completed)
 - Status category
 - Housing type
-- Area
+- Area. When choosing areas, users can see where each one is on a map, not just its name.
 - Radius around an address or map point
 - Minimum units added
 - Permit sub-type (new construction, addition/alteration, …)

@@ -14,8 +14,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { filterParsers, MILESTONES, UNIT_KINDS, type Milestone, type UnitKind } from "@/lib/filters";
-import { RadiusPicker } from "@/components/radius-picker";
+import { WherePicker } from "@/components/where-picker";
 import { STAGE_LABELS, STATUS_LABELS } from "@/lib/format";
+import type { AreaOption } from "@/lib/server/permits";
 import { cn } from "@/lib/utils";
 
 interface Option {
@@ -102,7 +103,7 @@ export function FilterBar({
   showStatus = false,
   showDates = true,
 }: {
-  areas: Option[];
+  areas: AreaOption[];
   subTypes: string[];
   showMilestone?: boolean;
   showStatus?: boolean;
@@ -112,7 +113,7 @@ export function FilterBar({
   const [f, setF] = useQueryStates(filterParsers, { shallow: false, startTransition, scroll: false });
   const set = (patch: Parameters<typeof setF>[0]) => void setF(patch);
 
-  const areaName = new Map(areas.map((a) => [a.value, a.label]));
+  const areaName = new Map(areas.map((a) => [a.id, a.name]));
   const chips: { key: string; label: string; clear: () => void }[] = [
     ...(f.type ?? []).map((t) => ({
       key: `type-${t}`,
@@ -143,7 +144,7 @@ export function FilterBar({
     })),
     ...(f.min != null ? [{ key: "min", label: `≥ ${f.min} units`, clear: () => set({ min: null }) }] : []),
     ...(f.lat != null && f.lng != null && f.r != null
-      ? [{ key: "radius", label: `Within ${f.r} mi of ${f.lat.toFixed(4)}, ${f.lng.toFixed(4)}`, clear: () => set({ lat: null, lng: null, r: null }) }]
+      ? [{ key: "radius", label: `Within ${f.r} mi of a point`, clear: () => set({ lat: null, lng: null, r: null }) }]
       : []),
     ...(showDates && (f.from || f.to)
       ? [{ key: "dates", label: `${f.from ?? "start"} → ${f.to ?? "today"}`, clear: () => set({ from: null, to: null }) }]
@@ -158,16 +159,18 @@ export function FilterBar({
           selected={f.type ?? []}
           onChange={(type) => set({ type: type as HousingType[] | null })}
         />
-        <MultiSelect label="Area" options={areas} selected={f.area ?? []} onChange={(area) => set({ area })} />
         <MultiSelect
           label="Permit type"
           options={subTypes.map((s) => ({ value: s, label: s }))}
           selected={f.sub ?? []}
           onChange={(sub) => set({ sub })}
         />
-        <RadiusPicker
-          value={f.lat != null && f.lng != null && f.r != null ? { lat: f.lat, lng: f.lng, miles: f.r } : null}
-          onChange={(v) => set(v ? { lat: v.lat, lng: v.lng, r: Number(v.miles.toFixed(2)) } : { lat: null, lng: null, r: null })}
+        <WherePicker
+          areas={areas}
+          selectedAreas={f.area ?? []}
+          onAreasChange={(area) => set({ area })}
+          radius={f.lat != null && f.lng != null && f.r != null ? { lat: f.lat, lng: f.lng, miles: f.r } : null}
+          onRadiusChange={(v) => set(v ? { lat: v.lat, lng: v.lng, r: Number(v.miles.toFixed(2)) } : { lat: null, lng: null, r: null })}
         />
         {showStatus && (
           <MultiSelect

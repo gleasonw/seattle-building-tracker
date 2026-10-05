@@ -61,7 +61,7 @@ export default async function PermitsPage({ searchParams }: { searchParams: Prom
       </div>
 
       <FilterBar
-        areas={areas.map((a) => ({ value: a.id, label: a.name }))}
+        areas={areas}
         subTypes={subTypes}
         showMilestone
         showStatus

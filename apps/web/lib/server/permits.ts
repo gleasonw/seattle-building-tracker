@@ -90,10 +90,23 @@ export async function listPermits(
 export interface AreaOption {
   id: string;
   name: string;
+  /** Simplified boundary as [lat, lng] rings per polygon, for the area picker map. */
+  polygons: [number, number][][][];
 }
 
+/** Community Reporting Areas with simplified boundaries (~30 m tolerance, ~40 KB in total). */
 export async function listAreas(): Promise<AreaOption[]> {
-  return query<AreaOption & Record<string, unknown>>(sql`SELECT id, name FROM areas ORDER BY name`);
+  const rows = await query<{ id: string; name: string; geojson: string }>(sql`
+    SELECT id, name, ST_AsGeoJSON(ST_Multi(ST_SimplifyPreserveTopology(geom, 0.0003)), 5) AS geojson FROM areas ORDER BY name
+  `);
+  return rows.map((r) => {
+    const { coordinates } = JSON.parse(r.geojson) as { coordinates: [number, number][][][] };
+    return {
+      id: r.id,
+      name: r.name,
+      polygons: coordinates.map((poly) => poly.map((ring) => ring.map(([lng, lat]) => [lat, lng] as [number, number]))),
+    };
+  });
 }
 
 export async function listSubTypes(): Promise<string[]> {

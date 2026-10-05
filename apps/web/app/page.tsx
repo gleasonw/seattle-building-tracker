@@ -96,7 +96,7 @@ export default async function OutputPage({ searchParams }: { searchParams: Promi
         </p>
       </div>
 
-      <FilterBar areas={areas.map((a) => ({ value: a.id, label: a.name }))} subTypes={subTypes} />
+      <FilterBar areas={areas} subTypes={subTypes} />
 
       <div className="grid gap-4 md:grid-cols-3">
         <ComparisonCard

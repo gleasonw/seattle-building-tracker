@@ -51,7 +51,7 @@ export function UnitsByYearChart({
           axisLine={false}
           width={48}
           tickFormatter={(v: number) => v.toLocaleString()}
-          domain={[(min: number) => Math.min(0, Math.floor(min / 1000) * 1000), "auto"]}
+          domain={[(min: number) => Math.min(0, min), "auto"]}
         />
         <ChartTooltip content={<ChartTooltipContent />} />
         {/* Keep stack order (houses → towers) rather than alphabetical. */}

@@ -8,3 +8,8 @@ export const LazyPermitMap = dynamic(() => import("./permit-map"), {
   ssr: false,
   loading: () => <Skeleton className="h-full w-full" />,
 });
+
+export const LazyAreaMap = dynamic(() => import("./area-map"), {
+  ssr: false,
+  loading: () => <Skeleton className="h-full w-full" />,
+});

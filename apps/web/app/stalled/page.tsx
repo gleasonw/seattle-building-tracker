@@ -41,7 +41,7 @@ export default async function StalledPage({ searchParams }: { searchParams: Prom
         </p>
       </div>
 
-      <FilterBar areas={areas.map((a) => ({ value: a.id, label: a.name }))} subTypes={subTypes} showDates={false} />
+      <FilterBar areas={areas} subTypes={subTypes} showDates={false} />
 
       <Card>
         <CardHeader>

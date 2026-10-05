@@ -7,7 +7,7 @@ import type { LatLngBoundsExpression, LatLngExpression } from "leaflet";
 import { formatDate, formatNumber } from "@/lib/format";
 import type { MapPoint } from "@/lib/server/map";
 
-const SEATTLE_BOUNDS: LatLngBoundsExpression = [
+export const SEATTLE_BOUNDS: LatLngBoundsExpression = [
   [47.495, -122.436],
   [47.735, -122.236],
 ];
@@ -22,7 +22,7 @@ function ClickToPick({ onPick }: { onPick: (lat: number, lng: number) => void })
 }
 
 /** Re-measure when the container resizes (e.g. inside an animating popover) and refit if nothing is selected. */
-function FitToContainer({ refit }: { refit: boolean }) {
+export function FitToContainer({ refit }: { refit: boolean }) {
   const map = useMap();
   useEffect(() => {
     const observer = new ResizeObserver(() => {
@@ -53,7 +53,8 @@ export default function PermitMap({ points = [], radius, onPick, className }: Pe
       {...view}
       maxBounds={SEATTLE_BOUNDS}
       maxBoundsViscosity={0.8}
-      minZoom={11}
+      minZoom={10}
+      zoomSnap={0.25}
       preferCanvas
       scrollWheelZoom={false}
       className={className}

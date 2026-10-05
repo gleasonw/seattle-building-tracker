@@ -352,8 +352,14 @@ mobile), a filter bar, and a freshness footer.
   drill down this way, so the list holds every permit of the projects behind the number. `stage`
   and `project` filters exist for the funnel and stalled-project drill-downs.
 - **Filter UI:** shadcn `Popover` + `Command` for multi-selects, `Calendar` for date ranges,
-  `ToggleGroup` for the milestone, `Slider` for radius, and `Badge` chips with remove buttons for
-  active filters. On mobile, `Sheet` holds the filter set.
+  `ToggleGroup` for the milestone, and `Badge` chips with remove buttons for active filters. On
+  mobile, `Sheet` holds the filter set.
+- **"Where" picker:** one popover covers both area (D3) and radius (L1), with tabs. *Areas* shows
+  the CRA boundaries on a map (hover for the name, click to toggle) next to a searchable list.
+  *Near a point* is a map to click plus a radius `Slider`. *Changed (2026-10-05):* this replaced
+  a name-only area dropdown and a separate radius button, because area names alone didn't tell
+  users where the areas are. Boundaries are served simplified (~30 m, ~40 KB) by the page's
+  server component.
 
 ### 5.3 Metrics layer (`lib/metrics/`)
 

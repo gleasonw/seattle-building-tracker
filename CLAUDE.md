@@ -2,6 +2,8 @@ For data fetching, only use react server components, fetching in parent server c
 
 After a large suite of changes, run pnpm tsc to verify
 
+To check UI changes, use the preview browser (the T3 Code preview tools) against the running dev server. Don't use Playwright or other headless browsers; if the preview browser is unavailable, say so instead of falling back.
+
 Use shadcn/ui and Tailwind for all UI, including shadcn Charts for charts. Don't add other component libraries or CSS approaches.
 
 ## Specs
