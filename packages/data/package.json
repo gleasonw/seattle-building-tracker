@@ -14,17 +14,18 @@
     "verify:portal": "tsx src/scripts/verify-portal.ts",
     "report:housing-type": "tsx src/scripts/housing-type-report.ts",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "start:job": "pnpm db:migrate && pnpm sync"
   },
   "dependencies": {
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.45.1",
-    "postgres": "^3.4.8"
+    "postgres": "^3.4.8",
+    "tsx": "^4.23.15"
   },
   "devDependencies": {
     "@types/node": "^20",
     "drizzle-kit": "^0.31.8",
-    "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "^5.0.3"
   }

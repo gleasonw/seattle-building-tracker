@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { HOUSING_TYPE_LABELS, MF_LARGE_MIN_UNITS, MF_MID_MIN_UNITS } from "@sbt/data/domain/housing-type";
 import { STATUS_VALUES } from "@sbt/data/domain/status";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +27,8 @@ const pct = (v: number | null) => (v === null ? "—" : `${Math.round(v * 100)}%
 
 /** SPEC T6: the page a skeptical reader can check the app against. Generated from the same definitions the app uses. */
 export default async function MethodologyPage() {
+  // Live counts: render per request, never at build time.
+  await connection();
   const [x, accuracy, coverage] = await Promise.all([getExclusions(), getHousingTypeAccuracy(), getDwellingTypeCoverage()]);
 
   return (

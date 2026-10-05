@@ -1,10 +1,12 @@
 import { AlertTriangle } from "lucide-react";
 import Link from "next/link";
+import { connection } from "next/server";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { getFreshness } from "@/lib/server/metrics";
 
 /** Last successful sync, with a warning when data is stale or the last sync failed (SPEC T5). */
 export async function FreshnessNotice() {
+  await connection();
   const { lastSuccessAt, lastRunStatus, stale } = await getFreshness();
   const last = lastSuccessAt ? new Date(lastSuccessAt) : null;
   const failed = lastRunStatus === "failed";
