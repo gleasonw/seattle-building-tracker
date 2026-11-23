@@ -139,13 +139,18 @@ The pages are built from these:
      year to date. Policy changes that matter appear as dated, numbered markers. Each links to
      a primary source, and no causation is claimed. **Every marker must be checked against a
      primary source (City ordinance, council or department page) before it ships.** Starting
-     list, checked on 2026-10-04:
+     list, checked on 2026-11-22:
 
      | Date | Event | Source |
      |---|---|---|
-     | 2019-04-19 | Mandatory Housing Affordability takes effect citywide (Ord. 125791) | [City Council](https://seattle.gov/council/committees/citywidemha) |
-     | 2019-08-08 | ADU reforms take effect: two ADUs per lot, no owner-occupancy or parking requirement (CB 119544) | [OPCD](https://www.seattle.gov/opcd/ongoing-initiatives/encouraging-backyard-cottages) |
-     | 2026-01-21 | Permanent middle-housing zoning takes effect (CB 120993) | [City Council](https://www.seattle.gov/council/topics/2025-comprehensive-plan) |
+     | 2019-04-19 | Mandatory Housing Affordability takes effect citywide (Ord. 125791, CB 119444) | [City Clerk](https://clerk.seattle.gov/search/ordinances/125791) |
+     | 2019-08-08 | ADU reforms take effect: two ADUs per lot, no owner-occupancy or parking requirement (Ord. 125854, CB 119544) | [City Clerk](https://clerk.seattle.gov/search/ordinances/125854) |
+     | 2025-06-30 | Interim middle-housing zoning for state HB 1110 takes effect (Ord. 127219, CB 120969) | [OPCD](https://www.seattle.gov/planning-and-community-development/current-projects/encouraging-backyard-cottages) |
+     | 2026-01-21 | Permanent middle-housing zoning takes effect (Ord. 127376, CB 120993) | [City Clerk](https://clerk.seattle.gov/search/ordinances/127376) |
+
+     Seattle ordinances take effect 30 days after the mayor signs them unless they say
+     otherwise. The Clerk's records give the signing dates.
+
 - **Past years**: the user can step back to any earlier year and see it as a year in review,
   compared with the year before. Completed, permitted and applied-for figures, the type mix,
   the ranking and the biggest projects work the same way. Today's pipeline and recent movement
