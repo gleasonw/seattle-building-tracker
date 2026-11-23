@@ -2,7 +2,7 @@
   "_comment": "Informal names place search recognizes, keyed by the boundary layer's own name. The atlas's S_HOOD_ALT_NAMES are added automatically; list only what it lacks. A name may appear under several places: search shows all of them.",
   "neighborhoods": {
     "Broadway": ["Capitol Hill", "Cap Hill", "Pike/Pine", "Pike-Pine"],
-    "Stevens": ["Capitol Hill", "North Capitol Hill"],
+    "Stevens": ["Capitol Hill", "Cap Hill", "North Capitol Hill"],
     "University District": ["U District", "U-District", "UDistrict", "The Ave"],
     "University of Washington": ["UW", "U Dub", "Husky Stadium"],
     "Genesee": ["The Junction", "West Seattle Junction", "Alaska Junction"],

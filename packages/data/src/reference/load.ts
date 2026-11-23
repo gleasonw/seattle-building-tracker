@@ -10,7 +10,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import type postgres from "postgres";
 import { buildPlaces, type AliasFile, type CenterFeature, type NeighborhoodFeature } from "../domain/places";
-import { assignPlaces, DERIVE_VERSION, rebuildProjects, type Tx } from "../sync/merge";
+import { assignPlaces, DERIVE_VERSION, flagRestatedUnits, rebuildProjects, type Tx } from "../sync/merge";
 
 const dataFile = (name: string) => fileURLToPath(new URL(`../../data/${name}`, import.meta.url));
 
@@ -74,9 +74,10 @@ export async function ensureReferenceData(sql: postgres.Sql): Promise<string[]> 
     }
 
     if (placesChanged || (await currentVersion(tx, "derive")) !== DERIVE_VERSION) {
+      const restated = await flagRestatedUnits(tx);
       const n = await rebuildProjects(tx);
       await setVersion(tx, "derive", DERIVE_VERSION);
-      done.push(`rebuilt ${n} projects`);
+      done.push(`flagged ${restated} restated permits; rebuilt ${n} projects`);
     }
     return done;
   });

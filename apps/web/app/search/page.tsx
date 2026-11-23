@@ -11,7 +11,7 @@ import { StageBadge } from "@/components/stage-badge";
 import { placeHref, projectHref, type Stage } from "@/lib/filters";
 import { formatNumber, unitsCount } from "@/lib/format";
 import { DEFAULT_RADIUS_MILES, radiusLabel } from "@/lib/rules";
-import { KIND_GROUP_LABELS, matchPlaces, type PlaceOption } from "@/lib/search";
+import { KIND_GROUP_LABELS, matchPlaces, placeSubtitle, type PlaceMatch } from "@/lib/search";
 import { geocode } from "@/lib/server/geocode";
 import {
   getProjectsNear,
@@ -24,20 +24,16 @@ export const metadata: Metadata = { title: "Places" };
 
 const cache = createSearchParamsCache({ q: parseAsString.withDefault("") });
 
-function PlaceLink({ p }: { p: PlaceOption }) {
+function PlaceLink({ p }: { p: PlaceMatch }) {
   return (
     <Link
       href={placeHref(p)}
       className="hover:bg-muted flex min-h-13 items-center gap-3 rounded-lg px-3 py-1.5"
     >
       <span className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate text-[15px] font-semibold">{p.name}</span>
-        <span className="text-muted-foreground truncate text-[13px]">
-          {p.kind === "neighborhood"
-            ? `Neighborhood · ${p.district}`
-            : `${p.district} · Comprehensive Plan`}
-          {p.aliases.length > 0 &&
-            ` · also ${p.aliases.slice(0, 3).join(", ")}`}
+        <span className="text-[15px] font-semibold break-words">{p.name}</span>
+        <span className="text-muted-foreground text-[13px] break-words">
+          {placeSubtitle(p)}
         </span>
       </span>
       <span className="text-muted-foreground shrink-0 text-right text-[13px] tabular-nums">
@@ -195,12 +191,13 @@ export default async function SearchPage({
                     href={placeHref({
                       lat: s.lat,
                       lng: s.lng,
-                      r: 0.25,
-                      label: `${s.label} (${s.zip})`,
+                      r: DEFAULT_RADIUS_MILES,
+                      label: `a point on ${s.label} (${s.zip})`,
                     })}
                     className="text-primary text-sm font-medium"
                   >
-                    Report on the {radiusLabel(0.25)} around it →
+                    Report on the {radiusLabel(DEFAULT_RADIUS_MILES)} around a
+                    point on it →
                   </Link>
                 </li>
               ))}

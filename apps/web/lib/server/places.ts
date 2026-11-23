@@ -14,7 +14,7 @@ export interface Place {
   aliases: string[];
   /** Boundary as [lat, lng] rings per polygon, simplified for drawing. */
   polygons: [number, number][][][];
-  /** A point inside the place, for "widen to a radius". */
+  /** A point inside the place, for a radius report around it. */
   center: { lat: number; lng: number };
 }
 

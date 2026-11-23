@@ -57,7 +57,7 @@ export function BiggestProjects({
             <Link href={projectHref(p.mainPermit)} className="group flex min-h-13 flex-wrap items-center gap-x-3 gap-y-1 py-2">
               <KindChip kind={kind} className="w-20" />
               <span className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate text-[15px] font-medium group-hover:underline">{p.address ?? p.mainPermit}</span>
+                <span className="text-[15px] font-medium break-words group-hover:underline">{p.address ?? p.mainPermit}</span>
                 <span className="text-muted-foreground text-[13px]">{p.hoodName ?? "Unlocated"}</span>
               </span>
               <span className="flex flex-col text-right">

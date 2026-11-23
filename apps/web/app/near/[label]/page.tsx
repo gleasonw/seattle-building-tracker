@@ -41,7 +41,7 @@ export default async function NearPage({ params, searchParams }: Props) {
       settings={settings}
       place={{
         name: `${radiusLabel(r)} around ${label}`,
-        kindLabel: "Near an address",
+        kindLabel: "Within a radius",
         where: { lat, lng, r },
         circle: { lat, lng, miles: r },
         center: { lat, lng },

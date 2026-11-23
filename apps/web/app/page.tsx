@@ -72,10 +72,10 @@ export default async function ThisYearPage({ searchParams }: { searchParams: Pro
             How&apos;s it going in…
           </label>
           <PlaceSearch places={places} />
-          <span className="text-muted-foreground text-xs">
-            Try <Link href="/place/roosevelt" className="text-primary">Roosevelt</Link>,{" "}
-            <Link href="/place/ballard" className="text-primary">Ballard</Link>,{" "}
-            <Link href="/place/columbia-city" className="text-primary">Columbia City</Link>
+          <span className="text-muted-foreground text-sm">
+            Try <Link href="/place/roosevelt" className="text-primary -my-2 inline-block py-2">Roosevelt</Link>,{" "}
+            <Link href="/place/ballard" className="text-primary -my-2 inline-block py-2">Ballard</Link>,{" "}
+            <Link href="/place/columbia-city" className="text-primary -my-2 inline-block py-2">Columbia City</Link>
           </span>
         </div>
       </section>

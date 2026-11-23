@@ -45,7 +45,7 @@ export function TypeMix({
       <ul className="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fit,minmax(150px,1fr))]">
         {types.map((t) => (
           <li key={t.type}>
-            <Link href={projectsHref({ ...filters, type: [t.type] })} className="group flex items-start gap-2 text-sm">
+            <Link href={projectsHref({ ...filters, type: [t.type] })} className="group flex min-h-11 items-start gap-2 py-0.5 text-sm">
               <span aria-hidden className="mt-1 size-3 flex-none rounded-[3px]" style={{ background: HOUSING_TYPE_COLORS[t.type] }} />
               <span className="flex flex-col">
                 <span className="font-semibold tabular-nums group-hover:underline">{formatNumber(t.units)}</span>

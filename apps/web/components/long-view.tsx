@@ -36,7 +36,7 @@ export function LongView({
   });
   const data: LongViewDatum[] = points.map((p) => ({
     year: p.year,
-    label: p.year === currentYear ? `${String(p.year).slice(2)} YTD` : `'${String(p.year).slice(2)}`,
+    label: `'${String(p.year).slice(2)}`,
     units: p.units,
     share: showShare && p.share !== null && p.shareProjects >= MIN_PROJECTS ? Number((p.share * 100).toFixed(2)) : null,
     href: projectsHref(f.longView(p.year, p.year === currentYear ? today : `${p.year}-12-31`)),
@@ -46,11 +46,13 @@ export function LongView({
   return (
     <div className="flex flex-col gap-3">
       <LongViewChart data={data} showShare={showShare} />
-      {showShare && (
+      {showShare ? (
         <p className="text-muted-foreground text-xs">
-          The line is this place&apos;s share of all net homes completed in the city that year. It&apos;s hidden for years with fewer than{" "}
+          The outlined bar is {currentYear} so far. The line is this place&apos;s share of all net homes completed in the city that year. It&apos;s hidden for years with fewer than{" "}
           {MIN_PROJECTS} projects here.
         </p>
+      ) : (
+        <p className="text-muted-foreground text-xs">The outlined bar is {currentYear} so far. Click a bar for that year&apos;s projects.</p>
       )}
       {events.length > 0 && (
         <ol className="text-muted-foreground flex flex-col gap-1.5 text-[13px]">

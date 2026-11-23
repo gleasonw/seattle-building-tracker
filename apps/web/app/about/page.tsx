@@ -46,7 +46,7 @@ export default async function AboutPage() {
     ["Proposals not yet applied for", "On file with the City but not formally applied for; no dates are published. Shown separately, never in the pipeline.", x.pre_intake_permits, x.pre_intake_units],
     ["Units “added” on demolition permits", "Demolitions only count toward units removed. Some also report the replacement building's units, which are counted on its building permit instead.", x.demolition_added_permits, x.demolition_units_added],
     ["Shoring and excavation permits", "They restate the units of the building they prepare the site for. Counted once, on the building permit.", x.site_prep_permits, x.site_prep_units],
-    ["Repeated development totals", "Three or more unlinked permits on one street, applied for together, each listing the same 50+ units: counted once.", x.restated_permits, x.restated_units],
+    ["Repeated development totals", "Permits for one site’s buildings that each list the whole site’s units: counted once. Applies to permits at one address applied for the same day with the same 3+ units, and to three or more permits on one street in a year listing the same 50+ units.", x.restated_permits, x.restated_units],
     ["Finished permits with no completion date", "The City marks them done (e.g. Closed) but records no completion date, so they can't be placed in a year and aren't in homes completed. Their projects still show as completed.", x.done_no_date_permits, x.done_no_date_units],
     ["Cancelled or lapsed demolitions", "Not counted as units removed.", null, x.demolition_units_uncounted],
     ["Permits without a location", "In citywide totals, but in no neighborhood, center or radius.", x.unlocated_permits, x.unlocated_units],
@@ -175,7 +175,7 @@ export default async function AboutPage() {
           They overlap neighborhoods, so totals are never added across the two.
         </p>
         <p>
-          <strong>Near an address</strong> counts permits within ¼, ½ or 1 mile of a point. Addresses are found with the City&apos;s
+          <strong>Radius reports</strong> count permits within ¼, ½ or 1 mile of a point: an address, a point on a street, or the middle of a place. Addresses are found with the City&apos;s
           geocoder. Search also knows informal names such as “U District”, “Capitol Hill” and “the Junction”.
         </p>
       </Block>

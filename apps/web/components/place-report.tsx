@@ -33,12 +33,12 @@ import { cn } from "@/lib/utils";
 export interface ReportPlace {
   /** e.g. "Roosevelt" or "½ mile around 6716 Roosevelt Way NE". */
   name: string;
-  /** e.g. "Neighborhood" or "Near an address". */
+  /** e.g. "Neighborhood" or "Within a radius". */
   kindLabel: string;
   where: Where;
   polygons?: [number, number][][][];
   circle?: { lat: number; lng: number; miles: number };
-  /** A point to widen around. */
+  /** A point inside the place, for a radius report around it. */
   center: { lat: number; lng: number };
   /** Label for a radius around this place. */
   radiusLabel: string;
@@ -150,7 +150,7 @@ export async function PlaceReport({ place, settings, today }: { place: ReportPla
                     href={placeHref({ ...place.center, r: DEFAULT_RADIUS_MILES, label: place.radiusLabel }, { year: settings.year, asof: settings.asof })}
                     className={chip}
                   >
-                    Widen to {radiusLabel(DEFAULT_RADIUS_MILES)} around
+                    {radiusLabel(DEFAULT_RADIUS_MILES)} around its center
                   </Link>
                 )}
           </div>

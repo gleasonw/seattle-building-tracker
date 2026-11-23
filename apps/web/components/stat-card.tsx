@@ -65,7 +65,7 @@ function Delta({ current, previous, href, label }: { current: Support; previous:
   const same = showPct ? Math.abs(change!) < 0.05 : cur === prev;
   const up = cur > prev;
   const prevLink = (
-    <Link href={href} className="hover:underline hover:underline-offset-2">
+    <Link href={href} className="-my-2 inline-block py-2 hover:underline hover:underline-offset-2">
       {formatNumber(prev)} {label}
     </Link>
   );

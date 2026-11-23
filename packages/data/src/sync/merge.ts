@@ -143,33 +143,60 @@ export async function assignPlaces(tx: Tx, changedSince: string | null): Promise
 /** Groups at least this large, restating at least this many units, are treated as restatements. */
 const RESTATED_MIN_PERMITS = 3;
 const RESTATED_MIN_UNITS = 50;
+/** Same-site siblings: permits at one address, applied for the same day, each listing this many units or more. */
+const SIBLING_MIN_UNITS = 3;
 
 /**
  * Some multi-building developments without a development site repeat the whole
- * development's unit count on every building's permit (e.g. 24 townhouse-structure permits
- * each listing 238 units). Where at least RESTATED_MIN_PERMITS unlinked building permits share
- * a street, an application year and an identical unit count of RESTATED_MIN_UNITS or more, keep the
- * units on the lowest permit number and flag the rest. Smaller repeats (a row of 20-unit
- * buildings) are plausibly real and are left alone.
+ * development's unit count on every building's permit. Two patterns are counted once,
+ * keeping the units on the first live permit and flagging the rest:
+ *
+ * - Large developments: at least RESTATED_MIN_PERMITS unlinked building permits on one
+ *   street, applied for the same year, each listing the same RESTATED_MIN_UNITS or more
+ *   (e.g. 24 townhouse-structure permits each listing 238 units). Smaller repeats along a
+ *   street (a row of 20-unit buildings) are plausibly real and are left alone.
+ * - Small sites: two or more unlinked building permits at the same address, applied for the
+ *   same day, each listing the same SIBLING_MIN_UNITS or more. These are one site's buildings
+ *   ("Construct west units 1A-B" and "east units 2A-B", each "(4) attached dwelling units"),
+ *   and each permit states the site's total. One- and two-unit siblings are usually one
+ *   house or duplex per permit, so they're left alone.
  */
 export async function flagRestatedUnits(tx: Tx): Promise<number> {
   await tx`UPDATE permits SET restated_units = false WHERE restated_units`;
   const result = await tx`
-    WITH candidates AS (
-      SELECT permit_num,
-             row_number() OVER w AS rn,
-             count(*) OVER w AS n
+    WITH base AS (
+      SELECT permit_num, address, applied_date, housing_units_added, status_category
         FROM permits
        WHERE removed_at IS NULL AND permit_type_mapped = 'Building' AND NOT site_prep_only
          AND development_site IS NULL AND applied_date IS NOT NULL
-         AND housing_units_added >= ${RESTATED_MIN_UNITS}
+         AND housing_units_added >= ${SIBLING_MIN_UNITS}
+    ),
+    large AS (
+      SELECT permit_num,
+             row_number() OVER w AS rn,
+             count(*) OVER w AS n
+        FROM base
+       WHERE housing_units_added >= ${RESTATED_MIN_UNITS}
       WINDOW w AS (PARTITION BY regexp_replace(upper(address), '^[0-9A-Z-]+[[:space:]]+', ''),
                                 date_trunc('year', applied_date), housing_units_added
-                   ORDER BY permit_num ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
+                   ORDER BY (status_category = 'dead'), permit_num
+                   ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
+    ),
+    siblings AS (
+      SELECT permit_num, row_number() OVER w AS rn
+        FROM base
+       WHERE address IS NOT NULL
+      WINDOW w AS (PARTITION BY upper(regexp_replace(address, '[[:space:]]+', ' ', 'g')), applied_date, housing_units_added
+                   ORDER BY (status_category = 'dead'), permit_num)
+    ),
+    flagged AS (
+      SELECT permit_num FROM large WHERE n >= ${RESTATED_MIN_PERMITS} AND rn > 1
+      UNION
+      SELECT permit_num FROM siblings WHERE rn > 1
     )
     UPDATE permits p SET restated_units = true
-      FROM candidates c
-     WHERE c.permit_num = p.permit_num AND c.n >= ${RESTATED_MIN_PERMITS} AND c.rn > 1
+      FROM flagged f
+     WHERE f.permit_num = p.permit_num
   `;
   return result.count;
 }
@@ -178,7 +205,7 @@ export async function flagRestatedUnits(tx: Tx): Promise<number> {
  * Bump when rebuildProjects or assignPlaces change, so the next deploy re-derives
  * (reference/load.ts) instead of waiting for the nightly sync.
  */
-export const DERIVE_VERSION = "2";
+export const DERIVE_VERSION = "3";
 
 /**
  * Rebuild the projects table. A project is every unit-adding

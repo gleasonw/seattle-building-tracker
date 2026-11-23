@@ -7,25 +7,21 @@ import { Command as CommandPrimitive } from "cmdk";
 import { Button } from "@/components/ui/button";
 import { Command, CommandDialog, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { unitsCount } from "@/lib/format";
-import { KIND_GROUP_LABELS, looksLikeAddress, matchPlaces, type PlaceOption } from "@/lib/search";
+import { KIND_GROUP_LABELS, looksLikeAddress, matchPlaces, placeSubtitle, type PlaceMatch, type PlaceOption } from "@/lib/search";
 import { cn } from "@/lib/utils";
 
 const searchHref = (q: string) => `/search?q=${encodeURIComponent(q.trim())}`;
-
-function placeSub(p: PlaceOption) {
-  return p.kind === "neighborhood" ? `Neighborhood · ${p.district}` : `${p.district} · Comprehensive Plan`;
-}
 
 /** Matches grouped as neighborhoods, centers, and addresses (SPEC P2). */
 function Results({ query, places, onPick }: { query: string; places: PlaceOption[]; onPick: (href: string) => void }) {
   const q = query.trim();
   if (!q) return null;
   const { neighborhoods, centers } = matchPlaces(q, places);
-  const item = (p: PlaceOption) => (
+  const item = (p: PlaceMatch) => (
     <CommandItem key={p.id} value={`place:${p.id}`} onSelect={() => onPick(`/place/${p.id}`)} className="min-h-12 gap-3 px-3">
       <span className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate text-[15px] font-semibold">{p.name}</span>
-        <span className="text-muted-foreground truncate text-[13px]">{placeSub(p)}</span>
+        <span className="text-[15px] font-semibold break-words">{p.name}</span>
+        <span className="text-muted-foreground text-[13px] break-words">{placeSubtitle(p)}</span>
       </span>
       <span className="text-muted-foreground shrink-0 text-right text-[13px] tabular-nums">
         {unitsCount(p.pipelineUnits)} in pipeline
@@ -90,7 +86,7 @@ export function PlaceSearch({
             if (e.key === "Escape") setOpen(false);
           }}
           autoFocus={autoFocus}
-          placeholder="A neighborhood, urban village or address"
+          placeholder="A neighborhood or address"
           className="placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-base outline-none"
           aria-label="Search for a place"
         />
@@ -127,7 +123,7 @@ export function HeaderSearch({ places }: { places: PlaceOption[] }) {
           <CommandInput
             value={query}
             onValueChange={setQuery}
-            placeholder="A neighborhood, urban village or address"
+            placeholder="A neighborhood or address"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !query.trim()) e.preventDefault();
             }}
