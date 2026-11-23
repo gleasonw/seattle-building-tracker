@@ -108,10 +108,10 @@ export default async function MethodologyPage() {
             <TableRow>
               <TableCell>Units &ldquo;added&rdquo; on demolition permits</TableCell>
               <TableCell className="whitespace-normal">
-                Demolition permits sometimes report the units of the replacement building. Those are counted on the
-                building permit instead, to avoid double counting.
+                Demolition permits only ever count toward units removed. Some also report the units of the replacement
+                building; those are counted on the building permit instead, to avoid double counting.
               </TableCell>
-              <TableCell className="text-right tabular-nums">{formatNumber(x.demolition_permits)}</TableCell>
+              <TableCell className="text-right tabular-nums">{formatNumber(x.demolition_added_permits)}</TableCell>
               <TableCell className="text-right tabular-nums">{formatNumber(x.demolition_units_added)}</TableCell>
             </TableRow>
             <TableRow>

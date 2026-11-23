@@ -1,5 +1,5 @@
 /**
- * Compares our database with aggregates computed by the portal itself (DEV_REWRITE_SPEC §7).
+ * Compares our database with aggregates computed by the portal itself.
  * Exits non-zero if any check differs by more than the tolerance.
  *
  * Usage: pnpm --filter @sbt/data verify:portal

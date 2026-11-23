@@ -3,7 +3,7 @@ import { sql, type SQL } from "drizzle-orm";
 import { DEFAULT_START, isoDate, type Filters, type Milestone, type UnitKind } from "@/lib/filters";
 
 /**
- * The single translation from filters to SQL (DEV_REWRITE_SPEC §5.2). Every aggregate and
+ * The single translation from filters to SQL. Every aggregate and
  * every drill-down list uses it, which is what guarantees a list adds up to the number
  * that was clicked (SPEC X3). Conditions reference the `permits` table as `p`.
  *
@@ -113,7 +113,7 @@ export function scope(
   const conditions: SQL[] = [LIVE, rows];
 
   if (filters.by === "project") {
-    // Dates and status describe the whole project (DEV_REWRITE_SPEC §4.5): list every permit
+    // Dates and status describe the whole project: list every permit
     // of the projects whose milestone falls in range.
     const projectConditions: SQL[] = [sql`pr.project_key = p.project_key`];
     if (!opts.ignoreDates) {

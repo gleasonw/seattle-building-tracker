@@ -1,5 +1,5 @@
 /**
- * Housing-type inference accuracy (DEV_REWRITE_SPEC §4.7).
+ * Housing-type inference accuracy.
  *
  * For permits where the City recorded a dwelling unit type, hide it, run the inference,
  * and compare. Reports per-type precision/recall by permits and by units, plus the

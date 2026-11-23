@@ -50,6 +50,10 @@ describe("housing type", () => {
       description: null,
     };
     expect(classifyHousingType(input)).toBeNull();
+    // Demolitions that report the replacement building's units (e.g. 6880831-DM, 734 units) stay unclassified.
+    expect(
+      classifyHousingType({ ...input, housingUnitsAdded: 734, dwellingUnitType: "Apartment", permitClass: "Multifamily" }),
+    ).toBeNull();
     expect(classifyHousingType({ ...input, permitTypeMapped: "Building", housingUnitsAdded: 0 })).toBeNull();
     expect(classifyHousingType({ ...input, permitTypeMapped: "Building" })).toEqual({
       housingType: "townhouse",

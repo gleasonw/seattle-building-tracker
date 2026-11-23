@@ -1,377 +1,287 @@
 # Seattle Building Tracker — Product Spec
 
 > This spec covers **what a user should be able to find out** from the application.
-> It leaves out screens, components, routes and storage on purpose. Any design that
-> lets users answer these questions, with the stated accuracy and transparency, meets the spec.
+> It leaves out components, routes and storage on purpose. Any design that lets users
+> answer these questions, with the stated accuracy and transparency, meets the spec.
 
 ---
 
 ## 1. Purpose
 
-The application helps users understand **where Seattle is succeeding at building more
-housing, and where it is getting stuck.**
+The application answers two questions:
 
-That breaks down into three questions:
+1. **How is Seattle doing on housing *this year*?** How many homes have been finished so far,
+   how that compares with last year, what's entering the pipeline, and what has moved.
+2. **How is it going *in a particular place*?** For a neighborhood, an urban village or the
+   area around an address: what's been built, which projects are in the pipeline, which of
+   them are moving, and which are stuck.
 
-1. **Where is housing getting built?** Which areas and housing types produce the most new
-   homes, and which are growing or shrinking over time.
-2. **Where are the bottlenecks?** At which stage do projects slow down or die, for which
-   kinds of projects, and is that getting better or worse.
-3. **What's coming?** How much housing is in the pipeline, and how much of it is likely
-   to actually be built.
+Every number is traceable to public City of Seattle permit records. A skeptical user can
+open any figure and see the projects behind it.
 
-Every number is traceable to public City of Seattle permit records. A skeptical user
-must be able to check any figure down to the individual permits behind it.
+## 2. Users
 
-## 2. Primary user
+The app is for **anyone who cares about Seattle housing, citywide or in their part of town**.
+That includes advocates, journalists, neighborhood groups, policy staff and curious residents.
+They show up with one of two questions:
 
-The primary user is **someone trying to understand what's working and what isn't in
-Seattle housing production.** That might be an advocate, journalist, policy staffer or
-an informed resident. Their usual workflow:
+- **"How's this year going?"** They want the current-year picture right away, with no setup.
+- **"What's happening in Roosevelt?"** They type a place name and get a complete picture of
+  it. They don't need to know City area codes, build filters or move between several views.
 
-1. **Spot** a pattern, e.g. "townhouse completions doubled" or "large projects are taking
-   a year longer to get issued".
-2. **Isolate** it by narrowing to the area, housing type or time period where it shows up.
-3. **Compare** that segment against the rest of the city, or against its own past.
-4. **Explain** it by opening the actual permits behind the pattern.
-5. **Cite** it with a link or export that reproduces exactly what they saw.
+From either starting point they usually go on to:
 
-The app supports this workflow at two levels:
+1. **Scan** the headline numbers and the real projects behind them.
+2. **Follow** a project: what stage it's at, when it last moved, and whether it's stuck.
+3. **Share** a link that shows someone else exactly what they saw.
 
-- **Curated views** (§5) are a small set of opinionated setups that each answer one question well.
-  They're for spotting.
-- **The explorer** (§6) offers any measure × any dimension × any filters. It's for isolating,
-  comparing and explaining.
-
-Casual lookups ("what's going up on my block?") are supported (§8) but not optimized for.
+There's no general-purpose analysis tool. If a question can't be answered from the pages in
+§5, it's out of scope (§8).
 
 ## 3. Shared definitions
 
-The whole application uses these terms the same way. Users can see what each one means
-wherever a number is shown.
+The whole app uses these terms the same way. Each one is explained in place wherever it's
+used (§6, T6).
 
-- **Permit**: a single City of Seattle permit record. **Every building permit that adds
-  housing units counts toward units added, whatever the City's permit class.** That includes
-  "Commercial" mixed-use buildings, which account for about a third of completed units.
-  Demolition permits count only toward units removed.
+- **Permit**: a single City of Seattle permit record.
+  - Every building permit that adds housing units counts toward **units added**, whatever its
+    permit class. That includes "Commercial" mixed-use buildings.
+  - **Demolition permits count only toward units removed, never toward units added**, even when
+    the City's record shows units added on them.
 - **Project**: all the permits for one development: its building permits, plus any demolition
   permits on the same development site, as identified by the City. A permit with no
   development site is its own project.
-  - Unit totals are credited per permit, when each building reaches its milestone. A townhouse
+  - Unit totals are credited per permit, as each building reaches its milestone. A townhouse
     site that finishes over 18 months adds units as each building completes.
-  - Outcomes are judged per project: counts, durations, share built, stalled lists and the forecast.
-    That way 45 townhouse permits on one site count as one development, not 45 independent data points.
-- **Units added / units removed / net units**: units created, units demolished, and their
-  difference. Net units are the preferred headline *if* the data supports it (open question 4).
-  Otherwise the headline is units added, labeled as gross.
-- **Lifecycle milestones**: *applied* → *issued* → *completed*. Each permit has a date for
-  every milestone it has reached.
-- **Status category**: every permit is in exactly one of these:
-  - **Pipeline**: not yet finished and not dead (in review, issued, under construction).
-  - **Done**: construction finished (completed, closed, approved to occupy, inspections completed).
-  - **Lapsed**: the permit was issued but then expired, so the outcome is unknown. Seattle
-    construction permits expire 18 months after issuance unless renewed. An expired permit might mean:
-    - the project was abandoned or stalled with no real progress,
+  - Anywhere the app lists what's happening, it lists **projects**, not permits. Each project
+    can be opened to see its permits (P4).
+- **Units added / units removed / net units**: units created, units demolished, and the
+  difference. **Homes completed** means net units on the completed milestone if the data
+  supports it (open question 3). Otherwise it means units added, labeled as gross.
+- **Milestones**: *applied* → *issued* → *completed*. Each permit has a date for every
+  milestone it has reached. *Completed* is roughly final inspection or occupancy, and it can
+  lag move-in by weeks to months. Users are told so.
+- **Stage**: every project is at exactly one of these:
+  - **In review**: applied, not yet issued.
+  - **Issued**: permit issued, construction not yet completed.
+  - **Completed**.
+  - **Permit expired**: issued, then expired with no completion recorded. That's true even
+    if the City's status hasn't caught up. Seattle construction permits expire 18 months after
+    issuance unless renewed. An expired permit might mean:
+    - the project stalled or was abandoned,
     - the building was finished but the final inspection was never recorded, or
-    - the work continued under a different permit.
+    - the work moved to another permit.
 
-    The data can't tell these apart, so lapsed permits are shown separately. They are never counted
-    as built, they are left out of share built (M4), and they appear as their own stage in the
-    funnel. Lapsing after issuance is itself a bottleneck signal.
-  - **Dead**: will not be built under this permit (canceled, denied, withdrawn, or expired
-    before ever being issued).
-- **"Completed"** means the permit's completed date. Users should be told that this is
-  roughly final inspection or occupancy, and that it can lag move-in by weeks to months.
-- **Housing type**: a single classification for every permit, which combines building form
-  and, for multifamily, size:
+    The data can't tell these apart, so the app says so wherever it shows the label. Expired
+    projects are never counted as completed.
+  - **Dead**: canceled, denied or withdrawn, or expired before being issued. These are not
+    shown in pipeline lists, but they do appear in movement (as "died").
+- **Pipeline**: projects that are in review or issued.
+- **Movement**: a dated change in a project's progress:
+  - it applied, was issued or completed,
+  - its permit expired, or
+  - it died.
+
+  Movements carry the City's own date where there is one. A death with no City date is dated
+  by when the app first noticed it, and that's labeled. Changes from before the app started
+  recording (October 2026) show only the City's milestone dates.
+- **Stalled**: a pipeline project that meets a simple fixed rule anyone can check:
+  - **in review for 2 years or more**, or
+  - **issued 3 years ago or more and not completed**.
+
+  Separately, **expiring soon** flags an issued project whose permit expires within 6 months.
+  The thresholds are stated wherever the label appears (open question 5).
+- **Housing type**: a single classification for every project, combining building form and,
+  for multifamily, size:
 
   > Detached house · ADU/DADU · Townhouse/rowhouse · Small multifamily · Mid-size
   > multifamily · Large multifamily · Other/unknown
 
-  - The multifamily size cutoffs are set from the data, ideally where construction type
-    actually changes (low-rise / mid-rise / high-rise) rather than at round numbers.
   - *Other/unknown* is always shown, never dropped.
-  - If a type is inferred by the app rather than taken from the City's own fields, that is
-    disclosed (§9).
-  - There is no separate "project size" dimension.
-- **Area**: a **Community Reporting Area** (CRA), the City's own set of roughly 50 areas for
-  statistical reporting. CRAs cover the whole city with no overlaps, have neighborhood-like
-  names, are stable over time, and are built from census tracts. Every permit with a location
-  belongs to exactly one CRA. Area names should match the City's official CRA names.
+  - When the type is inferred by the app rather than taken from the City's own fields, the
+    share that was inferred is shown (T4).
+- **Place**: a part of the city a user can ask about. It's one of:
+  - **Neighborhood**: a named neighborhood with a boundary that matches what residents mean.
+    "Roosevelt" means Roosevelt, not a larger statistical area that contains part of it.
+    Neighborhoods cover the whole city without overlapping, so every located permit is in exactly one.
+  - **Urban village**: an urban center or village from the City's Comprehensive Plan, e.g.
+    the Roosevelt Residential Urban Village. That's where the City has planned for growth, so
+    it's often the boundary that matters for housing policy. Urban villages overlap
+    neighborhoods.
+  - **Near an address**: a radius around an address or map point.
 
----
+  Totals are never added up across overlapping places. Users can always see a place's boundary
+  on a map.
+- **This year**: the current calendar year to date. Every this-year figure is compared with
+  **the same dates last year**, and is marked provisional, because completions are sometimes
+  recorded late.
 
-## 4. Measures, dimensions and filters
+## 4. Measures
 
-Everything the app shows is some combination of these.
+The pages are built from these:
 
-### Measures
-
-| ID | Measure | Notes |
-|---|---|---|
-| M1 | **Units completed** (net or gross per §3) | Main output measure |
-| M2 | **Units applied for** | Leading indicator |
-| M3 | **Units in pipeline**, split by stage (applied, not issued / issued, not completed) | Snapshot as of today |
-| M4 | **Share built** | Of units applied for in a cohort: % completed / still pending / lapsed / dead. Recent cohorts are marked provisional |
-| M5 | **Median days per stage** | Applied→issued and issued→completed, with the 25th–75th percentile spread |
-| M6 | **Review breakdown** | Days the City spent reviewing vs. days the applicant spent on corrections, and the number of review cycles |
-| M7 | **Permit count** | Always available next to unit measures |
-
-Unit totals can be shown per month, per year, or as a **trailing 12-month total**. The trailing
-total is the default for "is this year ahead or behind?" so seasonal patterns don't mislead.
-
-### Dimensions (group by)
-
-| ID | Dimension |
+| Measure | Meaning |
 |---|---|
-| D1 | Time (month / year / application-year cohort) |
-| D2 | Housing type |
-| D3 | Area |
-| D4 | Status category |
+| **Homes completed** | Net (or gross, see §3) units reaching *completed* in the period |
+| **Homes permitted** | Units on permits *issued* in the period. A sign that construction is about to start |
+| **Homes applied for** | Units on permits *applied* for in the period. New projects entering the pipeline |
+| **In the pipeline** | Units and projects in review and issued, as of today, with how many are stalled |
+| **Proposals** | Units in projects the City has on file but that haven't formally applied yet. Shown separately, never added to the pipeline (open question 2) |
+| **Movement** | Projects that moved in a period, by kind |
+| **Project count** | Shown next to every unit total |
 
-### Filters
+## 5. Pages
 
-Every view can be narrowed by any combination of these. Every filter in effect is visible
-and can be removed individually.
+**P1. This year (front page)**
+- Question: how is Seattle doing on housing this year?
+- Leads with the year, labeled with its exact date range (e.g. "Year to date · 1 Jan – 21 Nov").
+  A place search ("How's it going in…") sits prominently beside the title.
+- Shows:
+  1. **Headline numbers**: homes completed, permitted and applied for this year, each against
+     the same dates last year; and the pipeline today, split into in review and issued, with
+     units stalled.
+  2. **What got finished**: homes completed this year, by housing type.
+  3. **Where it's happening**: neighborhoods ranked by homes completed this year. Each row
+     opens that neighborhood's report.
+  4. **Biggest projects this year**: the largest projects completed and issued, each with
+     its share of the year's total.
+  5. **Recent movement**: the largest recent movements citywide, newest first, with a link to all of them.
+  6. **The long view**: homes completed per year over the long run, with this year shown as
+     year to date. Policy changes that matter appear as dated, numbered markers. Each links to
+     a primary source, and no causation is claimed. **Every marker must be checked against a
+     primary source (City ordinance, council or department page) before it ships.** Starting
+     list, checked on 2026-10-04:
 
-- Date range
-- Which milestone the date refers to (applied / issued / completed)
-- Status category
-- Housing type
-- Area. When choosing areas, users can see where each one is on a map, not just its name.
-- Radius around an address or map point
-- Minimum units added
-- Permit sub-type (new construction, addition/alteration, …)
+     | Date | Event | Source |
+     |---|---|---|
+     | 2019-04-19 | Mandatory Housing Affordability takes effect citywide (Ord. 125791) | [City Council](https://seattle.gov/council/committees/citywidemha) |
+     | 2019-08-08 | ADU reforms take effect: two ADUs per lot, no owner-occupancy or parking requirement (CB 119544) | [OPCD](https://www.seattle.gov/opcd/ongoing-initiatives/encouraging-backyard-cottages) |
+     | 2026-01-21 | Permanent middle-housing zoning takes effect (CB 120993) | [City Council](https://www.seattle.gov/council/topics/2025-comprehensive-plan) |
+- **Past years**: the user can step back to any earlier year and see the same page as a year
+  in review, compared with the year before.
 
-## 5. Curated views
+**P2. Place search**
+- Available from every page. As the user types, matches appear grouped as **Neighborhoods**,
+  **Urban villages** and **Addresses and streets**, each with a one-line hint (e.g. units in
+  the pipeline).
+- Common and informal names find the right place ("U District", "Capitol Hill", "the
+  Junction"). A name that matches more than one kind of place shows all of them.
+- Choosing an address offers both the projects at that address and a report on the area
+  around it.
 
-These are the app's opinion about what's worth looking at. Each view:
+**P3. Place report**
+- Question: how is housing going in this place?
+- Opens with the place's name and kind, a one- or two-sentence plain-language summary of the
+  year (e.g. "Few homes finished this year, but 1,090 units are in the pipeline…"), and a map
+  of the boundary with pipeline projects marked by stage and sized by units.
+- One click switches to a related place (the overlapping urban village or neighborhood),
+  widens to a radius, or compares with another place.
+- Shows, in this order:
+  1. **This year in this place**: the P1 headline numbers for the place, each against last year.
+  2. **Projects in the pipeline**: a table with address, units, housing type, stage, how long it's been at
+     that stage, permit expiry, and a flag (stalled / expiring soon / permit expired). The table
+     can be sorted by units, time in stage and last movement. Proposals are mentioned below it with their count and
+     units, and can be shown on request.
+  3. **Movement**: a dated feed of what changed, newest first. It can be switched between the last 30 days, 6
+     months and 1 year.
+  4. **The long view**: homes completed per year in this place, and the place's share of the
+     city's completions over time.
+- Places are small, so the report leans on **project lists, which are always shown**, rather
+  than on derived statistics, which follow the reliability rule (T2).
 
-- has a fixed setup of measures and dimensions,
-- carries a one-line caption saying what to look for,
-- respects any filters the user applies, and
-- can be opened in the explorer (§6) with its setup already applied.
+**P4. Project**
+- Question: what's going on with this project?
+- Shows the address, units, housing type, place, and the City's description. It also links to
+  the City's official record and a street-level view of the site, labeled as possibly older
+  than the permit.
+- **Where it stands**: stage, time at that stage (against the stalled threshold), permit expiry,
+  and last movement. When the permit has expired, the page explains what that can and can't mean.
+- **Timeline**: applied → issued → (expired) → completed, with dates and the time between each.
+- **Permits on this site**: every permit in the project, including demolitions, with units
+  added and removed and the replacement ratio (units added per unit demolished).
 
-Five views at most. Past that, curation turns back into a menu.
+**P5. About the data**
+- One short page, linked from the footer and from every info tooltip. It covers:
+  - the source and the last sync date,
+  - what's counted and what isn't (in plain language, with the size of each exclusion),
+  - how stages, stalled and movement are decided,
+  - where place boundaries come from,
+  - and known data quirks (late completions, missing locations, inferred housing types).
 
-**V1. Output**
-- Question: how much are we building, and what kind?
-- Shows: units completed (M1) per year and as a trailing 12-month total, stacked by housing type.
-  Also shows the year-to-date figure against the same date range last year, with exactly
-  aligned windows. Policy changes that matter appear as dated annotations. The list of dates
-  lives in one place, each date links to a primary source, and no causation is claimed.
-  **Every annotation must be checked against a primary source (City ordinance, council or
-  department page) before it ships.** Starting list, checked against sources on 2026-10-04:
+## 6. Trust and transparency
 
-  | Date | Event | Source |
-  |---|---|---|
-  | 2019-04-19 | Mandatory Housing Affordability takes effect citywide (Ord. 125791). It had been applied to six areas in 2017 | [City Council](https://seattle.gov/council/committees/citywidemha) |
-  | 2019-08-08 | ADU reforms take effect: two ADUs per lot, no owner-occupancy or parking requirement (CB 119544) | [OPCD](https://www.seattle.gov/opcd/ongoing-initiatives/encouraging-backyard-cottages) |
-  | 2025-05-27 | Interim middle-housing ordinance passed for state HB 1110 (CB 120969). *Effective date still to be confirmed* | [OPCD director's report](https://www.seattle.gov/documents/departments/opcd/seattleplan/oneseattleplaninterimstatezoningcompliancelegislationdirectorsreport.pdf) |
-  | 2026-01-21 | Permanent middle-housing zoning takes effect (CB 120993) | [City Council](https://www.seattle.gov/council/topics/2025-comprehensive-plan) |
+**T1. Every number is traceable.** Any headline number, chart bar or ranked row opens the list
+of projects behind it, and that list adds up exactly to the number.
 
-  Process changes count too, because they affect the bottleneck measures. One example is the City
-  cancelling applications older than 24 months, which started in 2023
-  ([SDCI](https://buildingconnections.seattle.gov/2023/10/02/sdci-is-cancelling-applications-older-than-24-months/)).
-  Its exact start date is still to be confirmed.
-- Also shows: the largest completed permits in the selected period and their share of
-  the total.
+**T2. Reliability rule.**
+- Every total shows how many projects are behind it.
+- If one project makes up more than half of a total, the total says so and names that project
+  (e.g. "One project is 131 of them").
+- Percent changes and shares are hidden when fewer than **N projects** are behind them (open
+  question 4). The raw numbers and the project lists are always shown instead.
 
-**V2. Where**
-- Question: where is it working, and where is it growing or shrinking?
-- Shows: units completed (M1) by area for the last 12 months against the prior 12 months, as a map and
-  as a ranked table. The table can be sorted by total or by change. A drill-down shows
-  each area's housing-type mix.
+**T3. Provisional periods.** This year, and any period known to be revised by late-recorded
+completions, are marked provisional.
 
-**V3. Bottlenecks**
-- Question: which kinds of projects stall or die, and at which stage?
-- Shows, for each housing type: share built (M4), median days per stage (M5) and the review
-  breakdown (M6), each trended by application year. A funnel per type shows units that were
-  applied → issued → completed, with the dead units at each stage and the lapsed units after
-  issuance, so the user can see whether the problem is projects dying or projects being slow.
+**T4. Disclosed inference.** Where housing type is inferred, the share that was inferred and
+the share that is unknown are shown. Where a movement's date comes from when the app first
+noticed it, that's shown too.
 
-**V4. Pipeline & forecast**
-- Question: what's coming, and how sure are we?
-- Shows: units in pipeline (M3) by stage and housing type, plus the completion forecast
-  (§7) joined to the actual completions chart.
+**T5. Freshness.** The last successful sync date is visible on every page, with a warning if the last sync failed
+or is more than a few days old.
 
-**V5. Stalled**
-- Question: which real projects are stuck?
-- Shows: pipeline projects that have spent much longer in their current stage than is
-  typical for their housing type (e.g. issued 3+ years ago and not completed, or close to
-  expiring). The list is ranked by units at risk and shows time in stage, expiration date
-  and a link to the City record.
+**T6. Explained in place.** Each number and label (stalled, permit expired, provisional) has an
+info tooltip saying what it counts, linking to the matching part of P5.
 
-## 6. Explorer
+**T7. Shareable links.** Every page, including a place report for a radius or a past year,
+has a link that shows the same thing when reopened, relative to the live data. A place
+report's link reads as the place's name.
 
-**X1. Any measure by any dimension**
-- The user picks a measure, a dimension and filters, and gets a chart and a table.
-- Accept: with no dimension chosen, the result matches the corresponding total in the curated views.
+## 7. Phone use
 
-**X2. Compare**
-- The user can compare the current filtered segment against **the rest of the city** or
-  against **the same segment in an earlier period**.
-- Period comparisons cover the measures that happen over time: units completed (M1), units applied
-  (M2) and median days per stage (M5). The default is the last 12 months against the prior 12 months.
-  The pipeline snapshot (M3) is shown only as of today, since past pipelines can only be
-  approximately reconstructed.
-- Accept: both sides are shown together, with the difference and each side's reliability (§9).
+Every page works at phone width. Tables scroll inside their own box, and the place search is
+reachable from the top of every page.
 
-**X3. Open the permits behind any number**
-- Any number, chart point or table cell opens the exact list of permits behind it. The list
-  can be sorted by date, units and permit number.
-- Accept: the permits in the list add up exactly to the number that was clicked.
+## 8. Non-goals
 
-**X4. Map**
-- Shows the current filtered permits on a map. Marker size reflects units, not just
-  permit count.
-
-## 7. Completion forecast
-
-- **Determine:** roughly how many units are likely to complete in each of the next 4–8
-  quarters, and which housing types they'll come from.
-- **Method requirements** (what, not how):
-  - Built bottom-up from permits currently in the pipeline. Each permit's chance of
-    completing, and when, comes from how past permits of the same housing type at the same stage
-    turned out (M4, M5). It is not a trend line extended forward.
-  - Accounts for both timing and attrition (the share that die).
-  - Covers only the existing pipeline, with no allowance for projects not yet applied for. The
-    chart says plainly that the forecast thins out after about 2 years for that reason.
-- **Accept:**
-  - Shown as a range (a likely band and a wider plausible band), never as a single number.
-  - Can be broken down by housing type. There is no breakdown by area, since most areas would be too thin.
-  - **Backtest is required:** the user can see what the method *would have* forecast from
-    past dates (e.g. each Jan 1 since 2015) against what actually happened, plus a plain
-    summary such as "actual completions fell inside the likely band in 7 of 9 years".
-    A forecast without a visible track record must not ship.
-  - **Drill-down:** the user can open the list of pipeline permits behind each forecast
-    quarter, with each permit's estimated completion window.
-  - The forecast states the date it was generated.
-
-## 8. Lookup
-
-**L1. Near a place**
-- The user can restrict any view to a radius around an address or map point. Every number
-  on the page respects the radius.
-
-**L2. What's happening at this address?**
-- Searching an address lists the permits there: status, housing type, units added and
-  removed, the key dates (applied / issued / completed / expires), the description and a link
-  to the City's official record.
-- Wherever individual permits or projects are listed, the user can open a street-level view of
-  the site. It is labeled as possibly older than the permit.
-
-**L3. Project history**
-- Any project can be opened to show all of its permits on one timeline (demolition,
-  building permits, milestones), with units added, units removed and the replacement ratio
-  (units added per unit demolished).
-
-## 9. Trust and transparency
-
-**T1. Every number is traceable**
-- Any number opens the list of permits behind it (X3). A "view on Seattle Open Data"
-  link reproduces the same query at the source wherever that's possible.
-
-**T2. Reliability rule**
-- Every aggregate shows **how many projects are behind it**.
-- If **one project makes up more than half the units** of a total, the total is flagged and the
-  flag names that project.
-- **Derived numbers** (percent changes, medians, shares, ranks, forecast breakdowns) are not
-  computed when fewer than **N projects** are behind them (N is calibrated from data, see open
-  question 3). In their place the app shows "not enough data — based on k projects". Raw counts are always shown.
-- Rankings (V2) leave out segments below N and say how many were left out.
-
-**T3. Provisional periods**
-- The current partial month and year, recent application cohorts (M4), and any period
-  known to be revised by late-recorded completions are marked as provisional. Comparisons
-  that involve them say so.
-
-**T4. Disclosed inference**
-- When housing type is inferred by the app rather than taken from the City's own fields,
-  breakdowns show the share that was inferred and the share that is unknown.
-
-**T5. Freshness**
-- The date of the last successful data sync is visible. A warning appears if the last
-  sync failed or is more than a few days old.
-
-**T6. Methodology: "What we count"**
-- One page that a skeptical reader can check the app against. It covers:
-  - **What's counted.** The inclusion rules in plain language ("every building permit that adds
-    housing units, whatever its permit class"), how units added and removed are dated, and how
-    permits are grouped into projects.
-  - **What's left out, with numbers.** Each exclusion comes with its live size, e.g. "N
-    pre-application proposals (M units) aren't counted because they haven't formally applied".
-  - **Status categories.** How every City status maps to pipeline / done / lapsed / dead.
-  - **Housing type.** How types are assigned and how accurate the inference is.
-  - **The reliability rule**, the provisional-period rules, the forecast method and its backtest
-    results, and known data quirks (placeholder dates, missing coordinates, late completions).
-- Every number's info tooltip links to the relevant section, so "what does this count?" is
-  always one click away.
-- The page is regenerated from the same definitions the app uses, so it can't drift from the
-  actual counting.
-
-**T7. Shareable, reproducible views**
-- Any curated view or explorer setup can be bookmarked or shared, and shows the same
-  thing when reopened (relative to the live data).
-
-**T8. Export**
-- The permit list behind any view can be downloaded as CSV. Charts can be downloaded
-  as images.
-
-## 10. Non-goals
-
-**Out of scope:**
+- **Analysis beyond the pages above**: there's no free-form explorer, no bottleneck analysis (review times,
+  correction cycles, share of projects built), and no ranking views other than P1's.
+- **Forecasting**: no predicted completions, pace lines or "likely to finish" ranges. The pipeline
+  lists and homes permitted say what's coming.
 - Rental prices, affordability levels and income restrictions.
-- Non-residential construction: floor area, and commercial projects that add no housing.
-  Any permit that adds housing units is in scope, whatever its permit class (§3).
+- Non-residential construction.
 - Filing or tracking your own permit. Users are sent to the City's systems.
-- Predicting an individual project's outcome, or "how long will my project take?" estimates.
-- Tracking progress against official city housing targets. There's no reliable,
-  machine-readable source for them.
-- Notifications, watchlists and digests. These need user accounts, which makes them a different product.
+- Notifications, watchlists and accounts. A shared place-report link is the substitute.
+- Custom drawn boundaries, per-capita figures, zoning and transit analysis.
 
-**Deferred** until the core is proven, or until data or real need justifies them:
-- Additional boundary sets beyond CRAs.
-- An "inside a designated growth center?" flag for comparing growth inside and outside the
-  Comprehensive Plan's centers. It's a single yes/no attribute, not a second set of boundaries.
-- Per-capita and per-acre normalization.
-- Transit-proximity analysis.
-- Zoning analysis.
-- Fast/slow outlier detection against peer projects.
-- Storing forecast snapshots to track forecast against actual, and monthly forecast-change explanations.
-  The backtest covers track record.
+## 9. Priority
 
-## 11. Priority and order
+| Priority | Scope |
+|---|---|
+| **P0** | P1 This year, P4 Project, P5 About, T1–T7 |
+| **P0** | Neighborhood and urban-village boundaries, P2 Place search, P3 Place report |
+| **P1** | Movement feeds (P1, P3), stalled / expiring flags, past-year view |
+| **P2** | CSV download of any project list |
 
-| Priority | Scope | Why |
-|---|---|---|
-| **P0** (honest baseline) | M1, M2, M7, V1 (without the type stacking), X3, X4, L1, T1, T2, T5, T7 | Trustworthy totals you can trace to their permits, with clear signals when data is thin |
-| **P1** (housing type) | D2 housing type, V1 stacking, T4 | Every later view depends on it |
-| **P1** (bottlenecks) | M4, M5, M6, V3, V5, T3, issued-date milestone | Historical durations and attrition. Also the forecast's inputs |
-| **P1** (forecast) | §7, M3, V4, T6 | Headline feature. Ships only with its backtest |
-| **P2** (where) | D3 area (CRA), V2, X1, X2 | Needs CRA boundaries loaded and assigned to permits |
-| **P2** (finish) | L2, L3, T8 | |
+Pages and code for the dropped sections (bottlenecks, stalled list, forecast, explorer, the full
+methodology page) can be removed once P1–P5 are in place.
 
-Suggested order: **housing type → bottleneck measures → forecast**, with area work
-running in parallel once boundaries are chosen.
+## 10. Open questions
 
-## 12. Open questions
-
-1. **Double counting:** within a development site, do any building permits restate units that
-   another permit already counts (e.g. a master permit plus dependent permits)? Audit once and
-   add a dedup rule if the effect is material.
-2. **Pre-application stage:** about 1,500 proposals (about 27k units) are in the City's system
-   before formal application, mostly waiting on the applicant. The City publishes no dates for
-   them. Should the app show them, and how (see the discussion of possible uses)?
-3. **Reliability threshold N:** calibrate from real data, e.g. find the project count
-   below which year-over-year changes in an area often reverse the following year.
-4. **Net units:** units removed are recorded mostly on demolition permits, which link to
-   their replacement buildings through the development site 78% of the time. Confirm that
-   dating removals by the demolition's completion gives sensible yearly net figures before
-   making net the headline.
-5. **Housing type:** the City's dwelling-type field has almost stopped being filled in
-   (9% of 2025 applications, 0% of 2026), so recent types must be inferred. Accept the
-   inference only where it validates well against older years. Also where to set the multifamily
-   size cutoffs.
-6. **Display start year:** the full history is imported. Should displays still start in 2010
-   by default?
+1. **Boundary sources.** Neighborhoods probably come from the City Clerk's Neighborhood Map
+   Atlas and urban villages from the Comprehensive Plan's Urban Centers and Villages layer.
+   Confirm that the atlas's smallest neighborhoods cover the city with no overlaps (P1's ranking
+   depends on it), and build the list of informal names search should recognize.
+2. **Proposals.** About 1,250 projects (about 22k units) are on file before formal application,
+   and the City publishes no dates for them. Is "proposals: N projects, M units" under the
+   pipeline table useful, or noise?
+3. **Net or gross.** Confirm that dating removals by the demolition's completion gives sensible
+   net figures before "homes completed" is net.
+4. **Reliability threshold N** for hiding percent changes in small places.
+5. **Stalled thresholds.** Check that 2 years in review and 3 years issued flag the projects
+   people would call stuck without flagging normal large buildings.
+6. **Expired but "Issued".** Some issued permits are past their expiration date while the City
+   still lists them as Issued (e.g. 6716 Roosevelt Way NE). Treating them as *permit expired*
+   is the current rule. Check how often a renewal shows up later.
+7. **Movement before October 2026.** Deaths before then have no reliable date. Should they show
+   in movement at all, or only from October 2026 on?

@@ -27,7 +27,7 @@ export interface AccuracyReport {
 
 /**
  * Hide the City's dwelling type on permits that have one, infer the type, and compare
- * (DEV_REWRITE_SPEC §4.7). Shared by the report script and the methodology page.
+ * against it. Shared by the report script and the methodology page.
  */
 export function measureInferenceAccuracy(rows: AccuracyInput[]): AccuracyReport {
   const confusion = Object.fromEntries(

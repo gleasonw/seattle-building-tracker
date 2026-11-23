@@ -1,5 +1,5 @@
 /**
- * Housing type classifier (SPEC §3, DEV_REWRITE_SPEC §4.7).
+ * Housing type classifier (SPEC §3).
  *
  * One type per building permit that adds units. The City's `dwellingunittype` is used
  * when present; otherwise the type is inferred from housing category, permit class,
@@ -132,7 +132,7 @@ const RE_BUILDS_BUILDING = /\b(occupy|construction of (a )?new|construct new)\b/
 
 /**
  * Shoring/excavation permits often restate the units of the building they prepare the site
- * for, without being linked to it (DEV_REWRITE_SPEC §4.5 double-counting audit). Their units
+ * for, without being linked to it (double-counting audit). Their units
  * are counted on the building permit instead.
  */
 export function isSitePrepOnly(description: string | null): boolean {

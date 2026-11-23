@@ -8,8 +8,7 @@ Use shadcn/ui and Tailwind for all UI, including shadcn Charts for charts. Don't
 
 ## Specs
 
-- `docs/SPEC.md` describes what users should be able to find out from the app. It is the source of truth for the rewrite. Keep it free of implementation details.
-- `docs/DEV_REWRITE_SPEC.md` covers how the rewrite is built: data pipeline, architecture, forecast and phased plan. It's a working plan: change it freely when a better approach turns up, as long as the result still satisfies `SPEC.md`, and update it in the same PR.
+`docs/SPEC.md` describes what users should be able to find out from the app. It is the source of truth for the rewrite. Keep it free of implementation details.
 
 ## Layout
 

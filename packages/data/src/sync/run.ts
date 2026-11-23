@@ -1,5 +1,5 @@
 /**
- * Nightly sync (DEV_REWRITE_SPEC §4.2): full snapshot of the portal → staging →
+ * Nightly sync: full snapshot of the portal → staging →
  * reconcile → merge in one transaction. Any failure fails the whole run, and the live
  * tables are only touched once the snapshot is complete and reconciled.
  *

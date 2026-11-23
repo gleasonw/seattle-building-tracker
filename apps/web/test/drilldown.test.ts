@@ -1,15 +1,44 @@
 /**
- * Invariant tests (DEV_REWRITE_SPEC §7, SPEC X3): for sampled filter combinations, the
+ * Invariant tests (SPEC X3): for sampled filter combinations, the
  * permit list behind a number adds up exactly to that number. Run against the local
  * database (`DATABASE_URL` in .env.local) after a sync.
  */
+import { sql as drizzleSql } from "drizzle-orm";
 import { afterAll, describe, expect, test } from "vitest";
 import { sql } from "@sbt/data/db/client";
 import type { Filters } from "@/lib/filters";
 import { getMonthlyWithTrailing, getSupport, getUnitsByYearAndType } from "@/lib/server/metrics";
 import { listPermits } from "@/lib/server/permits";
+import { query } from "@/lib/server/db";
+import { scope } from "@/lib/server/scope";
 
 afterAll(() => sql.end());
+
+/**
+ * Some demolition permits report the replacement building's units as "added" (e.g. 6880831-DM,
+ * 6959231-DM and 6959238-DM, 734 each). Make sure the local data has such rows, so the
+ * "never add units" check below isn't vacuous, and that none of them counts anywhere.
+ */
+describe("demolitions reporting units added", () => {
+  test("exist in the data", async () => {
+    const [row] = await query<{ n: number }>(drizzleSql`
+      SELECT count(*)::int AS n FROM permits p
+       WHERE p.removed_at IS NULL AND p.permit_type_mapped = 'Demolition' AND p.housing_units_added > 0
+    `);
+    expect(row!.n).toBeGreaterThan(0);
+  });
+
+  test.each(["applied", "issued", "completed"] as const)("add nothing, any date (%s)", async (milestone) => {
+    for (const units of ["net", "added"] as const) {
+      const s = scope({}, { milestone, units, ignoreDates: true });
+      const [row] = await query<{ added: number }>(drizzleSql`
+        SELECT coalesce(sum(${s.added}), 0)::int AS added FROM permits p
+         WHERE ${s.where} AND p.permit_type_mapped = 'Demolition'
+      `);
+      expect(row!.added, units).toBe(0);
+    }
+  });
+});
 
 const SAMPLES: [string, Filters][] = [
   ["citywide, net completions", {}],
@@ -50,6 +79,17 @@ describe.each(SAMPLES)("%s", (_, filters) => {
           : { ...filters, ...clamp, type: [cell.series], units: "added" };
       const permits = await list(drill);
       expect(permits.totalUnits, `${cell.year} ${cell.series}`).toBe(cell.units);
+    }
+  });
+
+  test("demolition permits never add units (SPEC §3)", async () => {
+    for (const units of ["net", "added"] as const) {
+      const s = scope(filters, { units });
+      const [row] = await query<{ added: number }>(drizzleSql`
+        SELECT coalesce(sum(${s.added}), 0)::int AS added FROM permits p
+         WHERE ${s.where} AND p.permit_type_mapped = 'Demolition'
+      `);
+      expect(row!.added, units).toBe(0);
     }
   });
 

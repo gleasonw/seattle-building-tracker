@@ -1,6 +1,6 @@
 /**
- * SQL steps that move a fully staged, reconciled snapshot into the live tables
- * (DEV_REWRITE_SPEC §4.2 steps 5–6). All run inside one transaction.
+ * SQL steps that move a fully staged, reconciled snapshot into the live tables.
+ * All run inside one transaction.
  */
 import { getTableColumns } from "drizzle-orm";
 import type postgres from "postgres";
@@ -143,7 +143,7 @@ export async function flagRestatedUnits(tx: Tx): Promise<number> {
 }
 
 /**
- * Rebuild the projects table (DEV_REWRITE_SPEC §4.5). A project is every unit-adding
+ * Rebuild the projects table. A project is every unit-adding
  * building permit sharing a project key, plus demolitions on the same key.
  */
 export async function rebuildProjects(tx: Tx): Promise<number> {

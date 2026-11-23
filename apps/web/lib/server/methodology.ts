@@ -14,7 +14,7 @@ type ExclusionCounts = Record<
   | "lapsed_units"
   | "unlocated_permits"
   | "unlocated_units"
-  | "demolition_permits"
+  | "demolition_added_permits"
   | "demolition_units_added"
   | "demolition_units_removed"
   | "demolition_units_counted"
@@ -43,8 +43,9 @@ export async function getExclusions() {
       coalesce(sum(housing_units_added) FILTER (WHERE permit_type_mapped = 'Building' AND housing_units_added > 0 AND stage = 'lapsed'), 0)::int AS lapsed_units,
       count(*) FILTER (WHERE permit_type_mapped = 'Building' AND housing_units_added > 0 AND cra_id IS NULL)::int AS unlocated_permits,
       coalesce(sum(housing_units_added) FILTER (WHERE permit_type_mapped = 'Building' AND housing_units_added > 0 AND cra_id IS NULL), 0)::int AS unlocated_units,
-      count(*) FILTER (WHERE permit_type_mapped = 'Demolition')::int AS demolition_permits,
-      coalesce(sum(housing_units_added) FILTER (WHERE permit_type_mapped = 'Demolition'), 0)::int AS demolition_units_added,
+      -- Demolitions never count toward units added (SPEC §3), whatever they report.
+      count(*) FILTER (WHERE permit_type_mapped = 'Demolition' AND housing_units_added > 0)::int AS demolition_added_permits,
+      coalesce(sum(housing_units_added) FILTER (WHERE permit_type_mapped = 'Demolition' AND housing_units_added > 0), 0)::int AS demolition_units_added,
       coalesce(sum(housing_units_removed) FILTER (WHERE permit_type_mapped = 'Demolition'), 0)::int AS demolition_units_removed,
       coalesce(sum(housing_units_removed) FILTER (WHERE permit_type_mapped = 'Demolition' AND issued_date IS NOT NULL AND status_category IN ('done', 'pipeline')), 0)::int AS demolition_units_counted,
       coalesce(sum(housing_units_removed) FILTER (WHERE permit_type_mapped = 'Demolition' AND NOT (issued_date IS NOT NULL AND status_category IN ('done', 'pipeline'))), 0)::int AS demolition_units_uncounted,

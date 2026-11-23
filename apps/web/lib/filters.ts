@@ -18,7 +18,7 @@ export const MILESTONES = ["applied", "issued", "completed"] as const;
 export type Milestone = (typeof MILESTONES)[number];
 
 /**
- * Which units a completion count includes (DEV_REWRITE_SPEC §4.8). Net is the headline;
+ * Which units a completion count includes. Net is the headline;
  * other milestones always count units added.
  */
 export const UNIT_KINDS = ["net", "added", "removed"] as const;
