@@ -37,12 +37,16 @@ used (§5, T6).
   - Anywhere the app lists what's happening, it lists **projects**, not permits. Each project
     can be opened to see its permits (P4).
 - **Units added / units removed / net units**: units created, units demolished, and the
-  difference. **Homes completed** means net units on the completed milestone if the data
-  supports it (open question 3). Otherwise it means units added, labeled as gross.
+  difference. **Homes completed** means net units: units added by permits completed in the
+  period, minus units removed by demolitions completed in the same period. The units removed
+  are always shown next to it.
 - **Milestones**: *applied* → *issued* → *completed*. Each permit has a date for every
   milestone it has reached. *Completed* is roughly final inspection or occupancy, and it can
   lag move-in by weeks to months. Users are told so.
-- **Stage**: every project is at exactly one of these:
+- **Stage**: every project is at exactly one of these, taken from its **main permit** (the one
+  with the most units, which also sets the project's housing type). When the project's other
+  permits are further along or behind, the project says so (e.g. "partly complete: 4 of 10
+  homes"):
   - **In review**: applied, not yet issued.
   - **Issued**: permit issued, construction not yet completed.
   - **Completed**.
@@ -71,7 +75,7 @@ used (§5, T6).
   - **issued 3 years ago or more and not completed**.
 
   Separately, **expiring soon** flags an issued project whose permit expires within 6 months.
-  The thresholds are stated wherever the label appears (open question 5).
+  The thresholds are stated wherever the label appears (open question 4).
 - **Housing type**: a single classification for every project, combining building form and,
   for multifamily, size:
 
@@ -89,13 +93,16 @@ used (§5, T6).
     the Roosevelt Residential Urban Village. That's where the City has planned for growth, so
     it's often the boundary that matters for housing policy. Urban villages overlap
     neighborhoods.
-  - **Near an address**: a radius around an address or map point.
+  - **Near an address**: a radius around an address or map point. The default is ½ mile, and
+    ¼ mile and 1 mile can be chosen instead.
 
   Totals are never added up across overlapping places. Users can always see a place's boundary
   on a map.
 - **This year**: the current calendar year to date. Every this-year figure is compared with
   **the same dates last year**, and is marked provisional, because completions are sometimes
-  recorded late.
+  recorded late. During January, when there's too little of the new year to say much, the
+  front page shows the previous year in review by default, with an obvious switch to the new
+  year so far.
 
 ## 3. Measures
 
@@ -103,7 +110,7 @@ The pages are built from these:
 
 | Measure | Meaning |
 |---|---|
-| **Homes completed** | Net (or gross, see §2) units reaching *completed* in the period |
+| **Homes completed** | Net units reaching *completed* in the period (§2), with units removed beside it |
 | **Homes permitted** | Units on permits *issued* in the period. A sign that construction is about to start |
 | **Homes applied for** | Units on permits *applied* for in the period. New projects entering the pipeline |
 | **In the pipeline** | Units and projects in review and issued, as of today, with how many are stalled |
@@ -126,8 +133,9 @@ The pages are built from these:
      opens that neighborhood's report.
   4. **Biggest projects this year**: the largest projects completed and issued, each with
      its share of the year's total.
-  5. **Recent movement**: the largest recent movements citywide, newest first, with a link to all of them.
-  6. **The long view**: homes completed per year over the long run, with this year shown as
+  5. **Recent movement**: movements citywide in the last 30 days for projects of 10 or more
+     units, newest first, with a link to all of them.
+  6. **The long view**: homes completed per year since 2010, with this year shown as
      year to date. Policy changes that matter appear as dated, numbered markers. Each links to
      a primary source, and no causation is claimed. **Every marker must be checked against a
      primary source (City ordinance, council or department page) before it ships.** Starting
@@ -138,8 +146,12 @@ The pages are built from these:
      | 2019-04-19 | Mandatory Housing Affordability takes effect citywide (Ord. 125791) | [City Council](https://seattle.gov/council/committees/citywidemha) |
      | 2019-08-08 | ADU reforms take effect: two ADUs per lot, no owner-occupancy or parking requirement (CB 119544) | [OPCD](https://www.seattle.gov/opcd/ongoing-initiatives/encouraging-backyard-cottages) |
      | 2026-01-21 | Permanent middle-housing zoning takes effect (CB 120993) | [City Council](https://www.seattle.gov/council/topics/2025-comprehensive-plan) |
-- **Past years**: the user can step back to any earlier year and see the same page as a year
-  in review, compared with the year before.
+- **Past years**: the user can step back to any earlier year and see it as a year in review,
+  compared with the year before. Completed, permitted and applied-for figures, the type mix,
+  the ranking and the biggest projects work the same way. Today's pipeline and recent movement
+  don't apply to a past year, so they're replaced by **what happened to that year's
+  applications**: how many units have since completed, are still in progress, had their
+  permit expire, or died.
 
 **P2. Place search**
 - Available from every page. Users find a place by its name, without needing to know City
@@ -154,10 +166,10 @@ The pages are built from these:
 **P3. Place report**
 - Question: how is housing going in this place?
 - Opens with the place's name and kind, a one- or two-sentence plain-language summary of the
-  year (e.g. "Few homes finished this year, but 1,090 units are in the pipeline…"), and a map
+  year (e.g. "Few homes finished this year, but 1,086 units are in the pipeline…"), and a map
   of the boundary with pipeline projects marked by stage and sized by units.
-- One click switches to a related place (the overlapping urban village or neighborhood),
-  widens to a radius, or compares with another place.
+- One click switches to a related place (the overlapping urban village or neighborhood) or
+  widens to a radius.
 - Shows, in this order:
   1. **This year in this place**: the P1 headline numbers for the place, each against last year.
   2. **Projects in the pipeline**: a table with address, units, housing type, stage, how long it's been at
@@ -192,15 +204,16 @@ The pages are built from these:
 
 ## 5. Trust and transparency
 
-**T1. Every number is traceable.** Any headline number, chart bar or ranked row opens the list
-of projects behind it, and that list adds up exactly to the number.
+**T1. Every number is traceable.** Any headline number, chart bar or count in a ranking opens
+the list of projects behind it, and that list adds up exactly to the number. (A ranked row's
+name opens that place's report; its number opens the projects.)
 
 **T2. Reliability rule.**
 - Every total shows how many projects are behind it.
 - If one project makes up more than half of a total, the total says so and names that project
   (e.g. "One project is 131 of them").
 - Percent changes and shares are hidden when fewer than **N projects** are behind them (open
-  question 4). The raw numbers and the project lists are always shown instead.
+  question 3). The raw numbers and the project lists are always shown instead.
 
 **T3. Provisional periods.** This year, and any period known to be revised by late-recorded
 completions, are marked provisional.
@@ -257,13 +270,14 @@ methodology page) can be removed once P1–P5 are in place.
 2. **Proposals.** About 1,250 projects (about 22k units) are on file before formal application,
    and the City publishes no dates for them. Is "proposals: N projects, M units" under the
    pipeline table useful, or noise?
-3. **Net or gross.** Confirm that dating removals by the demolition's completion gives sensible
-   net figures before "homes completed" is net.
-4. **Reliability threshold N** for hiding percent changes in small places.
-5. **Stalled thresholds.** Check that 2 years in review and 3 years issued flag the projects
+3. **Reliability threshold N** for hiding percent changes in small places.
+4. **Stalled thresholds.** Check that 2 years in review and 3 years issued flag the projects
    people would call stuck without flagging normal large buildings.
-6. **Expired but "Issued".** Some issued permits are past their expiration date while the City
+5. **Expired but "Issued".** Some issued permits are past their expiration date while the City
    still lists them as Issued (e.g. 6716 Roosevelt Way NE). Treating them as *permit expired*
    is the current rule. Check how often a renewal shows up later.
-7. **Movement before October 2026.** Deaths before then have no reliable date. Should they show
+6. **Movement before October 2026.** Deaths before then have no reliable date. Should they show
    in movement at all, or only from October 2026 on?
+7. **Noisy change records.** In late October 2026 the recorded changes show permit expiration
+   dates on large projects being cleared and then set again a few days later. Find out whether
+   that's the City's data or the sync, and make sure it can't show up as false movement.

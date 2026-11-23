@@ -10,6 +10,20 @@ Use shadcn/ui and Tailwind for all UI, including shadcn Charts for charts. Don't
 
 `docs/SPEC.md` describes what users should be able to find out from the app. It is the source of truth for the rewrite. Keep it free of implementation details.
 
+Starting point for the spec's pages: `apps/web` already has most of the plumbing, so build on it rather than starting over.
+- `lib/server/scope.ts` is the single translation from filters to SQL. It counts units added only on Building permits, credits units per permit and groups permits into projects. Drill-down lists come from it too, so they add up to the totals.
+- `lib/server/metrics.ts` has year-to-date comparisons, units by year and type, top permits, policy events and freshness.
+- `lib/server/permits.ts` lists permits.
+- The radius filter and CRA areas are in `lib/filters.ts` and `components/where-picker.tsx`.
+- `components/reliability-badge.tsx` implements the reliability rule.
+- `components/map/*` has the permit map.
+- `components/street-view-link.tsx` links a site to Street View.
+- `components/freshness-notice.tsx` shows the sync date and warnings.
+- `lib/server/bottlenecks.ts` has `getStalledProjects`, but the spec now uses fixed stalled rules.
+- The sync records changes in `permit_events`, starting October 2026. That table is the source for movement.
+
+What's new: neighborhood and urban-village boundaries, place search, the place report and project pages, and movement feeds. The bottlenecks, stalled and forecast views and the explorer are dropped, so remove them once the new pages exist.
+
 ## Layout
 
 - `packages/data`: shared Drizzle schema, domain rules (status, housing type, normalization), and the nightly sync. Run `pnpm --filter @sbt/data <sync|verify:portal|report:housing-type|test|db:migrate|seed>`.
