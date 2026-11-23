@@ -83,7 +83,7 @@ export async function removeMissing(tx: Tx, runId: number): Promise<number> {
   return result.count;
 }
 
-/** Point geometry and CRA for rows changed in this run (or never assigned). */
+/** Point geometry and CRA for rows changed in this run (or never assigned). The CRA is unused by the web app; places come from assignPlaces. */
 export async function deriveGeography(tx: Tx, runStartedAt: string): Promise<void> {
   await tx`
     UPDATE permits
@@ -105,6 +105,38 @@ export async function deriveGeography(tx: Tx, runStartedAt: string): Promise<voi
        ORDER BY a.geom::geography <-> p.geom::geography
        LIMIT 1)
      WHERE p.cra_id IS NULL AND p.geom IS NOT NULL
+  `;
+  await assignPlaces(tx, runStartedAt);
+}
+
+/** Points this far outside every neighborhood (shorelines, piers) go to the nearest one. */
+const NEAREST_NEIGHBORHOOD_METERS = 50;
+
+/**
+ * Neighborhood and center for each located permit (SPEC §2 "Place"). Neighborhoods tile the
+ * city, so every located permit inside Seattle gets exactly one; centers are optional.
+ * `changedSince` limits the work to rows updated since then (plus rows never assigned);
+ * null reassigns every permit, after the boundaries change.
+ */
+export async function assignPlaces(tx: Tx, changedSince: string | null): Promise<void> {
+  const target = changedSince
+    ? tx`p.updated_at >= ${changedSince} OR (p.geom IS NOT NULL AND p.neighborhood_id IS NULL)`
+    : tx`true`;
+  await tx`
+    UPDATE permits p
+       SET neighborhood_id = (SELECT pl.id FROM places pl
+                               WHERE pl.kind = 'neighborhood' AND ST_Contains(pl.geom, p.geom) LIMIT 1),
+           center_id = (SELECT pl.id FROM places pl
+                         WHERE pl.kind = 'center' AND ST_Contains(pl.geom, p.geom) LIMIT 1)
+     WHERE ${target}
+  `;
+  await tx`
+    UPDATE permits p SET neighborhood_id = (
+      SELECT pl.id FROM places pl
+       WHERE pl.kind = 'neighborhood' AND ST_DWithin(pl.geom::geography, p.geom::geography, ${NEAREST_NEIGHBORHOOD_METERS})
+       ORDER BY pl.geom::geography <-> p.geom::geography
+       LIMIT 1)
+     WHERE p.neighborhood_id IS NULL AND p.geom IS NOT NULL
   `;
 }
 
@@ -143,6 +175,12 @@ export async function flagRestatedUnits(tx: Tx): Promise<number> {
 }
 
 /**
+ * Bump when rebuildProjects or assignPlaces change, so the next deploy re-derives
+ * (reference/load.ts) instead of waiting for the nightly sync.
+ */
+export const DERIVE_VERSION = "2";
+
+/**
  * Rebuild the projects table. A project is every unit-adding
  * building permit sharing a project key, plus demolitions on the same key.
  */
@@ -160,10 +198,12 @@ export async function rebuildProjects(tx: Tx): Promise<number> {
        WHERE removed_at IS NULL AND permit_type_mapped = 'Demolition'
        GROUP BY project_key
     ),
+    -- The main permit sets the project's stage and housing type (SPEC §2 "Stage"): the one
+    -- with the most units, preferring live permits over dead ones that were superseded.
     main AS (
       SELECT DISTINCT ON (project_key) project_key, permit_num, housing_type, cra_id
         FROM b
-       ORDER BY project_key, housing_units_added DESC, applied_date NULLS LAST, permit_num
+       ORDER BY project_key, (status_category = 'dead'), housing_units_added DESC, applied_date NULLS LAST, permit_num
     ),
     agg AS (
       SELECT project_key,

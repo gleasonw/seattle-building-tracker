@@ -7,12 +7,19 @@ import { getFreshness } from "@/lib/server/metrics";
 /** Last successful sync, with a warning when data is stale or the last sync failed (SPEC T5). */
 export async function FreshnessNotice() {
   await connection();
-  const { lastSuccessAt, lastRunStatus, stale } = await getFreshness();
+  const { lastSuccessAt, lastRunStatus, lastError, stale } = await getFreshness();
   const last = lastSuccessAt ? new Date(lastSuccessAt) : null;
   const failed = lastRunStatus === "failed";
 
   const when = last
-    ? last.toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })
+    ? last.toLocaleString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        timeZone: "America/Los_Angeles",
+      })
     : "never";
 
   return (
@@ -22,16 +29,20 @@ export async function FreshnessNotice() {
           <AlertTriangle />
           <AlertTitle>{failed ? "The latest data update failed" : "Data may be out of date"}</AlertTitle>
           <AlertDescription>
-            Numbers reflect the last successful update from the City ({when}).
+            <p>Numbers reflect the last successful update from the City ({when}).</p>
+            {failed && lastError && <p className="text-xs">Reason: {lastError}</p>}
           </AlertDescription>
         </Alert>
       )}
       <p className="text-muted-foreground text-xs">
-        Data from the{" "}
+        Data from the City of Seattle&apos;s{" "}
         <a href="https://data.seattle.gov/Permitting/Building-Permits/76t5-zqzr" className="underline underline-offset-2">
-          Seattle Open Data Portal
+          Building Permits dataset
         </a>
-        , last updated {when}. <Link href="/methodology" className="underline underline-offset-2">What we count</Link>
+        , last synced {when}.{" "}
+        <Link href="/about" className="underline underline-offset-2">
+          About the data
+        </Link>
       </p>
     </div>
   );

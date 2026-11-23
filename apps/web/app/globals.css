@@ -19,6 +19,11 @@
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
   --color-chart-5: var(--chart-5);
+  --color-stage-issued: var(--stage-issued);
+  --color-stage-review: var(--stage-review);
+  --color-stage-stalled: var(--stage-stalled);
+  --color-trend-up: var(--trend-up);
+  --color-trend-down: var(--trend-down);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
@@ -49,24 +54,24 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --background: oklch(0.985 0.001 106.4);
+  --foreground: oklch(0.216 0.006 56);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.216 0.006 56);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.216 0.006 56);
+  --primary: oklch(0.45 0.1 248);
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
+  --secondary: oklch(0.97 0.001 106.4);
   --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
+  --muted: oklch(0.97 0.001 106.4);
+  --muted-foreground: oklch(0.444 0.011 73.6);
+  --accent: oklch(0.96 0.015 248);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
+  --border: oklch(0.923 0.003 48.7);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --ring: oklch(0.45 0.1 248);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -81,6 +86,12 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  /* Stage and movement colors (SPEC P3 map legend, badges). */
+  --stage-issued: oklch(0.45 0.1 248);
+  --stage-review: oklch(0.74 0.12 55);
+  --stage-stalled: oklch(0.42 0.11 50);
+  --trend-up: oklch(0.45 0.1 248);
+  --trend-down: oklch(0.55 0.15 55);
 }
 
 .dark {
@@ -115,6 +126,11 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  --stage-issued: oklch(0.7 0.11 248);
+  --stage-review: oklch(0.78 0.12 55);
+  --stage-stalled: oklch(0.7 0.12 50);
+  --trend-up: oklch(0.7 0.11 248);
+  --trend-down: oklch(0.78 0.13 60);
 }
 
 @layer base {

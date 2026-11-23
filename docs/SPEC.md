@@ -38,8 +38,9 @@ used (§5, T6).
     can be opened to see its permits (P4).
 - **Units added / units removed / net units**: units created, units demolished, and the
   difference. **Homes completed** means net units: units added by permits completed in the
-  period, minus units removed by demolitions completed in the same period. The units removed
-  are always shown next to it.
+  period, minus units removed by demolitions issued in the same period. Demolitions are dated
+  by issue because the City often closes them out years after the building is gone. The units
+  removed are always shown next to it.
 - **Milestones**: *applied* → *issued* → *completed*. Each permit has a date for every
   milestone it has reached. *Completed* is roughly final inspection or occupancy, and it can
   lag move-in by weeks to months. Users are told so.
@@ -49,7 +50,8 @@ used (§5, T6).
   homes"):
   - **In review**: applied, not yet issued.
   - **Issued**: permit issued, construction not yet completed.
-  - **Completed**.
+  - **Completed**: a completion date is recorded. A recorded completion counts even if the
+    City's status later reads Expired or Issued, but never for a dead permit.
   - **Permit expired**: issued, then expired with no completion recorded. That's true even
     if the City's status hasn't caught up. Seattle construction permits expire 18 months after
     issuance unless renewed. An expired permit might mean:
@@ -71,8 +73,8 @@ used (§5, T6).
   by when the app first noticed it, and that's labeled. Changes from before the app started
   recording (October 2026) show only the City's milestone dates.
 - **Stalled**: a pipeline project that meets a simple fixed rule anyone can check:
-  - **in review for 2 years or more**, or
-  - **issued 3 years ago or more and not completed**.
+  - **in review for 3 years or more**, or
+  - **issued 4 years ago or more and not completed**.
 
   Separately, **expiring soon** flags an issued project whose permit expires within 6 months.
   The thresholds are stated wherever the label appears (open question 4).
@@ -89,8 +91,9 @@ used (§5, T6).
   - **Neighborhood**: a named neighborhood with a boundary that matches what residents mean.
     "Roosevelt" means Roosevelt, not a larger statistical area that contains part of it.
     Neighborhoods cover the whole city without overlapping, so every located permit is in exactly one.
-  - **Urban village**: an urban center or village from the City's Comprehensive Plan, e.g.
-    the Roosevelt Residential Urban Village. That's where the City has planned for growth, so
+  - **Urban village or center**: a center from the City's current Comprehensive Plan (the
+    One Seattle Plan's regional, urban and neighborhood centers), e.g. the Roosevelt Urban
+    Center. That's where the City has planned for growth, so
     it's often the boundary that matters for housing policy. Urban villages overlap
     neighborhoods.
   - **Near an address**: a radius around an address or map point. The default is ½ mile, and
@@ -101,8 +104,8 @@ used (§5, T6).
 - **This year**: the current calendar year to date. Every this-year figure is compared with
   **the same dates last year**, and is marked provisional, because completions are sometimes
   recorded late. During January, when there's too little of the new year to say much, the
-  front page shows the previous year in review by default, with an obvious switch to the new
-  year so far.
+  front page and place reports show the previous year in review by default (still marked
+  provisional), with an obvious switch to the new year so far.
 
 ## 3. Measures
 
@@ -160,9 +163,9 @@ The pages are built from these:
 
 **P2. Place search**
 - Available from every page. Users find a place by its name, without needing to know City
-  area codes or build filters. As the user types, matches appear grouped as **Neighborhoods**,
-  **Urban villages** and **Addresses and streets**, each with a one-line hint (e.g. units in
-  the pipeline).
+  area codes or build filters. As the user types, place matches appear grouped as
+  **Neighborhoods** and **Urban villages and centers**, each with a one-line hint (e.g. units
+  in the pipeline). Addresses and streets are looked up when the user submits the search.
 - Common and informal names find the right place ("U District", "Capitol Hill", "the
   Junction"). A name that matches more than one kind of place shows all of them.
 - Choosing an address offers both the projects at that address and a report on the area
@@ -268,21 +271,22 @@ methodology page) can be removed once P1–P5 are in place.
 
 ## 9. Open questions
 
-1. **Boundary sources.** Neighborhoods probably come from the City Clerk's Neighborhood Map
-   Atlas and urban villages from the Comprehensive Plan's Urban Centers and Villages layer.
-   Confirm that the atlas's smallest neighborhoods cover the city with no overlaps (P1's ranking
-   depends on it), and build the list of informal names search should recognize.
+1. **Boundary sources.** *Resolved:* neighborhoods come from the City Clerk's Neighborhood
+   Map Atlas (its 94 smallest neighborhoods cover the city with no overlaps), and centers from
+   the One Seattle Plan's 2044 centers layer. The list of informal names will keep growing.
 2. **Proposals.** About 1,250 projects (about 22k units) are on file before formal application,
    and the City publishes no dates for them. Is "proposals: N projects, M units" under the
    pipeline table useful, or noise?
 3. **Reliability threshold N** for hiding percent changes in small places.
-4. **Stalled thresholds.** Check that 2 years in review and 3 years issued flag the projects
-   people would call stuck without flagging normal large buildings.
+4. **Stalled thresholds.** Set at 3 years in review and 4 years issued. Large buildings typically
+   spend about 2.1 years in review and 2.8 years from issue to completion, so the earlier 2- and
+   3-year thresholds flagged about half of normal large buildings. Revisit once there's feedback.
 5. **Expired but "Issued".** Some issued permits are past their expiration date while the City
    still lists them as Issued (e.g. 6716 Roosevelt Way NE). Treating them as *permit expired*
    is the current rule. Check how often a renewal shows up later.
 6. **Movement before October 2026.** Deaths before then have no reliable date. Should they show
    in movement at all, or only from October 2026 on?
-7. **Noisy change records.** In late October 2026 the recorded changes show permit expiration
-   dates on large projects being cleared and then set again a few days later. Find out whether
-   that's the City's data or the sync, and make sure it can't show up as false movement.
+7. **Noisy change records.** *Resolved:* the October 2026 flapping came from the City's
+   data (one snapshot dropped expiration dates on 138k permits, and the next restored them).
+   Movement doesn't rely on recorded expiration changes, and the sync refuses a snapshot that
+   suddenly loses most of a field.

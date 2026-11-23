@@ -102,7 +102,12 @@ export const permits = pgTable(
   {
     ...permitColumns(),
     geom: point("geom"),
+    /** Community Reporting Area. Unused by the web app since places replaced CRAs; still derived by the sync and reset by the seed. */
     craId: text("cra_id").references(() => areas.id),
+    /** Neighborhood Map Atlas neighborhood (places.id); nearest within 50 m for shoreline points. */
+    neighborhoodId: text("neighborhood_id"),
+    /** Comprehensive Plan center (places.id) containing the point, if any. */
+    centerId: text("center_id"),
     /**
      * One of several permits that each restate the same development's total units
      * (sync/merge.ts flagRestatedUnits). Its units are counted once, on another permit.
@@ -117,6 +122,8 @@ export const permits = pgTable(
     index("permits_stage_idx").on(t.stage),
     index("permits_housing_type_idx").on(t.housingType),
     index("permits_cra_idx").on(t.craId),
+    index("permits_neighborhood_idx").on(t.neighborhoodId),
+    index("permits_center_idx").on(t.centerId),
     index("permits_project_idx").on(t.projectKey),
     index("permits_applied_idx").on(t.appliedDate),
     index("permits_issued_idx").on(t.issuedDate),
@@ -178,7 +185,39 @@ export const areas = pgTable(
   (t) => [index("areas_geom_idx").using("gist", t.geom)],
 );
 
-/** One row per development (permits sharing a development site). Rebuilt every sync. */
+/**
+ * Places a user can ask about (SPEC §2): neighborhoods (City Clerk's Neighborhood Map Atlas)
+ * and Comprehensive Plan centers. Loaded from data/*.geojson by reference/places.ts.
+ */
+export const places = pgTable(
+  "places",
+  {
+    /** URL slug, e.g. "roosevelt" or "roosevelt-urban-center". */
+    id: text("id").primaryKey(),
+    /** neighborhood | center */
+    kind: text("kind").notNull(),
+    name: text("name").notNull(),
+    /** Atlas district for neighborhoods (e.g. "Northeast"); place type for centers (e.g. "Urban Center"). */
+    district: text("district"),
+    aliases: text("aliases").array().notNull().default([]),
+    geom: multiPolygon("geom").notNull(),
+  },
+  (t) => [index("places_geom_idx").using("gist", t.geom)],
+);
+
+/** Version of each reference dataset or derivation last applied (reference/load.ts). */
+export const referenceData = pgTable("reference_data", {
+  name: text("name").primaryKey(),
+  version: text("version").notNull(),
+  loadedAt: ts("loaded_at").notNull().defaultNow(),
+});
+
+/**
+ * One row per development (permits sharing a development site). Rebuilt every sync. The web
+ * app reads project_key, main_permit_num, housing_type, units_added and building_permit_count;
+ * stage and status come from the main permit at query time (apps/web/lib/server/scope.ts), so
+ * stage, status_category, the date columns and cra_id here are unused (kept for ad-hoc queries).
+ */
 export const projects = pgTable(
   "projects",
   {

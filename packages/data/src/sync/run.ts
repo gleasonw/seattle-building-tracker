@@ -19,6 +19,9 @@ const FETCH_ATTEMPTS = 2;
 
 class SyncError extends Error {}
 
+/** Prefix on recorded errors that must not be shown publicly (see web getFreshness). */
+export const INTERNAL_ERROR_PREFIX = "internal: ";
+
 async function stageSnapshot() {
   await sql`TRUNCATE permits_staging`;
   const unknownStatuses = new Map<string, number>();
@@ -67,6 +70,54 @@ async function fetchReconciled() {
   }
 }
 
+/**
+ * Fields the sync tracks changes in. If the snapshot suddenly lacks one of them on a large
+ * share of the permits that had it, the portal is serving a broken export: in late October
+ * 2026 it dropped `expiresdate` from ~138k rows for three days, then restored the same values.
+ * Merging that would rewrite every permit and log the gap as changes (SPEC open question 7).
+ */
+const TRACKED_FIELDS = ["status_current", "applied_date", "issued_date", "expires_date", "completed_date", "latitude"] as const;
+/** Fail the run when more than this share of a field's values (and at least FIELD_DROPOUT_MIN_ROWS) vanish at once. */
+const FIELD_DROPOUT_SHARE = 0.05;
+const FIELD_DROPOUT_MIN_ROWS = 500;
+
+/**
+ * Fields allowed to drop out this run: `--allow-field-dropout` or SYNC_ALLOW_FIELD_DROPOUT=1/true
+ * allows all; SYNC_ALLOW_FIELD_DROPOUT=expires_date,latitude allows just those (for an
+ * unattended run after checking the change is real).
+ */
+function allowedDropouts(): Set<string> | "all" {
+  if (process.argv.includes("--allow-field-dropout")) return "all";
+  const env = process.env.SYNC_ALLOW_FIELD_DROPOUT?.trim().toLowerCase();
+  if (!env) return new Set();
+  if (env === "1" || env === "true") return "all";
+  return new Set(env.split(",").map((f) => f.trim()).filter(Boolean));
+}
+
+async function checkFieldDropouts() {
+  const allowed = allowedDropouts();
+  if (allowed === "all") return;
+  const counts = TRACKED_FIELDS.map(
+    (f) =>
+      `count(*) FILTER (WHERE p.${f} IS NOT NULL)::int AS "${f}_live", count(*) FILTER (WHERE p.${f} IS NOT NULL AND s.${f} IS NULL)::int AS "${f}_cleared"`,
+  ).join(", ");
+  const [row] = await sql.unsafe<Record<string, number>[]>(`
+    SELECT ${counts} FROM permits p JOIN permits_staging s USING (permit_num) WHERE p.removed_at IS NULL
+  `);
+  const broken = TRACKED_FIELDS.filter((f) => !allowed.has(f)).filter((f) => {
+    const cleared = row![`${f}_cleared`]!;
+    return cleared >= FIELD_DROPOUT_MIN_ROWS && cleared > row![`${f}_live`]! * FIELD_DROPOUT_SHARE;
+  });
+  if (broken.length) {
+    const detail = broken.map((f) => `${f}: ${row![`${f}_cleared`]} of ${row![`${f}_live`]} values missing`).join("; ");
+    throw new SyncError(
+      `The portal snapshot is missing values it had before (${detail}). Likely a broken export; ` +
+        `keeping the previous data. If the change is real, set SYNC_ALLOW_FIELD_DROPOUT=${broken.join(",")} ` +
+        "(or run with --allow-field-dropout).",
+    );
+  }
+}
+
 async function reuseStaging() {
   const [row] = await sql<{ n: number }[]>`SELECT count(*)::int AS n FROM permits_staging`;
   if (!row?.n) throw new SyncError("--reuse-staging: permits_staging is empty.");
@@ -95,9 +146,12 @@ async function main() {
       ? await reuseStaging()
       : await fetchReconciled();
     console.log(`  reconciled: ${staged} staged, ${duplicates} duplicate permit numbers skipped`);
+    await checkFieldDropouts();
 
     const result = await sql.begin(async (transaction) => {
       const tx = transaction as unknown as Tx;
+      // Don't merge while reference/load.ts is reassigning places (same lock).
+      await tx`SELECT pg_advisory_xact_lock(hashtext('sbt_reference_data'))`;
       const eventsWritten = await writeEvents(tx, runId);
       const { inserted, updated } = await upsertPermits(tx);
       const removed = await removeMissing(tx, runId);
@@ -126,9 +180,12 @@ async function main() {
     await notifyWebApp();
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+    // Only SyncError messages are written for the public freshness notice; anything else
+    // (database or network errors) may contain hosts or SQL, so it's marked internal.
+    const recorded = error instanceof SyncError ? message : `${INTERNAL_ERROR_PREFIX}${message}`;
     await db
       .update(syncRuns)
-      .set({ status: "failed", finishedAt: new Date().toISOString(), error: message })
+      .set({ status: "failed", finishedAt: new Date().toISOString(), error: recorded })
       .where(eq(syncRuns.id, runId));
     console.error(`Sync run ${runId} failed: ${message}`);
     process.exitCode = 1;
