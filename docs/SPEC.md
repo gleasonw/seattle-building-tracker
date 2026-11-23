@@ -19,29 +19,10 @@ The application answers two questions:
 Every number is traceable to public City of Seattle permit records. A skeptical user can
 open any figure and see the projects behind it.
 
-## 2. Users
-
-The app is for **anyone who cares about Seattle housing, citywide or in their part of town**.
-That includes advocates, journalists, neighborhood groups, policy staff and curious residents.
-They show up with one of two questions:
-
-- **"How's this year going?"** They want the current-year picture right away, with no setup.
-- **"What's happening in Roosevelt?"** They type a place name and get a complete picture of
-  it. They don't need to know City area codes, build filters or move between several views.
-
-From either starting point they usually go on to:
-
-1. **Scan** the headline numbers and the real projects behind them.
-2. **Follow** a project: what stage it's at, when it last moved, and whether it's stuck.
-3. **Share** a link that shows someone else exactly what they saw.
-
-There's no general-purpose analysis tool. If a question can't be answered from the pages in
-§5, it's out of scope (§8).
-
-## 3. Shared definitions
+## 2. Shared definitions
 
 The whole app uses these terms the same way. Each one is explained in place wherever it's
-used (§6, T6).
+used (§5, T6).
 
 - **Permit**: a single City of Seattle permit record.
   - Every building permit that adds housing units counts toward **units added**, whatever its
@@ -116,13 +97,13 @@ used (§6, T6).
   **the same dates last year**, and is marked provisional, because completions are sometimes
   recorded late.
 
-## 4. Measures
+## 3. Measures
 
 The pages are built from these:
 
 | Measure | Meaning |
 |---|---|
-| **Homes completed** | Net (or gross, see §3) units reaching *completed* in the period |
+| **Homes completed** | Net (or gross, see §2) units reaching *completed* in the period |
 | **Homes permitted** | Units on permits *issued* in the period. A sign that construction is about to start |
 | **Homes applied for** | Units on permits *applied* for in the period. New projects entering the pipeline |
 | **In the pipeline** | Units and projects in review and issued, as of today, with how many are stalled |
@@ -130,7 +111,7 @@ The pages are built from these:
 | **Movement** | Projects that moved in a period, by kind |
 | **Project count** | Shown next to every unit total |
 
-## 5. Pages
+## 4. Pages
 
 **P1. This year (front page)**
 - Question: how is Seattle doing on housing this year?
@@ -161,7 +142,8 @@ The pages are built from these:
   in review, compared with the year before.
 
 **P2. Place search**
-- Available from every page. As the user types, matches appear grouped as **Neighborhoods**,
+- Available from every page. Users find a place by its name, without needing to know City
+  area codes or build filters. As the user types, matches appear grouped as **Neighborhoods**,
   **Urban villages** and **Addresses and streets**, each with a one-line hint (e.g. units in
   the pipeline).
 - Common and informal names find the right place ("U District", "Capitol Hill", "the
@@ -208,7 +190,7 @@ The pages are built from these:
   - where place boundaries come from,
   - and known data quirks (late completions, missing locations, inferred housing types).
 
-## 6. Trust and transparency
+## 5. Trust and transparency
 
 **T1. Every number is traceable.** Any headline number, chart bar or ranked row opens the list
 of projects behind it, and that list adds up exactly to the number.
@@ -237,12 +219,12 @@ info tooltip saying what it counts, linking to the matching part of P5.
 has a link that shows the same thing when reopened, relative to the live data. A place
 report's link reads as the place's name.
 
-## 7. Phone use
+## 6. Phone use
 
 Every page works at phone width. Tables scroll inside their own box, and the place search is
 reachable from the top of every page.
 
-## 8. Non-goals
+## 7. Non-goals
 
 - **Analysis beyond the pages above**: there's no free-form explorer, no bottleneck analysis (review times,
   correction cycles, share of projects built), and no ranking views other than P1's.
@@ -254,7 +236,7 @@ reachable from the top of every page.
 - Notifications, watchlists and accounts. A shared place-report link is the substitute.
 - Custom drawn boundaries, per-capita figures, zoning and transit analysis.
 
-## 9. Priority
+## 8. Priority
 
 | Priority | Scope |
 |---|---|
@@ -266,7 +248,7 @@ reachable from the top of every page.
 Pages and code for the dropped sections (bottlenecks, stalled list, forecast, explorer, the full
 methodology page) can be removed once P1–P5 are in place.
 
-## 10. Open questions
+## 9. Open questions
 
 1. **Boundary sources.** Neighborhoods probably come from the City Clerk's Neighborhood Map
    Atlas and urban villages from the Comprehensive Plan's Urban Centers and Villages layer.
