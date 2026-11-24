@@ -202,6 +202,20 @@ The pages are built from these:
 - **Permits on this site**: every permit in the project, including demolitions, with units
   added and removed and the replacement ratio (units added per unit demolished).
 
+**P6. Email updates about a place**
+- Question: what moved in my place, without having to check?
+- From any place report (neighborhood, urban village or radius), a user can ask for email
+  updates by entering an email address. Nothing is sent until they confirm through an emailed
+  link. No account is needed.
+- After each daily refresh of the City's data, a confirmed subscriber gets one email if
+  anything in that place moved (§2 "Movement") since their last email, and nothing otherwise.
+  It lists each movement with its project's address, units and date, links to each project
+  (P4) and the place report, and says when a date is the app's rather than the City's (T4).
+- A movement is emailed once. One the City records a little late, with an earlier date, still
+  arrives. Movement from before the user signed up is never sent.
+- Every email has a link that stops updates for that place. A user can follow any number of
+  places; each is separate.
+
 **P5. About the data**
 - One short page, linked from the footer and from every info tooltip. It covers:
   - the source and the last sync date,
@@ -254,7 +268,7 @@ reachable from the top of every page.
 - Rental prices, affordability levels and income restrictions.
 - Non-residential construction.
 - Filing or tracking your own permit. Users are sent to the City's systems.
-- Notifications, watchlists and accounts. A shared place-report link is the substitute.
+- Watchlists of individual projects, and accounts. Email updates follow places (P6), not projects.
 - Custom drawn boundaries, per-capita figures, zoning and transit analysis.
 
 ## 8. Priority
@@ -265,6 +279,7 @@ reachable from the top of every page.
 | **P0** | Neighborhood and urban-village boundaries, P2 Place search, P3 Place report |
 | **P1** | Movement feeds (P1, P3), stalled / expiring flags, past-year view |
 | **P2** | CSV download of any project list |
+| **P2** | P6 Email updates about a place |
 
 Pages and code for the dropped sections (bottlenecks, stalled list, forecast, explorer, the full
 methodology page) can be removed once P1–P5 are in place.

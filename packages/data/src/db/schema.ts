@@ -11,7 +11,9 @@ import {
   pgTable,
   serial,
   text,
+  primaryKey,
   timestamp,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 /** PostGIS MultiPolygon in WGS84. Read/written as raw SQL (ST_GeomFromGeoJSON / ST_AsGeoJSON). */
@@ -256,3 +258,55 @@ export const policyEvents = pgTable("policy_events", {
   verifiedOn: day("verified_on"),
 });
 
+
+/**
+ * Email updates about one place (apps/web/lib/server/notifications.ts). A row exists from the
+ * signup request; only confirmed rows get digests. Unsubscribing deletes the row.
+ */
+export const subscriptions = pgTable(
+  "subscriptions",
+  {
+    id: text("id").primaryKey(),
+    email: text("email").notNull(),
+    /** The place report's path, e.g. "/place/roosevelt" or "/near/…?lat=…&lng=…&r=0.5". */
+    placePath: text("place_path").notNull(),
+    placeName: text("place_name").notNull(),
+    /** The place as a Where (apps/web/lib/filters.ts). */
+    place: jsonb("place").$type<{ hood?: string | null; center?: string | null; lat?: number | null; lng?: number | null; r?: number | null }>().notNull(),
+    confirmationTokenHash: text("confirmation_token_hash"),
+    confirmationRequestedAt: ts("confirmation_requested_at"),
+    confirmedAt: ts("confirmed_at"),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("subscriptions_email_place_idx").on(t.email, t.placePath), index("subscriptions_token_idx").on(t.confirmationTokenHash)],
+);
+
+/** Movements a subscription has already been told about, or that predate it ("projectKey:kind:date"). */
+export const subscriptionSeen = pgTable(
+  "subscription_seen",
+  {
+    subscriptionId: text("subscription_id")
+      .notNull()
+      .references(() => subscriptions.id, { onDelete: "cascade" }),
+    itemKey: text("item_key").notNull(),
+    seenAt: ts("seen_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.subscriptionId, t.itemKey] })],
+);
+
+/** A digest written for a subscription. One left unsent is retried by the next run. */
+export const digestDeliveries = pgTable(
+  "digest_deliveries",
+  {
+    id: text("id").primaryKey(),
+    subscriptionId: text("subscription_id")
+      .notNull()
+      .references(() => subscriptions.id, { onDelete: "cascade" }),
+    itemKeys: text("item_keys").array().notNull(),
+    subject: text("subject").notNull(),
+    body: text("body").notNull(),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    sentAt: ts("sent_at"),
+  },
+  (t) => [index("digest_deliveries_subscription_idx").on(t.subscriptionId)],
+);

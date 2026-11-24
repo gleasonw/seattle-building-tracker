@@ -134,6 +134,29 @@ async function notifyWebApp() {
   if (!res.ok) console.warn(`Revalidation request failed: ${res.status}`);
 }
 
+/**
+ * Asks the web app to email subscribers about new movement (apps/web/app/api/digests). The
+ * web app owns the movement rules, so the digest is built there. A failed request leaves the
+ * merged data alone but fails the run, so it shows up; the next run sends what was missed.
+ */
+async function requestDigests() {
+  const url = process.env.WEB_DIGEST_URL;
+  if (!url) return;
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${process.env.DIGEST_SECRET ?? ""}` },
+      signal: AbortSignal.timeout(10 * 60_000),
+    });
+    const body = await res.text();
+    if (!res.ok) throw new Error(`${res.status}: ${body}`);
+    console.log(`Digests: ${body}`);
+  } catch (error) {
+    console.error("Digest request failed:", error);
+    process.exitCode = 1;
+  }
+}
+
 async function main() {
   const [run] = await db.insert(syncRuns).values({ status: "running" }).returning();
   const runId = run!.id;
@@ -178,6 +201,7 @@ async function main() {
     if (!process.argv.includes("--keep-staging")) await sql`TRUNCATE permits_staging`;
     console.log(`Sync run ${runId} succeeded`, result);
     await notifyWebApp();
+    await requestDigests();
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     // Only SyncError messages are written for the public freshness notice; anything else

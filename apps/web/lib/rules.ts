@@ -39,6 +39,14 @@ export const MOVEMENT_PERIODS = { "30d": 30, "6m": 183, "1y": 365 } as const;
 export type MovementPeriod = keyof typeof MOVEMENT_PERIODS;
 export const MOVEMENT_PERIOD_LABELS: Record<MovementPeriod, string> = { "30d": "30 days", "6m": "6 months", "1y": "1 year" };
 
+/**
+ * Email updates (SPEC P6): a digest lists movement dated within this many days that the
+ * subscriber hasn't been sent, so changes the City records a little late still arrive once.
+ */
+export const DIGEST_LOOKBACK_DAYS = 30;
+/** Movements listed in one email; the rest are counted and the report linked. */
+export const DIGEST_MAX_ITEMS = 40;
+
 /** Radius options for "near an address" (SPEC §2). */
 export const RADIUS_MILES = [0.25, 0.5, 1] as const;
 export const DEFAULT_RADIUS_MILES = 0.5;

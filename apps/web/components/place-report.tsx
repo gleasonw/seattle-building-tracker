@@ -6,6 +6,7 @@ import type { MapProject } from "@/components/map/place-map";
 import { PipelineTable, SortLinks, YearProjectsTable } from "@/components/pipeline-table";
 import { MovementFeed } from "@/components/project-list-items";
 import { Section } from "@/components/section";
+import { SubscribeForm, type SubscriptionMessage } from "@/components/subscribe-form";
 import { EarlyYearNotice, Headline, WhatGotFinished, YearStepper } from "@/components/year-report";
 import { placeHref, projectHref, projectsHref, type PipelineSort, type Where } from "@/lib/filters";
 import { homes, projectsCount, unitsCount } from "@/lib/format";
@@ -25,6 +26,7 @@ import {
 import { placeSummary } from "@/lib/summary";
 import { getPolicyEvents, summarize } from "@/lib/server/metrics";
 import { getMovement } from "@/lib/server/movement";
+import { notificationsConfigured } from "@/lib/server/notifications";
 import type { RelatedPlace } from "@/lib/server/places";
 import { listProjects, type ProjectRow } from "@/lib/server/projects";
 import { getYearReport, reportFilters } from "@/lib/server/report";
@@ -62,6 +64,8 @@ export interface ReportSettings {
   all: boolean;
   /** Development only (lib/server/today.ts); carried through links. */
   asof?: string | null;
+  /** Outcome of an email-updates action, shown by the signup form. */
+  subscription?: SubscriptionMessage | null;
 }
 
 const chip =
@@ -293,6 +297,9 @@ export async function PlaceReport({ place, settings, today }: { place: ReportPla
             }
           >
             <MovementFeed moves={moves} showPlace={false} empty={`Nothing moved here in the last ${MOVEMENT_PERIOD_LABELS[settings.moves]}.`} />
+            {notificationsConfigured() && (
+              <SubscribeForm where={where} label={place.radiusLabel} placeName={place.name} status={settings.subscription} />
+            )}
           </Section>
         )}
         <Section
