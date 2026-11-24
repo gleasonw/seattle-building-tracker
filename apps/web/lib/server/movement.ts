@@ -5,7 +5,7 @@ import type { Where } from "@/lib/filters";
 import { DATE_OLD_DEATHS_BY_LAST_MILESTONE } from "@/lib/rules";
 import { formatAddress } from "@/lib/format";
 import { query } from "./db";
-import { housingSql, placeConditions, stageSql } from "./scope";
+import { demolitionSql, housingSql, placeConditions, stageSql } from "./scope";
 
 export const MOVEMENT_KINDS = ["applied", "issued", "completed", "expired", "died"] as const;
 export type MovementKind = (typeof MOVEMENT_KINDS)[number];
@@ -24,6 +24,12 @@ export interface Movement {
   permits: number;
   /** Units across the whole project, to say "4 of 10 homes" when only part of it moved. */
   projectUnits: number;
+  /** The permits that moved. */
+  permitNums: string[];
+  /** Units the moved permits themselves record as removed. */
+  unitsRemoved: number;
+  /** Units removed by the site's demolition permits that count (scope.ts demolitionSql). */
+  demolitionUnitsRemoved: number;
 }
 
 /**
@@ -47,7 +53,7 @@ export async function getMovement(
   const rows = await query<Movement & Record<string, unknown>>(sql`
     WITH hp AS (
       SELECT p.permit_num, p.project_key, p.applied_date, p.issued_date, p.completed_date, p.expires_date,
-             p.status_current, p.housing_units_added AS u, ${stage} AS stage, ${mainStage} AS main_stage
+             p.status_current, p.housing_units_added AS u, coalesce(p.housing_units_removed, 0) AS ur, ${stage} AS stage, ${mainStage} AS main_stage
         FROM permits p
         JOIN projects pr ON pr.project_key = p.project_key
         JOIN permits m ON m.permit_num = pr.main_permit_num
@@ -68,32 +74,35 @@ export async function getMovement(
        GROUP BY e.permit_num
     ),
     moves AS (
-      SELECT project_key, 'applied' AS kind, applied_date AS d, 'city' AS dating, u FROM hp WHERE applied_date IS NOT NULL
+      SELECT project_key, permit_num, 'applied' AS kind, applied_date AS d, 'city' AS dating, u, ur FROM hp WHERE applied_date IS NOT NULL
       UNION ALL
-      SELECT project_key, 'issued', issued_date, 'city', u FROM hp WHERE issued_date IS NOT NULL
+      SELECT project_key, permit_num, 'issued', issued_date, 'city', u, ur FROM hp WHERE issued_date IS NOT NULL
       UNION ALL
-      SELECT project_key, 'completed', completed_date, 'city', u FROM hp WHERE stage = 'completed' AND completed_date IS NOT NULL
+      SELECT project_key, permit_num, 'completed', completed_date, 'city', u, ur FROM hp WHERE stage = 'completed' AND completed_date IS NOT NULL
       UNION ALL
-      SELECT hp.project_key, 'expired',
+      SELECT hp.project_key, hp.permit_num, 'expired',
              CASE WHEN hp.expires_date <= ${today}::date THEN hp.expires_date ELSE n.d END,
-             CASE WHEN hp.expires_date <= ${today}::date THEN 'city' ELSE 'noticed' END, hp.u
+             CASE WHEN hp.expires_date <= ${today}::date THEN 'city' ELSE 'noticed' END, hp.u, hp.ur
         FROM hp LEFT JOIN noticed n USING (permit_num) WHERE hp.stage = 'expired'
       UNION ALL
-      SELECT hp.project_key, 'died',
+      SELECT hp.project_key, hp.permit_num, 'died',
              CASE WHEN hp.status_current = 'Expired' AND hp.expires_date <= ${today}::date THEN hp.expires_date
                   ELSE coalesce(n.d, ${oldDeathDate}) END,
              CASE WHEN hp.status_current = 'Expired' AND hp.expires_date <= ${today}::date THEN 'city'
-                  WHEN n.d IS NOT NULL THEN 'noticed' ELSE 'approximate' END, hp.u
+                  WHEN n.d IS NOT NULL THEN 'noticed' ELSE 'approximate' END, hp.u, hp.ur
         FROM hp LEFT JOIN noticed n USING (permit_num) WHERE hp.stage = 'dead' AND hp.main_stage = 'dead'
     ),
     grouped AS (
-      SELECT project_key, kind, d, dating, sum(u)::int AS units, count(*)::int AS permits
+      SELECT project_key, kind, d, dating, sum(u)::int AS units, count(*)::int AS permits,
+             array_agg(permit_num ORDER BY permit_num) AS permit_nums, sum(ur)::int AS units_removed
         FROM moves WHERE d >= ${from}::date AND d <= ${today}::date
        GROUP BY 1, 2, 3, 4
     )
     SELECT g.project_key AS "projectKey", pr.main_permit_num AS "mainPermit", m.address, h.name AS "hoodName",
            pr.housing_type AS "housingType", g.kind, to_char(g.d, 'YYYY-MM-DD') AS date, g.dating, g.units, g.permits,
-           pr.units_added AS "projectUnits"
+           pr.units_added AS "projectUnits", g.permit_nums AS "permitNums", g.units_removed AS "unitsRemoved",
+           coalesce((SELECT sum(d.housing_units_removed) FROM permits d
+                      WHERE d.project_key = g.project_key AND d.removed_at IS NULL AND ${demolitionSql("d")}), 0)::int AS "demolitionUnitsRemoved"
       FROM grouped g
       JOIN projects pr ON pr.project_key = g.project_key
       JOIN permits m ON m.permit_num = pr.main_permit_num

@@ -242,6 +242,28 @@ const KIND_TEXT: Record<MovementKind, string> = {
   died: "Died",
 };
 
+const unitsText = (n: number) => `${formatNumber(n)} unit${n === 1 ? "" : "s"}`;
+
+/**
+ * Units on the permits behind a movement: what they add and remove, units removed by a
+ * demolition on the same site (the City usually records removals there), and the net.
+ */
+export function unitLines(m: Movement): string[] {
+  const permits = `${m.permitNums.length === 1 ? "Permit" : "Permits"} ${m.permitNums.join(", ")}`;
+  // Finished permits added units; live ones plan to; expired or dead ones would have.
+  const [add, remove] =
+    m.kind === "completed" ? ["added", "removed"] : m.kind === "expired" || m.kind === "died" ? ["would have added", "would have removed"] : ["adds", "removes"];
+  const lines = [`  ${permits}: ${add} ${unitsText(m.units)}, ${remove} ${m.unitsRemoved ? unitsText(m.unitsRemoved) : "none"}`];
+  if (m.demolitionUnitsRemoved) lines.push(`  Demolition on the site: removes ${unitsText(m.demolitionUnitsRemoved)}`);
+  const removed = m.unitsRemoved + m.demolitionUnitsRemoved;
+  if (removed) {
+    const net = m.units - removed;
+    lines.push(`  Net: ${net > 0 ? "+" : net < 0 ? "−" : ""}${unitsText(Math.abs(net))}`);
+  }
+  if (m.projectUnits > m.units) lines.push(`  The whole project adds ${unitsNoun(m.projectUnits, m.housingType)}`);
+  return lines;
+}
+
 export function digestText(sub: { placeName: string; placePath: string }, moves: Movement[], unsubscribe: string): {
   subject: string;
   body: string;
@@ -249,9 +271,8 @@ export function digestText(sub: { placeName: string; placePath: string }, moves:
   const o = origin();
   const shown = moves.slice(0, DIGEST_MAX_ITEMS);
   const lines = shown.map((m) => {
-    const units = m.projectUnits > m.units ? `${formatNumber(m.units)} of ${formatNumber(m.projectUnits)} homes` : unitsNoun(m.units, m.housingType);
     const dated = m.dating === "city" ? formatDayMonth(m.date) : `${formatDayMonth(m.date)} (${m.dating === "noticed" ? "date noticed; the City gives none" : "approximate date"})`;
-    return `${KIND_TEXT[m.kind]}: ${m.address ?? m.mainPermit} · ${units} · ${dated}\n${o}/project/${encodeURIComponent(m.mainPermit)}`;
+    return [`${KIND_TEXT[m.kind]}: ${m.address ?? m.mainPermit} · ${dated}`, ...unitLines(m), `  ${o}/project/${encodeURIComponent(m.mainPermit)}`].join("\n");
   });
   const more = moves.length - shown.length;
   const n = new Set(moves.map((m) => m.projectKey)).size;

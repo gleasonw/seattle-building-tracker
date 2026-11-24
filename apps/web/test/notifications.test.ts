@@ -11,6 +11,7 @@ import { getMovement, shiftDays } from "@/lib/server/movement";
 import {
   confirmSubscription,
   requestSubscription,
+  unitLines,
   sendDigests,
   unsubscribe,
 } from "@/lib/server/notifications";
@@ -81,7 +82,10 @@ test("signup, confirm, digest of new movement only, once, then unsubscribe", asy
   const digest = sent[0]!;
   const projects = new Set(fresh.map((m) => m.projectKey)).size;
   expect(digest.subject).toBe(`${projects} housing project${projects === 1 ? "" : "s"} moved in Crown Hill`);
-  for (const m of fresh.slice(0, 40)) expect(digest.text).toContain(`https://tracker.test/project/${encodeURIComponent(m.mainPermit)}`);
+  for (const m of fresh.slice(0, 40)) {
+    expect(digest.text).toContain(`https://tracker.test/project/${encodeURIComponent(m.mainPermit)}`);
+    expect(digest.text).toMatch(new RegExp(`${m.permitNums.join(", ")}: (adds|added|would have added) `));
+  }
   expect(digest.text).toContain("https://tracker.test/place/crown-hill#movement");
   expect(digest.headers["List-Unsubscribe"]).toMatch(/^<https:\/\/tracker\.test\/unsubscribe\?id=/);
 
@@ -126,4 +130,32 @@ test("radius places are canonical and bad input is refused", async () => {
   await expect(requestSubscription(email, { hood: "atlantis" })).rejects.toThrow("Unknown place");
   await expect(requestSubscription(email, { center: "crown-hill" })).rejects.toThrow("Unknown place");
   await expect(requestSubscription(email, { lat: 40, lng: -122.3, r: 0.5, label: "x" })).rejects.toThrow("Unknown place");
+});
+
+test("each movement says what its permits add and remove, with the site's demolition and the net", () => {
+  const base = {
+    projectKey: "p",
+    mainPermit: "7000001-CN",
+    address: "1 Main St",
+    hoodName: null,
+    housingType: "townhouse" as const,
+    kind: "issued" as const,
+    date: "2026-11-10",
+    dating: "city" as const,
+    permits: 1,
+  };
+  expect(unitLines({ ...base, units: 2, projectUnits: 2, permitNums: ["7000001-CN"], unitsRemoved: 0, demolitionUnitsRemoved: 0 })).toEqual([
+    "  Permit 7000001-CN: adds 2 units, removes none",
+  ]);
+  expect(unitLines({ ...base, kind: "expired", units: 66, projectUnits: 66, permitNums: ["7000001-CN"], unitsRemoved: 0, demolitionUnitsRemoved: 0 })).toEqual([
+    "  Permit 7000001-CN: would have added 66 units, would have removed none",
+  ]);
+  expect(
+    unitLines({ ...base, units: 4, projectUnits: 10, permitNums: ["7000001-CN", "7000002-CN"], unitsRemoved: 1, demolitionUnitsRemoved: 2 }),
+  ).toEqual([
+    "  Permits 7000001-CN, 7000002-CN: adds 4 units, removes 1 unit",
+    "  Demolition on the site: removes 2 units",
+    "  Net: +1 unit",
+    "  The whole project adds 10 townhouses",
+  ]);
 });
